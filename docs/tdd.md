@@ -1,626 +1,866 @@
-# 登科 · 考研助手 (DengKe) — TDD 测试设计与规范文档
+# 登科 · 考研助手 (DengKe) — TDD 测试设计与规范文档 (Flutter)
 
-> **版本**: v2.0 | **最后更新**: 2026-09-19
-> **状态**: 经讨论确认。架构已调整为 Next.js 全栈 TypeScript，Go 后端相关测试已移除。
-
----
-
-## 1. 测试策略
-
-### 1.1 总体方针
-
-遵循 TDD 循环：**Red (写失败测试) → Green (最简实现通过) → Refactor (重构，测试仍绿)**。
-
-项目全栈 TypeScript，测试分三层：
-
-| 层级 | 占比 | 工具 | 覆盖范围 |
-|---|---|---|---|
-| **单元测试** | ~60% | Vitest | 纯函数、算法逻辑、状态管理 (Zustand store)、数据转换、工具函数 |
-| **集成测试** | ~30% | Vitest + @testing-library/react | 组件交互流程、API Route Handler 请求/响应、数据库查询结果 |
-| **E2E 测试** | ~10% | Playwright | 关键用户流程 (登录→刷题→错题→AI 答疑全链路) |
-
-### 1.2 核心原则
-
-1. **业务逻辑变更必须附带测试**——无测试的业务 PR 不予合并。
-2. **测试基于实现理解**——不能仅从接口猜行为，必须看过代码再写测试，覆盖关键分支与边界。
-3. **纯逻辑优先提取**——将算法（SM-2、报录比计算、错题状态机）抽为纯函数，与 I/O 解耦，单元测试覆盖率 >= 90%。
-4. **数据库测试用真实连接**——集成测试连接 Supabase 测试项目（或本地 Docker PostgreSQL），禁止 Mock 数据库掩盖 SQL 错误。
-5. **API 测试用 Next.js 内建机制**——对 Route Handler 使用 `NextRequest` / `NextResponse` 直接调用，不启动 HTTP 服务器。
-
-### 1.3 不测什么
-
-- 纯 UI 样式/布局（交给视觉审查 + Storybook 截图对比，非 MVP 范围）。
-- 第三方库的内部行为（Supabase Auth SDK、Vercel AI SDK 等）。
-- 配置类代码（`tailwind.config.ts`、`next.config.ts`）。
+> **版本**: v3.0 | **最后更新**: 2026-09-20  
+> **状态**: 经讨论确认。架构已迁移至 Flutter (Dart) + Supabase (Edge Functions)  
+> **目标平台**: Android / iOS / Web / macOS / Windows  
 
 ---
 
-## 2. 测试目录结构
+## 1. 测试策略与原则
 
-遵循 Colocation 原则——测试文件与源文件同目录：
+### 1.1 总体测试金字塔
+
+采用经典测试金字塔模型，各层分工与权重如下：
+
+| 层级 | 占比 | 工具 / 框架 | 核心目标 | 运行环境 |
+|---|---|---|---|---|
+| **单元测试 (Unit)** | ~60% | `flutter_test`, `mocktail` | 纯逻辑算法、领域状态机、Riverpod 状态流转、数据模型映射 | 本地 Host (秒级完成) |
+| **组件测试 (Widget)** | ~30% | `flutter_test`, `WidgetTester` | 单一 Widget 渲染、按键/触摸交互响应、不同尺寸响应式适配、无障碍树 | 本地 Host (无头渲染) |
+| **集成/E2E 测试** | ~10% | `integration_test` package | 完整用户跨屏业务旅程（登录→刷题→错题归集→AI 答疑） | 真机 / 模拟器 / Chrome |
+| **Edge Functions 测试** | 独立 | `Deno.test`, `@std/assert` | AI 网关限流、Prompt 组装、SSE 管道代理健全性 | Deno 本地运行时 / CI |
+
+### 1.2 核心指导原则
+
+1. **业务逻辑先行编写失败测试 (Red ➔ Green ➔ Refactor)**：核心算法（错题消灭判定、SM-2 间隔复习、报录比除零保护）必须遵循先测后写，边界用例百分百覆盖。
+2. **纯逻辑彻底解耦 (Pure Functions First)**：所有数学计算、规则转移、状态判定函数均抽离为无外部 I/O 依赖的纯函数（Pure Dart），杜绝通过 Mock 庞大的 Widget 树来测试简单逻辑。
+3. **Mock 选型采用 `mocktail`**：弃用需要繁重代码生成的 `mockito`，选用基于 Dart 类型系统的高性能 `mocktail`，缩短编译等待时间。
+4. **集成测试连接沙箱 Supabase**：禁止在端到端与集成测试中使用全局内存 Mock 欺骗逻辑，统一通过环境变量对接 Supabase 测试项目或本地 Docker 实例。
+
+---
+
+## 2. 测试工程目录结构
+
+遵循业务特征 Colocation 原则，测试工程严格镜像 `lib/` 目录：
 
 ```
-src/
+dengke-app/
 ├── lib/
-│   ├── algorithms/
-│   │   ├── sm2.ts                      # SM-2 间隔复习算法
-│   │   ├── sm2.test.ts                 # ← 纯函数单元测试
-│   │   ├── mistake-state-machine.ts    # 错题状态机
-│   │   └── mistake-state-machine.test.ts
-│   ├── utils/
-│   │   ├── admission-ratio.ts          # 报录比计算
-│   │   └── admission-ratio.test.ts
-│   └── validators/
-│       ├── question.schema.ts          # Zod schema
-│       └── question.schema.test.ts     # schema 验证边界测试
-├── features/
-│   ├── quiz/
-│   │   ├── QuizCard.tsx
-│   │   ├── QuizCard.test.tsx           # ← 组件交互测试
-│   │   ├── useQuizStore.ts
-│   │   └── useQuizStore.test.ts        # ← Store 状态流转测试
-│   ├── memory/
-│   │   ├── Flashcard.tsx
-│   │   ├── Flashcard.test.tsx
-│   │   ├── useMemoryStore.ts
-│   │   └── useMemoryStore.test.ts
-│   └── chat/
-│       ├── ChatPanel.tsx
-│       └── ChatPanel.test.tsx
-├── app/
-│   └── api/v1/
-│       ├── questions/
-│       │   ├── route.ts
-│       │   └── route.test.ts           # ← API Route Handler 集成测试
-│       ├── chat/
-│       │   ├── route.ts
-│       │   └── route.test.ts
-│       └── schools/
-│           ├── route.ts
-│           └── route.test.ts
-└── e2e/
-    ├── quiz-flow.spec.ts               # ← Playwright E2E
-    ├── memory-flow.spec.ts
-    └── auth-flow.spec.ts
+│   ├── core/
+│   │   ├── algorithms/
+│   │   │   ├── sm2.dart
+│   │   │   └── mistake_state_machine.dart
+│   │   ├── utils/
+│   │   │   └── admission_ratio.dart
+│   │   └── theme/
+│   ├── features/
+│   │   ├── quiz/
+│   │   │   ├── domain/models/
+│   │   │   ├── data/repositories/
+│   │   │   ├── presentation/
+│   │   │   │   ├── widgets/quiz_card.dart
+│   │   │   │   └── controllers/quiz_controller.dart
+│   │   ├── memory/
+│   │   ├── school/
+│   │   └── chat/
+├── test/
+│   ├── core/
+│   │   ├── algorithms/
+│   │   │   ├── sm2_test.dart
+│   │   │   └── mistake_state_machine_test.dart
+│   │   └── utils/
+│   │       └── admission_ratio_test.dart
+│   ├── features/
+│   │   ├── quiz/
+│   │   │   ├── presentation/widgets/quiz_card_test.dart
+│   │   │   └── presentation/controllers/quiz_controller_test.dart
+│   │   ├── memory/
+│   │   │   └── presentation/widgets/flashcard_test.dart
+│   │   └── chat/
+│   │       └── data/sse_stream_test.dart
+│   ├── fixtures/
+│   │   ├── questions_fixture.dart
+│   │   ├── schools_fixture.dart
+│   │   └── memory_cards_fixture.dart
+│   └── test_helpers/
+│       └── pump_app.dart              # 封装了 ProviderScope 与 Theme 的 Widget 测试脚手架
+├── integration_test/
+│   ├── quiz_flow_test.dart            # 刷题-错题-重练闭环 E2E
+│   └── memory_flow_test.dart          # 单词抽卡-翻转-评级 E2E
+└── supabase/
+    └── functions/
+        └── chat/
+            ├── index.ts
+            └── index.test.ts          # Deno API 级测试
 ```
 
 ---
 
-## 3. 核心模块测试用例设计
+## 3. 核心领域逻辑单元测试 (Unit Tests)
 
-### 3.1 错题状态机 (`mistake-state-machine.ts`)
+### 3.1 错题状态机 (`mistake_state_machine.dart`)
 
-这是产品最核心的业务逻辑——错题的生命周期状态流转。
+**状态机规则**：
+- 首次答错：创建 `active` 错题，`error_count = 1`，`consecutive_correct = 0`。
+- 重复答错：保持 `active`，`error_count++`，`consecutive_correct = 0`。
+- 错题重练答对：保持 `active`，`consecutive_correct++`。
+- 连续 2 次答对：状态由 `active` 迁往 `mastered`（已掌握），记录 `mastered_at` 时间戳。
+- 已掌握错题再度答错：立刻被激活回 `active`，`consecutive_correct` 清零，`mastered_at` 置空。
 
-**纯函数签名**:
-```typescript
-type MistakeState = {
-  status: 'active' | 'mastered';
-  errorCount: number;
-  consecutiveCorrect: number;
-  masteredAt: Date | null;
-};
+**测试实现 (`test/core/algorithms/mistake_state_machine_test.dart`)**：
 
-function transitionMistakeState(
-  current: MistakeState,
-  event: 'answer_wrong' | 'answer_correct'
-): MistakeState;
-```
+```dart
+import 'package:flutter_test/flutter_test.dart';
+import 'package:dengke_app/core/algorithms/mistake_state_machine.dart';
 
-**测试用例**:
+void main() {
+  group('错题消灭状态机 (MistakeStateMachine)', () {
+    test('首次答错：应初始化为 active 状态且错误计数为 1', () {
+      final state = MistakeStateMachine.createInitialState();
 
-```typescript
-// mistake-state-machine.test.ts
-import { describe, it, expect } from 'vitest';
-import { transitionMistakeState, createInitialMistakeState } from './mistake-state-machine';
+      expect(state.status, MistakeStatus.active);
+      expect(state.errorCount, 1);
+      expect(state.consecutiveCorrect, 0);
+      expect(state.masteredAt, isNull);
+    });
 
-describe('错题状态机', () => {
-  describe('首次答错 → 创建活跃错题', () => {
-    it('应创建 active 状态，errorCount=1，consecutiveCorrect=0', () => {
-      const state = createInitialMistakeState();
-      expect(state).toEqual({
-        status: 'active',
-        errorCount: 1,
+    test('活跃错题再次答错：errorCount 递增且重置连续正确计数', () {
+      final current = MistakeState(
+        status: MistakeStatus.active,
+        errorCount: 2,
+        consecutiveCorrect: 1,
+        masteredAt: null,
+      );
+
+      final next = MistakeStateMachine.transition(current, MistakeEvent.answerWrong);
+
+      expect(next.status, MistakeStatus.active);
+      expect(next.errorCount, 3);
+      expect(next.consecutiveCorrect, 0);
+      expect(next.masteredAt, isNull);
+    });
+
+    test('重练答对 1 次：保持 active，consecutiveCorrect 递增', () {
+      final current = MistakeState(
+        status: MistakeStatus.active,
+        errorCount: 2,
         consecutiveCorrect: 0,
         masteredAt: null,
-      });
-    });
-  });
+      );
 
-  describe('活跃错题再次答错', () => {
-    it('errorCount 递增，consecutiveCorrect 重置为 0', () => {
-      const current = { status: 'active', errorCount: 2, consecutiveCorrect: 1, masteredAt: null };
-      const next = transitionMistakeState(current, 'answer_wrong');
-      expect(next.errorCount).toBe(3);
-      expect(next.consecutiveCorrect).toBe(0);
-      expect(next.status).toBe('active');
-    });
-  });
+      final next = MistakeStateMachine.transition(current, MistakeEvent.answerCorrect);
 
-  describe('重练答对但未达标 (consecutiveCorrect < 2)', () => {
-    it('consecutiveCorrect 递增，保持 active', () => {
-      const current = { status: 'active', errorCount: 3, consecutiveCorrect: 0, masteredAt: null };
-      const next = transitionMistakeState(current, 'answer_correct');
-      expect(next.consecutiveCorrect).toBe(1);
-      expect(next.status).toBe('active');
+      expect(next.status, MistakeStatus.active);
+      expect(next.consecutiveCorrect, 1);
+      expect(next.masteredAt, isNull);
     });
-  });
 
-  describe('连续第 2 次答对 → 标记掌握', () => {
-    it('status 变为 mastered，masteredAt 非空', () => {
-      const current = { status: 'active', errorCount: 3, consecutiveCorrect: 1, masteredAt: null };
-      const next = transitionMistakeState(current, 'answer_correct');
-      expect(next.consecutiveCorrect).toBe(2);
-      expect(next.status).toBe('mastered');
-      expect(next.masteredAt).toBeInstanceOf(Date);
-    });
-  });
+    test('连续第 2 次答对：状态跃迁至 mastered，并赋予掌握时间', () {
+      final current = MistakeState(
+        status: MistakeStatus.active,
+        errorCount: 2,
+        consecutiveCorrect: 1,
+        masteredAt: null,
+      );
 
-  describe('已掌握状态答错 → 重新激活', () => {
-    it('重回 active，consecutiveCorrect 清零', () => {
-      const current = { status: 'mastered', errorCount: 3, consecutiveCorrect: 2, masteredAt: new Date() };
-      const next = transitionMistakeState(current, 'answer_wrong');
-      expect(next.status).toBe('active');
-      expect(next.errorCount).toBe(4);
-      expect(next.consecutiveCorrect).toBe(0);
-      expect(next.masteredAt).toBeNull();
-    });
-  });
+      final next = MistakeStateMachine.transition(current, MistakeEvent.answerCorrect);
 
-  describe('边界: 极端高 errorCount', () => {
-    it('errorCount=999 时仍正常递增', () => {
-      const current = { status: 'active', errorCount: 999, consecutiveCorrect: 0, masteredAt: null };
-      const next = transitionMistakeState(current, 'answer_wrong');
-      expect(next.errorCount).toBe(1000);
+      expect(next.status, MistakeStatus.mastered);
+      expect(next.consecutiveCorrect, 2);
+      expect(next.masteredAt, isNotNull);
+    });
+
+    test('已掌握题目意外答错：重新变回 active 并清空连续计数', () {
+      final current = MistakeState(
+        status: MistakeStatus.mastered,
+        errorCount: 2,
+        consecutiveCorrect: 2,
+        masteredAt: DateTime.now().subtract(const Duration(days: 3)),
+      );
+
+      final next = MistakeStateMachine.transition(current, MistakeEvent.answerWrong);
+
+      expect(next.status, MistakeStatus.active);
+      expect(next.errorCount, 3);
+      expect(next.consecutiveCorrect, 0);
+      expect(next.masteredAt, isNull);
+    });
+
+    test('边界用例：极端高频错误计数安全递增', () {
+      final current = MistakeState(
+        status: MistakeStatus.active,
+        errorCount: 9999,
+        consecutiveCorrect: 0,
+        masteredAt: null,
+      );
+
+      final next = MistakeStateMachine.transition(current, MistakeEvent.answerWrong);
+
+      expect(next.errorCount, 10000);
     });
   });
-});
+}
 ```
 
-### 3.2 SM-2 间隔复习算法 (`sm2.ts`)
+---
 
-**纯函数签名**:
-```typescript
-type CardProgress = {
-  repetitions: number;
-  easeFactor: number;
-  interval: number; // 天数
-};
+### 3.2 SM-2 间隔复习算法 (`sm2.dart`)
 
-type Rating = 'forgot' | 'fuzzy' | 'remembered';
+**算法规则**：
+- `Forgot` (完全忘记)：`interval = 0` (今日必须重排)，`repetitions = 0`，`ease_factor = max(1.3, ease_factor - 0.2)`。
+- `Fuzzy` (模糊/犹豫)：`interval = 1` (次日复习)，`repetitions = 0`，`ease_factor = max(1.3, ease_factor - 0.1)`。
+- `Remembered` (牢记)：
+  - `repetitions == 0` ➔ `interval = 1`
+  - `repetitions == 1` ➔ `interval = 3`
+  - `repetitions >= 2` ➔ `interval = round(prev_interval * ease_factor)`
+  - `repetitions++`，`ease_factor = ease_factor + 0.1`
 
-function calculateNextReview(
-  current: CardProgress,
-  rating: Rating
-): CardProgress & { nextReviewAt: Date };
+**测试实现 (`test/core/algorithms/sm2_test.dart`)**：
+
+```dart
+import 'package:flutter_test/flutter_test.dart';
+import 'package:dengke_app/core/algorithms/sm2.dart';
+
+void main() {
+  group('SM-2 艾宾浩斯复习算法 (Sm2Calculator)', () {
+    const baseProgress = CardProgress(
+      repetitions: 0,
+      easeFactor: 2.5,
+      intervalDays: 0,
+    );
+
+    test('评级 Forgot: 归零间隔，扣减难度因子，设定复习时刻为今日', () {
+      final current = CardProgress(
+        repetitions: 4,
+        easeFactor: 2.5,
+        intervalDays: 14,
+      );
+
+      final result = Sm2Calculator.calculateNextReview(current, ReviewRating.forgot);
+
+      expect(result.intervalDays, 0);
+      expect(result.repetitions, 0);
+      expect(result.easeFactor, closeTo(2.3, 0.001));
+      expect(result.nextReviewAt.difference(DateTime.now()).inHours, lessThanOrEqualTo(1));
+    });
+
+    test('评级 Forgot: 难度因子不应突破下限 1.3', () {
+      final current = CardProgress(
+        repetitions: 1,
+        easeFactor: 1.4,
+        intervalDays: 1,
+      );
+
+      final result = Sm2Calculator.calculateNextReview(current, ReviewRating.forgot);
+
+      expect(result.easeFactor, 1.3);
+    });
+
+    test('评级 Fuzzy: 间隔重置为 1 天，轻微扣减难度因子', () {
+      final current = CardProgress(
+        repetitions: 3,
+        easeFactor: 2.5,
+        intervalDays: 6,
+      );
+
+      final result = Sm2Calculator.calculateNextReview(current, ReviewRating.fuzzy);
+
+      expect(result.intervalDays, 1);
+      expect(result.repetitions, 0);
+      expect(result.easeFactor, closeTo(2.4, 0.001));
+    });
+
+    test('评级 Remembered: 首次牢记步长为 1 天', () {
+      final result = Sm2Calculator.calculateNextReview(baseProgress, ReviewRating.remembered);
+
+      expect(result.intervalDays, 1);
+      expect(result.repetitions, 1);
+      expect(result.easeFactor, closeTo(2.6, 0.001));
+    });
+
+    test('评级 Remembered: 第二次牢记步长跨越至 3 天', () {
+      final current = CardProgress(
+        repetitions: 1,
+        easeFactor: 2.6,
+        intervalDays: 1,
+      );
+
+      final result = Sm2Calculator.calculateNextReview(current, ReviewRating.remembered);
+
+      expect(result.intervalDays, 3);
+      expect(result.repetitions, 2);
+      expect(result.easeFactor, closeTo(2.7, 0.001));
+    });
+
+    test('评级 Remembered: 第三次及以后按系数乘积四舍五入递增', () {
+      final current = CardProgress(
+        repetitions: 2,
+        easeFactor: 2.5,
+        intervalDays: 3,
+      );
+
+      final result = Sm2Calculator.calculateNextReview(current, ReviewRating.remembered);
+
+      // 3 * 2.5 = 7.5 -> round -> 8
+      expect(result.intervalDays, 8);
+      expect(result.repetitions, 3);
+      expect(result.easeFactor, closeTo(2.6, 0.001));
+    });
+  });
+}
 ```
 
-**测试用例**:
+---
 
-```typescript
-// sm2.test.ts
-describe('SM-2 间隔复习算法', () => {
-  const BASE_PROGRESS: CardProgress = { repetitions: 0, easeFactor: 2.5, interval: 0 };
+### 3.3 报录比计算与除零防护 (`admission_ratio.dart`)
 
-  describe('评级: forgot (忘记)', () => {
-    it('interval 重置为 0，repetitions 重置为 0，easeFactor 递减 0.2', () => {
-      const result = calculateNextReview(
-        { repetitions: 3, easeFactor: 2.5, interval: 7 },
-        'forgot'
-      );
-      expect(result.interval).toBe(0);
-      expect(result.repetitions).toBe(0);
-      expect(result.easeFactor).toBe(2.3);
+**测试实现 (`test/core/utils/admission_ratio_test.dart`)**：
+
+```dart
+import 'package:flutter_test/flutter_test.dart';
+import 'package:dengke_app/core/utils/admission_ratio.dart';
+
+void main() {
+  group('报录比工具 (AdmissionRatioCalculator)', () {
+    test('标准录取场景计算：400 报名 / 40 录取 = 10.0', () {
+      final ratio = AdmissionRatioCalculator.calculate(applicants: 400, enrolled: 40);
+      expect(ratio, 10.0);
     });
 
-    it('easeFactor 不低于 1.3 下限', () => {
-      const result = calculateNextReview(
-        { repetitions: 1, easeFactor: 1.4, interval: 1 },
-        'forgot'
-      );
-      expect(result.easeFactor).toBe(1.3); // max(1.3, 1.4 - 0.2)
+    test('除零边界防御：当录取数为 0 时返回 null，杜绝抛出除零异常', () {
+      final ratio = AdmissionRatioCalculator.calculate(applicants: 150, enrolled: 0);
+      expect(ratio, isNull);
     });
 
-    it('nextReviewAt 应为当前时间 (今日重排)', () => {
-      const before = Date.now();
-      const result = calculateNextReview(BASE_PROGRESS, 'forgot');
-      const after = Date.now();
-      expect(result.nextReviewAt.getTime()).toBeGreaterThanOrEqual(before);
-      expect(result.nextReviewAt.getTime()).toBeLessThanOrEqual(after + 1000);
-    });
-  });
-
-  describe('评级: fuzzy (模糊)', () => {
-    it('interval 设为 1 天，repetitions 重置为 0，easeFactor 递减 0.1', () => {
-      const result = calculateNextReview(
-        { repetitions: 5, easeFactor: 2.5, interval: 14 },
-        'fuzzy'
-      );
-      expect(result.interval).toBe(1);
-      expect(result.repetitions).toBe(0);
-      expect(result.easeFactor).toBe(2.4);
-    });
-  });
-
-  describe('评级: remembered (牢记)', () => {
-    it('首次牢记: interval=1, repetitions=1', () => {
-      const result = calculateNextReview(BASE_PROGRESS, 'remembered');
-      expect(result.interval).toBe(1);
-      expect(result.repetitions).toBe(1);
+    test('报考数为 0 且录取正常：返回 0.0', () {
+      final ratio = AdmissionRatioCalculator.calculate(applicants: 0, enrolled: 30);
+      expect(ratio, 0.0);
     });
 
-    it('第二次牢记: interval=3, repetitions=2', () => {
-      const result = calculateNextReview(
-        { repetitions: 1, easeFactor: 2.5, interval: 1 },
-        'remembered'
-      );
-      expect(result.interval).toBe(3);
-      expect(result.repetitions).toBe(2);
+    test('双方皆为 0：返回 null', () {
+      final ratio = AdmissionRatioCalculator.calculate(applicants: 0, enrolled: 0);
+      expect(ratio, isNull);
     });
 
-    it('后续牢记: interval = round(prev_interval * easeFactor)', () => {
-      const result = calculateNextReview(
-        { repetitions: 2, easeFactor: 2.5, interval: 3 },
-        'remembered'
-      );
-      expect(result.interval).toBe(8); // round(3 * 2.5) = 8
-      expect(result.repetitions).toBe(3);
-      expect(result.easeFactor).toBe(2.6); // 2.5 + 0.1
+    test('浮点舍入：精度规范为 1 位小数', () {
+      final ratio = AdmissionRatioCalculator.calculate(applicants: 355, enrolled: 52);
+      // 355 / 52 = 6.8269... -> 6.8
+      expect(ratio, 6.8);
     });
 
-    it('easeFactor 累积递增正确', () => {
-      let progress: CardProgress = { repetitions: 5, easeFactor: 2.8, interval: 30 };
-      const result = calculateNextReview(progress, 'remembered');
-      expect(result.easeFactor).toBe(2.9);
-      expect(result.interval).toBe(Math.round(30 * 2.8)); // 84
+    test('竞争烈度标签判定', () {
+      expect(AdmissionRatioCalculator.getDifficulty(4.2), RatioDifficulty.easy);
+      expect(AdmissionRatioCalculator.getDifficulty(7.5), RatioDifficulty.moderate);
+      expect(AdmissionRatioCalculator.getDifficulty(18.9), RatioDifficulty.competitive);
+      expect(AdmissionRatioCalculator.getDifficulty(null), RatioDifficulty.unknown);
     });
   });
-
-  describe('边界情况', () => {
-    it('easeFactor 极低时 interval 仍应为正数', () => {
-      const result = calculateNextReview(
-        { repetitions: 2, easeFactor: 1.3, interval: 3 },
-        'remembered'
-      );
-      expect(result.interval).toBe(4); // round(3 * 1.3) = 4
-      expect(result.interval).toBeGreaterThan(0);
-    });
-  });
-});
+}
 ```
 
-### 3.3 报录比计算 (`admission-ratio.ts`)
+---
 
-```typescript
-// admission-ratio.test.ts
-describe('报录比计算', () => {
-  it('标准计算: 400 报名 / 40 录取 = 10.0', () => {
-    expect(calculateRatio(400, 40)).toBe(10.0);
-  });
+## 4. Widget 组件与用户交互测试 (Widget Tests)
 
-  it('录取为 0 时返回 null (防除零)', () => {
-    expect(calculateRatio(120, 0)).toBeNull();
-  });
+### 4.1 题卡交互与键盘快捷键 (`quiz_card_test.dart`)
 
-  it('报名为 0 时返回 0', () => {
-    expect(calculateRatio(0, 40)).toBe(0);
-  });
+**测试目标**：
+1. 渲染题干、题型标签、四个选项内容。
+2. 触摸/点击正确选项：选项边框渲染成功色 (`#2E9E6E`)，下方展开解析。
+3. 触摸/点击错误选项：选中项渲染危险色 (`#D4453A`)，正确项自动被绿框高亮。
+4. 桌面端按键映射：按下键盘 `A` 键自动触发第一项选中。
+5. 答题完毕后右下角出现 `⚡ AI 深度答疑` 按钮。
 
-  it('报名和录取都为 0 时返回 null', () => {
-    expect(calculateRatio(0, 0)).toBeNull();
-  });
+**测试实现 (`test/features/quiz/presentation/widgets/quiz_card_test.dart`)**：
 
-  it('结果保留一位小数', () => {
-    expect(calculateRatio(333, 50)).toBe(6.7); // 6.66 → 6.7
-  });
+```dart
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:dengke_app/features/quiz/domain/models/question.dart';
+import 'package:dengke_app/features/quiz/presentation/widgets/quiz_card.dart';
 
-  describe('难度标签', () => {
-    it('ratio <= 5 → easy', () => {
-      expect(getDifficultyLabel(4.2)).toBe('easy');
-    });
-
-    it('5 < ratio <= 10 → moderate', () => {
-      expect(getDifficultyLabel(8.0)).toBe('moderate');
-    });
-
-    it('ratio > 10 → competitive', () => {
-      expect(getDifficultyLabel(15.3)).toBe('competitive');
-    });
-
-    it('ratio 为 null → unknown', () => {
-      expect(getDifficultyLabel(null)).toBe('unknown');
-    });
-  });
-});
-```
-
-### 3.4 AI 限流 (API Route Handler 集成测试)
-
-```typescript
-// app/api/v1/chat/route.test.ts
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-
-describe('POST /api/v1/chat', () => {
-  describe('限流', () => {
-    it('第 30 次请求正常通过', async () => {
-      // 模拟 Upstash Ratelimit 返回 success: true, remaining: 0
-      mockRatelimit.limit.mockResolvedValue({ success: true, remaining: 0 });
-      const response = await POST(createMockRequest({ message: '为什么选A？' }));
-      expect(response.status).toBe(200);
-    });
-
-    it('第 31 次请求返回 429', async () => {
-      mockRatelimit.limit.mockResolvedValue({
-        success: false,
-        remaining: 0,
-        reset: Date.now() + 86400000,
-      });
-      const response = await POST(createMockRequest({ message: '再问一个' }));
-      expect(response.status).toBe(429);
-      const body = await response.json();
-      expect(body.error.code).toBe('RATE_LIMITED');
-      expect(body.error.message).toContain('今日提问次数已用完');
-    });
-  });
-
-  describe('输入校验', () => {
-    it('空消息返回 400', async () => {
-      const response = await POST(createMockRequest({ message: '' }));
-      expect(response.status).toBe(400);
-    });
-
-    it('超长消息 (>5000字) 返回 400', async () => {
-      const response = await POST(createMockRequest({ message: 'a'.repeat(5001) }));
-      expect(response.status).toBe(400);
-    });
-
-    it('未认证请求返回 401', async () => {
-      const response = await POST(createMockRequest({ message: 'test' }, { noAuth: true }));
-      expect(response.status).toBe(401);
-    });
-  });
-
-  describe('流式响应', () => {
-    it('正常请求返回 SSE 流', async () => {
-      mockDeepSeek.mockStreamResponse(['这道', '题考查的是', '辩证法']);
-      const response = await POST(createMockRequest({ message: '解释这道题' }));
-      expect(response.headers.get('Content-Type')).toBe('text/event-stream');
-      // 验证 SSE 格式
-      const text = await response.text();
-      expect(text).toContain('data:');
-    });
-  });
-});
-```
-
-### 3.5 前端组件交互测试
-
-```typescript
-// features/quiz/QuizCard.test.tsx
-import { render, screen, fireEvent } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-
-describe('QuizCard 组件', () => {
-  const mockQuestion = {
-    id: '1',
-    stem: '下列关于矛盾普遍性的表述，正确的是：',
-    type: 'single_choice',
-    options: [
-      { key: 'A', content: '矛盾普遍性寓于特殊性之中' },
-      { key: 'B', content: '矛盾特殊性可以脱离普遍性' },
-      { key: 'C', content: '普遍性等同于特殊性' },
-      { key: 'D', content: '以上都不对' },
+void main() {
+  final testQuestion = Question(
+    id: 'q-001',
+    subject: 'politics',
+    type: QuestionType.singleChoice,
+    stem: '下列关于矛盾普遍性与特殊性关系的表述，正确的是：',
+    options: const [
+      QuestionOption(key: 'A', content: '矛盾普遍性寓于特殊性之中'),
+      QuestionOption(key: 'B', content: '矛盾特殊性可以彻底脱离普遍性'),
+      QuestionOption(key: 'C', content: '普遍性与特殊性在任何时候都不可转化'),
+      QuestionOption(key: 'D', content: '普遍性直接等同于特殊性'),
     ],
     answer: 'A',
-    explanation: '矛盾普遍性与特殊性是辩证统一关系...',
-  };
+    explanation: '矛盾的普遍性即矛盾的共性，矛盾的特殊性即矛盾的个性。矛盾普遍性寓于特殊性之中。',
+  );
 
-  it('渲染题干和所有选项', () => {
-    render(<QuizCard question={mockQuestion} />);
-    expect(screen.getByText(/矛盾普遍性/)).toBeInTheDocument();
-    expect(screen.getAllByRole('button')).toHaveLength(4);
-  });
+  Widget createWidgetUnderTest({void Function()? onNext}) {
+    return ProviderScope(
+      child: MaterialApp(
+        home: Scaffold(
+          body: QuizCard(
+            question: testQuestion,
+            onNextQuestion: onNext,
+          ),
+        ),
+      ),
+    );
+  }
 
-  it('点击正确选项 → 选项卡变绿，显示解析', async () => {
-    render(<QuizCard question={mockQuestion} />);
-    await userEvent.click(screen.getByText(/寓于特殊性/));
-    expect(screen.getByText(/寓于特殊性/).closest('button')).toHaveClass('border-emerald');
-    expect(screen.getByText(/辩证统一关系/)).toBeVisible();
-  });
+  group('QuizCard Widget 交互测试', () {
+    testWidgets('完整渲染题干与全部选项文本', (tester) async {
+      await tester.pumpWidget(createWidgetUnderTest());
 
-  it('点击错误选项 → 选项卡变红，正确选项标绿', async () => {
-    render(<QuizCard question={mockQuestion} />);
-    await userEvent.click(screen.getByText(/脱离普遍性/));
-    expect(screen.getByText(/脱离普遍性/).closest('button')).toHaveClass('border-rose');
-    expect(screen.getByText(/寓于特殊性/).closest('button')).toHaveClass('border-emerald');
-  });
+      expect(find.textContaining('矛盾普遍性与特殊性'), findsOneWidget);
+      expect(find.text('A. 矛盾普遍性寓于特殊性之中'), findsOneWidget);
+      expect(find.text('B. 矛盾特殊性可以彻底脱离普遍性'), findsOneWidget);
+      expect(find.text('C. 普遍性与特殊性在任何时候都不可转化'), findsOneWidget);
+      expect(find.text('D. 普遍性直接等同于特殊性'), findsOneWidget);
+    });
 
-  it('键盘 A 键选中第一个选项', async () => {
-    render(<QuizCard question={mockQuestion} />);
-    await userEvent.keyboard('a');
-    expect(screen.getByText(/寓于特殊性/).closest('button')).toHaveAttribute('aria-selected', 'true');
-  });
+    testWidgets('点击正确项 A：展示成功样式并展开解析', (tester) async {
+      await tester.pumpWidget(createWidgetUnderTest());
 
-  it('判定后显示 AI 答疑按钮', async () => {
-    render(<QuizCard question={mockQuestion} />);
-    await userEvent.click(screen.getByText(/寓于特殊性/));
-    expect(screen.getByText(/AI 深度解析/)).toBeVisible();
-  });
+      // 初始状态不应呈现解析正文
+      expect(find.textContaining('矛盾的普遍性即矛盾的共性'), findsNothing);
 
-  it('判定后 Enter 键触发下一题', async () => {
-    const onNext = vi.fn();
-    render(<QuizCard question={mockQuestion} onNext={onNext} />);
-    await userEvent.click(screen.getByText(/寓于特殊性/));
-    await userEvent.keyboard('{Enter}');
-    expect(onNext).toHaveBeenCalledOnce();
+      // 点击选项 A
+      await tester.tap(find.text('A. 矛盾普遍性寓于特殊性之中'));
+      await tester.pumpAndSettle();
+
+      // 解析展现
+      expect(find.textContaining('矛盾的普遍性即矛盾的共性'), findsOneWidget);
+      // AI 深度解析按钮展现
+      expect(find.text('⚡ AI 深度解析'), findsOneWidget);
+    });
+
+    testWidgets('点击错误项 B：选中项标红，正确项 A 标绿', (tester) async {
+      await tester.pumpWidget(createWidgetUnderTest());
+
+      await tester.tap(find.text('B. 矛盾特殊性可以彻底脱离普遍性'));
+      await tester.pumpAndSettle();
+
+      final optionBContainer = tester.widget<Container>(
+        find.byKey(const ValueKey('option_container_B')),
+      );
+      final decorationB = optionBContainer.decoration as BoxDecoration;
+      // 验证边框带危险色
+      expect(decorationB.border!.top.color, const Color(0xFFD4453A));
+
+      final optionAContainer = tester.widget<Container>(
+        find.byKey(const ValueKey('option_container_A')),
+      );
+      final decorationA = optionAContainer.decoration as BoxDecoration;
+      // 验证正确选项自动带成功色提示
+      expect(decorationA.border!.top.color, const Color(0xFF2E9E6E));
+    });
+
+    testWidgets('桌面键盘交互：按下 A 键即选中第一项', (tester) async {
+      await tester.pumpWidget(createWidgetUnderTest());
+
+      await tester.sendKeyEvent(LogicalKeyboardKey.keyA);
+      await tester.pumpAndSettle();
+
+      // 验证判定完成
+      expect(find.text('⚡ AI 深度解析'), findsOneWidget);
+    });
+
+    testWidgets('判题后按 Enter 键触发下一题回调', (tester) async {
+      var nextTriggered = false;
+      await tester.pumpWidget(createWidgetUnderTest(onNext: () => nextTriggered = true));
+
+      // 先按 A 答题
+      await tester.sendKeyEvent(LogicalKeyboardKey.keyA);
+      await tester.pumpAndSettle();
+
+      // 再按回车
+      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+      await tester.pumpAndSettle();
+
+      expect(nextTriggered, isTrue);
+    });
   });
-});
+}
 ```
 
-### 3.6 Zustand Store 测试
+---
+
+### 4.2 单词背诵卡片 3D 翻转 (`flashcard_test.dart`)
+
+**测试目标**：
+1. 初始状态呈现卡片正面（英文单词、音标）。
+2. 点击卡片触发 400ms `Matrix4.rotationY` 翻转动画，正面隐藏，反面展开（中文释义、例句）。
+3. 翻转后底部滑出 `忘记[1]`、`模糊[2]`、`牢记[3]` 评级按钮。
+4. 键盘按下 `3` 键触发 `ReviewRating.remembered` 回调。
+
+**测试实现 (`test/features/memory/presentation/widgets/flashcard_test.dart`)**：
+
+```dart
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:dengke_app/core/algorithms/sm2.dart';
+import 'package:dengke_app/features/memory/domain/models/memory_card.dart';
+import 'package:dengke_app/features/memory/presentation/widgets/flashcard_view.dart';
+
+void main() {
+  final testCard = MemoryCard(
+    id: 'card-101',
+    category: 'english_word',
+    front: 'abandon',
+    phonetic: '/əˈbændən/',
+    back: 'vt. 放弃，抛弃；沉湎于',
+    example: 'He decided to abandon the attempt due to severe weather.',
+  );
+
+  Widget createWidgetUnderTest({void Function(ReviewRating)? onRated}) {
+    return MaterialApp(
+      home: Scaffold(
+        body: FlashcardView(
+          card: testCard,
+          onRatingSubmitted: onRated ?? (_) {},
+        ),
+      ),
+    );
+  }
+
+  group('FlashcardView 3D 翻转交互测试', () {
+    testWidgets('初始状态只展示正面，不显示评级按钮', (tester) async {
+      await tester.pumpWidget(createWidgetUnderTest());
+
+      expect(find.text('abandon'), findsOneWidget);
+      expect(find.text('/əˈbændən/'), findsOneWidget);
+      expect(find.text('vt. 放弃，抛弃；沉湎于'), findsNothing);
+      expect(find.text('🟢 牢记 [3]'), findsNothing);
+    });
+
+    testWidgets('单击卡片完成 3D 翻转动画并呈现释义与操作栏', (tester) async {
+      await tester.pumpWidget(createWidgetUnderTest());
+
+      // 单击触发翻转
+      await tester.tap(find.byKey(const ValueKey('flashcard_interactive_surface')));
+      // 推进动画 400ms
+      await tester.pumpAndSettle();
+
+      // 背面展示
+      expect(find.text('vt. 放弃，抛弃；沉湎于'), findsOneWidget);
+      expect(find.textContaining('He decided to abandon'), findsOneWidget);
+
+      // 评级操作栏出现
+      expect(find.text('🔴 忘记 [1]'), findsOneWidget);
+      expect(find.text('🟡 模糊 [2]'), findsOneWidget);
+      expect(find.text('🟢 牢记 [3]'), findsOneWidget);
+    });
+
+    testWidgets('翻转后按键盘 3 键：提交 remembered 评级', (tester) async {
+      ReviewRating? submittedRating;
+      await tester.pumpWidget(createWidgetUnderTest(
+        onRated: (rating) => submittedRating = rating,
+      ));
+
+      // 翻转卡片
+      await tester.tap(find.byKey(const ValueKey('flashcard_interactive_surface')));
+      await tester.pumpAndSettle();
+
+      // 触发按键 3
+      await tester.sendKeyEvent(LogicalKeyboardKey.digit3);
+      await tester.pump();
+
+      expect(submittedRating, ReviewRating.remembered);
+    });
+  });
+}
+```
+
+---
+
+## 5. 状态管理 Riverpod 单元测试 (State Notifier Tests)
+
+无需启动任何 UI Widget，使用纯 `ProviderContainer` 快速验证状态跃迁与数据副作用。
+
+**测试实现 (`test/features/quiz/presentation/controllers/quiz_controller_test.dart`)**：
+
+```dart
+import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mocktail/mocktail.dart';
+import 'package:dengke_app/features/quiz/domain/models/question.dart';
+import 'package:dengke_app/features/quiz/domain/repositories/quiz_repository.dart';
+import 'package:dengke_app/features/quiz/presentation/controllers/quiz_controller.dart';
+
+class MockQuizRepository extends Mock implements QuizRepository {}
+
+void main() {
+  late MockQuizRepository mockRepo;
+  late ProviderContainer container;
+
+  final sampleQuestion = Question(
+    id: 'q-1',
+    subject: 'math',
+    type: QuestionType.singleChoice,
+    stem: '设 f(x) 连续...',
+    options: const [
+      QuestionOption(key: 'A', content: '0'),
+      QuestionOption(key: 'B', content: '1'),
+    ],
+    answer: 'A',
+    explanation: '由极限保号性...',
+  );
+
+  setUp(() {
+    mockRepo = MockQuizRepository();
+    container = ProviderContainer(
+      overrides: [
+        quizRepositoryProvider.overrideWithValue(mockRepo),
+      ],
+    );
+  });
+
+  tearDown(() => container.dispose());
+
+  group('QuizController 状态控制器', () {
+    test('submitAnswer 答对：correctCount +1 且不触发保存错题', () async {
+      final controller = container.read(quizControllerProvider.notifier);
+      controller.setQuestions([sampleQuestion]);
+
+      await controller.submitAnswer('A');
+
+      final state = container.read(quizControllerProvider);
+      expect(state.correctCount, 1);
+      expect(state.wrongCount, 0);
+      expect(state.isCurrentCorrect, isTrue);
+
+      // 验证未调用添加错题存储
+      verifyNever(() => mockRepo.recordMistake(any(), any()));
+    });
+
+    test('submitAnswer 答错：wrongCount +1 并异步调用 recordMistake', () async {
+      when(() => mockRepo.recordMistake(any(), any()))
+          .thenAnswer((_) async => Future.value());
+
+      final controller = container.read(quizControllerProvider.notifier);
+      controller.setQuestions([sampleQuestion]);
+
+      await controller.submitAnswer('B'); // 答错
+
+      final state = container.read(quizControllerProvider);
+      expect(state.correctCount, 0);
+      expect(state.wrongCount, 1);
+      expect(state.isCurrentCorrect, isFalse);
+
+      // 验证调用了持久化
+      verify(() => mockRepo.recordMistake('q-1', 'B')).called(1);
+    });
+  });
+}
+```
+
+---
+
+## 6. Supabase Edge Functions 后端测试 (Deno)
+
+针对位于 `supabase/functions/chat/` 的 AI 流式代理网关，直接在 Deno 运行时执行测试：
 
 ```typescript
-// features/quiz/useQuizStore.test.ts
-import { describe, it, expect, beforeEach } from 'vitest';
-import { useQuizStore } from './useQuizStore';
+// supabase/functions/chat/index.test.ts
+import { assertEquals, assertStringIncludes } from "https://deno.land/std@0.224.0/assert/mod.ts";
 
-describe('useQuizStore', () => {
-  beforeEach(() => {
-    useQuizStore.setState(useQuizStore.getInitialState());
+Deno.test("AI Chat Gateway: 未携带 Bearer Token 返回 401", async () => {
+  const req = new Request("http://localhost:54321/functions/v1/chat", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ message: "请解释这道题" }),
   });
 
-  it('submitAnswer 答对 → correctCount 递增', () => {
-    useQuizStore.getState().setQuestions([mockQuestion]);
-    useQuizStore.getState().submitAnswer('A'); // 正确
-    expect(useQuizStore.getState().correctCount).toBe(1);
-    expect(useQuizStore.getState().currentResult).toBe('correct');
+  // 调用主 handler
+  const res = await handleRequest(req);
+  assertEquals(res.status, 401);
+});
+
+Deno.test("AI Chat Gateway: 请求消息体为空返回 400 校验错误", async () => {
+  const req = new Request("http://localhost:54321/functions/v1/chat", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": "Bearer mock-valid-jwt",
+    },
+    body: JSON.stringify({ message: "   " }),
   });
 
-  it('submitAnswer 答错 → wrongCount 递增，触发错题回调', () => {
-    const onMistake = vi.fn();
-    useQuizStore.getState().setOnMistake(onMistake);
-    useQuizStore.getState().setQuestions([mockQuestion]);
-    useQuizStore.getState().submitAnswer('C'); // 错误
-    expect(useQuizStore.getState().wrongCount).toBe(1);
-    expect(onMistake).toHaveBeenCalledWith(mockQuestion.id, 'C');
+  const res = await handleRequest(req);
+  assertEquals(res.status, 400);
+  const data = await res.json();
+  assertEquals(data.error.code, "INVALID_INPUT");
+});
+
+Deno.test("AI Chat Gateway: 超出每日 30 次配额返回 429", async () => {
+  // Mock Upstash 限流返回超过配额
+  setupMockRateLimit({ success: false, remaining: 0 });
+
+  const req = new Request("http://localhost:54321/functions/v1/chat", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": "Bearer mock-valid-jwt",
+    },
+    body: JSON.stringify({ message: "第 31 次提问" }),
   });
 
-  it('nextQuestion 推进到下一题', () => {
-    useQuizStore.getState().setQuestions([mockQ1, mockQ2]);
-    useQuizStore.getState().nextQuestion();
-    expect(useQuizStore.getState().currentIndex).toBe(1);
+  const res = await handleRequest(req);
+  assertEquals(res.status, 429);
+  const data = await res.json();
+  assertStringIncludes(data.error.message, "今日提问次数已用完");
+});
+
+Deno.test("AI Chat Gateway: 正常请求配置 text/event-stream 响应头", async () => {
+  setupMockRateLimit({ success: true, remaining: 15 });
+  setupMockDeepSeekStream(["好的", "，这道题的", "关键在于..."]);
+
+  const req = new Request("http://localhost:54321/functions/v1/chat", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": "Bearer mock-valid-jwt",
+    },
+    body: JSON.stringify({ message: "这道题怎么分析？" }),
   });
 
-  it('最后一题后 nextQuestion → isComplete=true', () => {
-    useQuizStore.getState().setQuestions([mockQ1]);
-    useQuizStore.getState().submitAnswer('A');
-    useQuizStore.getState().nextQuestion();
-    expect(useQuizStore.getState().isComplete).toBe(true);
-  });
+  const res = await handleRequest(req);
+  assertEquals(res.status, 200);
+  assertEquals(res.headers.get("Content-Type"), "text/event-stream");
 });
 ```
 
 ---
 
-## 4. E2E 测试 (Playwright)
+## 7. 端到端集成测试 (Integration Tests)
 
-仅覆盖最关键的用户全链路，MVP 维护 2~3 个 E2E 场景：
+基于 `integration_test` 驱动真实 App 流程：
 
-### 4.1 刷题全链路
+```dart
+// integration_test/quiz_flow_test.dart
+import 'package:flutter_test/flutter_test.dart';
+import 'package:integration_test/integration_test.dart';
+import 'package:dengke_app/main.dart' as app;
 
-```typescript
-// e2e/quiz-flow.spec.ts
-test('完整刷题流程: 答题 → 错题入库 → 重练消题', async ({ page }) => {
-  await page.goto('/quiz?subject=politics');
-  // 答错一题
-  await page.click('text=矛盾特殊性可以脱离普遍性');
-  await expect(page.locator('.border-rose')).toBeVisible();
-  // 进入错题本验证
-  await page.goto('/mistakes');
-  await expect(page.locator('text=待消除')).toBeVisible();
-  // 重练并连续答对 2 次
-  await page.click('text=重做');
-  await page.click('text=寓于特殊性');
-  await page.click('text=重做');
-  await page.click('text=寓于特殊性');
-  await expect(page.locator('text=已掌握')).toBeVisible();
-});
-```
+void main() {
+  IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
-### 4.2 背诵打卡全链路
+  testWidgets('用户核心全链路: 刷题 ➔ 答错入错题本 ➔ 错题重做两次达标消题', (tester) async {
+    app.main();
+    await tester.pumpAndSettle();
 
-```typescript
-// e2e/memory-flow.spec.ts
-test('背诵流程: 翻转卡片 → 评级 → 完成打卡', async ({ page }) => {
-  await page.goto('/memory');
-  // 点击卡片翻转
-  await page.click('[data-testid="flashcard"]');
-  await expect(page.locator('[data-testid="card-back"]')).toBeVisible();
-  // 点击"牢记"
-  await page.click('text=牢记');
-  // 验证进度更新
-  await expect(page.locator('[data-testid="progress"]')).toContainText('1');
-});
+    // 1. 从主页点击进入政治刷题
+    await tester.tap(find.text('刷题'));
+    await tester.pumpAndSettle();
+
+    // 2. 作答并故意选错
+    await tester.tap(find.textContaining('矛盾特殊性可以彻底脱离普遍性'));
+    await tester.pumpAndSettle();
+    expect(find.text('⚡ AI 深度解析'), findsOneWidget);
+
+    // 3. 导航到错题本
+    await tester.tap(find.byTooltip('错题本'));
+    await tester.pumpAndSettle();
+
+    // 4. 验证出现待消除错题
+    expect(find.text('🔴 待消除'), findsOneWidget);
+
+    // 5. 攻坚重做：第 1 次答对
+    await tester.tap(find.text('重做'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.textContaining('矛盾普遍性寓于特殊性之中'));
+    await tester.pumpAndSettle();
+
+    // 6. 攻坚重做：第 2 次答对 -> 触发状态变迁
+    await tester.tap(find.text('重做'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.textContaining('矛盾普遍性寓于特殊性之中'));
+    await tester.pumpAndSettle();
+
+    // 7. 验证已转为已掌握
+    expect(find.text('🟢 已掌握'), findsOneWidget);
+  });
+}
 ```
 
 ---
 
-## 5. 自动化质量门禁
+## 8. 自动化门禁与覆盖率要求
 
-### 5.1 本地开发命令
+### 8.1 覆盖率硬性门禁 (Coverage Thresholds)
+
+| 目录模块 | 最低代码行覆盖率 (Line Coverage) | 阻断级别 |
+|---|---|---|
+| `lib/core/algorithms/` | **95%** | PR 强制阻断 |
+| `lib/core/utils/` | **90%** | PR 强制阻断 |
+| `lib/features/*/domain/` | **85%** | PR 强制阻断 |
+| `lib/features/*/presentation/controllers/` | **80%** | 警告并要求复核 |
+| `lib/features/*/presentation/widgets/` | **70%** | 建议覆盖 |
+| **App 全局综合** | **>= 75%** | CI 门禁检查 |
+
+### 8.2 本地运行指令集
 
 ```bash
-# 全量单元+集成测试
-pnpm test
+# 1. 运行所有纯单元测试与组件测试
+flutter test
 
-# 带覆盖率报告
-pnpm test:coverage
+# 2. 导出覆盖率报告 (生成 coverage/lcov.info)
+flutter test --coverage
 
-# 类型检查
-pnpm type-check
+# 3. 格式化生成可视 HTML 覆盖率报告 (需已安装 lcov 工具)
+genhtml coverage/lcov.info -o coverage/html
+open coverage/html/index.html
 
-# E2E 测试 (需先启动 dev server)
-pnpm test:e2e
+# 4. 运行 Edge Functions 测试
+cd supabase/functions && deno test --allow-net --allow-env
 ```
 
-### 5.2 CI Pipeline (GitHub Actions)
+### 8.3 GitHub Actions CI 配置
 
 ```yaml
-# .github/workflows/ci.yml
-name: CI
-on: [push, pull_request]
+name: Flutter CI Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
 
 jobs:
-  quality:
+  test_and_gate:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: '20' }
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm type-check           # TypeScript 严格模式
-      - run: pnpm lint                  # ESLint
-      - run: pnpm test:coverage         # Vitest + 覆盖率
-      - name: 覆盖率门禁
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.x'
+          channel: 'stable'
+          cache: true
+
+      - name: Install Dependencies
+        run: flutter pub get
+
+      - name: Static Code Analysis (Lint)
+        run: flutter analyze --fatal-infos
+
+      - name: Run Tests with Coverage
+        run: flutter test --coverage
+
+      - name: Check Coverage Threshold
+        uses: VeryGoodOpenSource/very_good_coverage@v3
+        with:
+          path: 'coverage/lcov.info'
+          min_coverage: 75
+
+      - name: Setup Deno
+        uses: denoland/setup-deno@v1
+        with:
+          deno-version: v1.42.x
+
+      - name: Run Supabase Edge Functions Tests
         run: |
-          # 核心业务逻辑覆盖率 >= 80%
-          # lib/algorithms/ 和 lib/utils/ 覆盖率 >= 90%
-          pnpm check-coverage
+          cd supabase/functions
+          deno test --allow-env
 ```
-
-### 5.3 覆盖率要求
-
-| 目录 | 最低行覆盖率 | 说明 |
-|---|---|---|
-| `src/lib/algorithms/` | 90% | 核心算法：SM-2、错题状态机 |
-| `src/lib/utils/` | 90% | 工具函数：报录比计算等 |
-| `src/lib/validators/` | 85% | Zod schema 验证 |
-| `src/features/` | 70% | 业务组件 + Store |
-| `src/app/api/` | 75% | API Route Handler |
-| 总体 | 75% | — |
-
----
-
-## 6. 测试数据策略
-
-### 6.1 Fixtures (静态测试数据)
-
-```
-src/
-└── test/
-    ├── fixtures/
-    │   ├── questions.ts        # 各科目、各题型样例题
-    │   ├── schools.ts          # 院校与报录比样例数据
-    │   ├── cards.ts            # 记忆卡片样例
-    │   └── users.ts            # 测试用户 (admin + user)
-    ├── helpers/
-    │   ├── create-mock-request.ts  # NextRequest 工厂
-    │   └── setup-test-db.ts        # 测试数据库初始化与清理
-    └── setup.ts                    # Vitest globalSetup
-```
-
-### 6.2 数据库测试隔离
-
-- 每个测试套件 (describe block) 在事务中执行，结束时 rollback——测试间完全隔离，无需清理。
-- 使用 Supabase 的测试项目（与生产/开发项目分离），连接串走 `TEST_DATABASE_URL` 环境变量。
