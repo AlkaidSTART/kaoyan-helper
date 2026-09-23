@@ -212,6 +212,18 @@
       "languageVersion": "3.2"
     },
     {
+      "name": "mix",
+      "rootUri": "file:///Users/allure/.pub-cache/hosted/pub.dev/mix-2.2.0",
+      "packageUri": "lib/",
+      "languageVersion": "3.11"
+    },
+    {
+      "name": "mix_annotations",
+      "rootUri": "file:///Users/allure/.pub-cache/hosted/pub.dev/mix_annotations-2.2.0",
+      "packageUri": "lib/",
+      "languageVersion": "3.11"
+    },
+    {
       "name": "passkeys_platform_interface",
       "rootUri": "file:///Users/allure/.pub-cache/hosted/pub.dev/passkeys_platform_interface-2.10.0",
       "packageUri": "lib/",
