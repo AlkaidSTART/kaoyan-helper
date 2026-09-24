@@ -76,12 +76,15 @@ class _MistakesViewState extends State<MistakesView> {
     ];
 
     final filteredMistakes = _mistakes.where((m) {
-      if (_selectedSubject != 0 && m['subjectId'] != _selectedSubject)
+      if (_selectedSubject != 0 && m['subjectId'] != _selectedSubject) {
         return false;
-      if (_selectedStatus == 0 && m['status'] == MistakeStatus.mastered)
+      }
+      if (_selectedStatus == 0 && m['status'] == MistakeStatus.mastered) {
         return false;
-      if (_selectedStatus == 1 && m['status'] != MistakeStatus.mastered)
+      }
+      if (_selectedStatus == 1 && m['status'] != MistakeStatus.mastered) {
         return false;
+      }
       return true;
     }).toList();
 
