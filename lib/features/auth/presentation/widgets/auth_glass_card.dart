@@ -167,15 +167,55 @@ class _AuthGlassCardState extends ConsumerState<AuthGlassCard> with SingleTicker
                     letterSpacing: 0.5,
                   ),
                 ),
-                const SizedBox(height: 6),
-                const Text(
-                  '桌前书本已备齐，向上生长正当时',
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: Color(0xFF6E6259), // 暖灰褐
-                  ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Expanded(
+                      child: Text(
+                        '桌前书本已备齐，向上生长正当时',
+                        style: TextStyle(
+                          fontSize: 12.5,
+                          color: Color(0xFF6E6259), // 暖灰褐
+                        ),
+                      ),
+                    ),
+                    InkWell(
+                      borderRadius: BorderRadius.circular(6),
+                      onTap: () {
+                        setState(() {
+                          _targetController.text = '13800000000';
+                          _secretController.text = _activeTab == 0 ? '123456' : 'password123';
+                          _agreedToTerms = true;
+                        });
+                        ref.read(authNotifierProvider.notifier).clearError();
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFE67E22).withAlpha(25),
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(color: const Color(0xFFE67E22).withAlpha(60)),
+                        ),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.bolt_outlined, size: 13, color: Color(0xFFE67E22)),
+                            SizedBox(width: 2),
+                            Text(
+                              '填入测试账号',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFFE67E22),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 16),
 
                 // Tab 切换：验证码登录 / 密码登录
                 Container(
