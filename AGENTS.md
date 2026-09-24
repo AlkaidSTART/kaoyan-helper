@@ -15,6 +15,11 @@ P3  验证 (docs/p3-verification/<feature-name>/)
     记录测试用例执行结果、静态检查 (flutter analyze)、性能与多端验收单
 ```
 
+### 每次任务与会话审计要求：
+每次对话、功能规划或重大重构，必须在 `docs/tasks/YYYY-MM-DD-<task-name>/` 下落盘：
+1. `plan.md`：记录原始诉求、决策论证与落地计划。
+2. `changed-files.md`：记录所有修改、新建、移动与删除的文件清单及说明。
+
 ---
 
 ## 2. 核心架构模式：Riverpod + Repository + Dio
