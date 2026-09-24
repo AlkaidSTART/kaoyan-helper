@@ -7,6 +7,10 @@ import 'widgets/side_nav_rail.dart';
 import 'widgets/top_app_bar.dart';
 import '../../core/providers/layout_providers.dart';
 import '../features/dashboard/dashboard_view.dart';
+import '../features/quiz/quiz_view.dart';
+import '../features/mistakes/mistakes_view.dart';
+import '../features/schools/schools_view.dart';
+import '../features/flashcards/flashcards_view.dart';
 
 // 快捷键意图定义
 class ToggleNavRailIntent extends Intent {
@@ -32,11 +36,11 @@ class AppShell extends ConsumerWidget {
 
     final pages = [
       const DashboardView(),
-      const Center(child: Text('题库刷题视图 (开发中)')),
-      const Center(child: Text('错题本视图 (开发中)')),
-      const Center(child: Text('择校报录视图 (开发中)')),
-      const Center(child: Text('闪卡背诵视图 (开发中)')),
-      const Center(child: Text('AI 助教视图 (开发中)')),
+      const QuizView(),
+      const MistakesView(),
+      const SchoolsView(),
+      const FlashcardsView(),
+      const Center(child: Text('AI 助教独立视窗')),
     ];
 
     final activeIndex = (currentIndex >= 0 && currentIndex < pages.length) ? currentIndex : 0;
