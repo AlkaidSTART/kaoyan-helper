@@ -48,6 +48,22 @@ void main() {
         // 心流累积增加
         expect(find.text('89'), findsOneWidget);
 
+        // 验证飘字鼓励文案在最顶层渲染呈现（包含 +1）
+        expect(
+          find.byWidgetPredicate(
+            (w) => w is Text && (w.data?.contains('+1') ?? false),
+          ),
+          findsOneWidget,
+        );
+
+        // 验证飘字被 IgnorePointer 包裹，二次点击不受阻挡
+        await tester.tap(find.byKey(const Key('muyu_strike_target')));
+        await tester.pump();
+        expect(find.text('90'), findsOneWidget);
+
+        // 等待动画完成淡出
+        await tester.pump(const Duration(milliseconds: 450));
+
         // 切换至“深呼吸”
         await tester.tap(find.text('深呼吸'));
         await tester.pump();

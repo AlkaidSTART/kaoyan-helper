@@ -48,7 +48,7 @@ class _MuyuReliefWidgetState extends State<MuyuReliefWidget>
     setState(() {
       _counter++;
       final text = _textTemplates[_random.nextInt(_textTemplates.length)];
-      final offset = Offset((_random.nextDouble() - 0.5) * 60, -20.0);
+      final offset = Offset((_random.nextDouble() - 0.5) * 60, -40.0);
       _floatingTexts.add(
         _FloatingText(key: UniqueKey(), text: text, initialOffset: offset),
       );
@@ -88,20 +88,7 @@ class _MuyuReliefWidgetState extends State<MuyuReliefWidget>
             alignment: Alignment.center,
             clipBehavior: Clip.none,
             children: [
-              // 飘字动画图层
-              for (final item in _floatingTexts)
-                _FloatingTextView(
-                  key: item.key,
-                  text: item.text,
-                  offset: item.initialOffset,
-                  onComplete: () {
-                    if (mounted) {
-                      setState(() => _floatingTexts.remove(item));
-                    }
-                  },
-                ),
-
-              // 物理木鱼本体
+              // 物理木鱼本体 (底层渲染)
               ScaleTransition(
                 scale: Tween<double>(begin: 1.0, end: 0.92).animate(
                   CurvedAnimation(
@@ -166,6 +153,21 @@ class _MuyuReliefWidgetState extends State<MuyuReliefWidget>
                   ),
                 ),
               ),
+
+              // 飘字动画图层 (顶层渲染，IgnorePointer 避免拦截敲击点击)
+              for (final item in _floatingTexts)
+                IgnorePointer(
+                  child: _FloatingTextView(
+                    key: item.key,
+                    text: item.text,
+                    offset: item.initialOffset,
+                    onComplete: () {
+                      if (mounted) {
+                        setState(() => _floatingTexts.remove(item));
+                      }
+                    },
+                  ),
+                ),
             ],
           ),
         ),
@@ -218,7 +220,7 @@ class _FloatingTextViewState extends State<_FloatingTextView>
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 650),
+      duration: const Duration(milliseconds: 400),
     );
 
     _translateY = Tween<double>(
@@ -233,7 +235,11 @@ class _FloatingTextViewState extends State<_FloatingTextView>
       ),
     );
 
-    _controller.forward().then((_) => widget.onComplete());
+    _controller.forward().then((_) {
+      if (mounted) {
+        widget.onComplete();
+      }
+    });
   }
 
   @override
