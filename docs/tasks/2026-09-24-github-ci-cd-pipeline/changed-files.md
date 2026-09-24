@@ -25,3 +25,10 @@
 | 文件路径 | 修改要点 |
 |---|---|
 | `docs/README.md` | 在文档中心索引中注册 `ci-cd` 自动化流水线在 P0~P3 的规范文档与任务追溯索引 |
+| `.gitignore` | 增加 `coverage/` 目录忽略，防止本地测试覆盖率报告被误追踪 |
+
+---
+
+## 3. Git 缓存清理 (Untracked from Index)
+
+- `coverage/lcov.info`（本地测试覆盖率生成物已从 Git 索引移除，保留本地）
