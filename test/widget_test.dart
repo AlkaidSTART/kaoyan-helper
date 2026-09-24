@@ -2,7 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kaoyan_helper/core/providers/layout_providers.dart';
+import 'package:kaoyan_helper/features/auth/presentation/auth_notifier.dart';
 import 'package:kaoyan_helper/main.dart';
+
+class AuthenticatedAuthNotifier extends AuthNotifier {
+  @override
+  AuthState build() => const AuthState(isAuthenticated: true);
+}
 
 void main() {
   group('Web UI Shell & Dashboard Tests', () {
@@ -13,7 +19,14 @@ void main() {
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
 
-      await tester.pumpWidget(const ProviderScope(child: MyApp()));
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            authNotifierProvider.overrideWith(AuthenticatedAuthNotifier.new),
+          ],
+          child: const MyApp(),
+        ),
+      );
       await tester.pumpAndSettle();
 
       // 验证桌面 AppBar 与品牌名称
@@ -46,7 +59,11 @@ void main() {
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
 
-      final container = ProviderContainer();
+      final container = ProviderContainer(
+        overrides: [
+          authNotifierProvider.overrideWith(AuthenticatedAuthNotifier.new),
+        ],
+      );
       addTearDown(container.dispose);
 
       await tester.pumpWidget(
@@ -89,7 +106,14 @@ void main() {
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
 
-      await tester.pumpWidget(const ProviderScope(child: MyApp()));
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            authNotifierProvider.overrideWith(AuthenticatedAuthNotifier.new),
+          ],
+          child: const MyApp(),
+        ),
+      );
       await tester.pumpAndSettle();
 
       // 移动端应该呈现 NavigationBar
