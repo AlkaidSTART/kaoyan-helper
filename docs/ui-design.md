@@ -1,7 +1,7 @@
 # 登科 · 考研助手 (DengKe) — UI 设计与交互规范文档 (Flutter)
 
 > **版本**: v3.0 | **最后更新**: 2026-09-20
-> **状态**: 经讨论确认
+> **状态**: 经讨论确认（已拆分细化至模块化目录：[docs/ui-design/](ui-design/)）
 > **技术栈**: Flutter 3.x + Material Design 3 + Riverpod
 > **目标平台**: Android / iOS / Web / macOS / Windows
 
