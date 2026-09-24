@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'widgets/school_row_item.dart';
 
 class SchoolsView extends StatefulWidget {
@@ -160,17 +161,30 @@ class _SchoolsViewState extends State<SchoolsView> {
       return matchesKeyword && matchesTag;
     }).toList();
 
-    return Center(
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 860),
-        child: ListView(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
-          children: [
-            // 搜索与标签栏
-            Row(
-              children: [
-                Expanded(
-                  child: TextField(
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isNarrow = constraints.maxWidth < 600;
+
+        return RefreshIndicator(
+          onRefresh: () async {
+            HapticFeedback.lightImpact();
+            await Future<void>.delayed(const Duration(milliseconds: 300));
+            if (mounted) setState(() {});
+          },
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 860),
+              child: ListView(
+                physics: const AlwaysScrollableScrollPhysics(
+                  parent: BouncingScrollPhysics(),
+                ),
+                padding: EdgeInsets.symmetric(
+                  horizontal: isNarrow ? 16.0 : 24.0,
+                  vertical: 16.0,
+                ),
+                children: [
+                  // 搜索栏 (支持清空与触控优化)
+                  TextField(
                     controller: _searchController,
                     onChanged: (_) => setState(() {}),
                     decoration: InputDecoration(
@@ -180,6 +194,15 @@ class _SchoolsViewState extends State<SchoolsView> {
                         fontSize: 13,
                       ),
                       prefixIcon: const Icon(Icons.search_rounded, size: 20),
+                      suffixIcon: _searchController.text.isNotEmpty
+                          ? IconButton(
+                              icon: const Icon(Icons.clear_rounded, size: 18),
+                              onPressed: () {
+                                _searchController.clear();
+                                setState(() {});
+                              },
+                            )
+                          : null,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                         borderSide: BorderSide(
@@ -192,65 +215,74 @@ class _SchoolsViewState extends State<SchoolsView> {
                       ),
                     ),
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
+                  const SizedBox(height: 12),
 
-            // 属性标签过滤
-            Row(
-              children: [
-                for (final tag in ['全部', '985', '211', '双一流']) ...[
-                  Padding(
-                    padding: const EdgeInsets.only(right: 8.0),
-                    child: ChoiceChip(
-                      label: Text(tag, style: const TextStyle(fontSize: 12)),
-                      selected: _selectedTag == tag,
-                      onSelected: (val) {
-                        if (val) setState(() => _selectedTag = tag);
-                      },
+                  // 属性标签过滤 (支持移动端平滑横向拖拽滑动)
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    physics: const BouncingScrollPhysics(),
+                    child: Row(
+                      children: [
+                        for (final tag in ['全部', '985', '211', '双一流']) ...[
+                          Padding(
+                            padding: const EdgeInsets.only(right: 8.0),
+                            child: ChoiceChip(
+                              label: Text(tag, style: const TextStyle(fontSize: 12)),
+                              selected: _selectedTag == tag,
+                              onSelected: (val) {
+                                if (val) {
+                                  HapticFeedback.selectionClick();
+                                  setState(() => _selectedTag = tag);
+                                }
+                              },
+                            ),
+                          ),
+                        ],
+                      ],
                     ),
                   ),
-                ],
-              ],
-            ),
-            const SizedBox(height: 16),
+                  const SizedBox(height: 16),
 
-            // 列表
-            if (filtered.isEmpty)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 40.0),
-                child: Center(
-                  child: Text(
-                    '未检索到符合条件的院校',
-                    style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
-                  ),
-                ),
-              )
-            else
-              for (final school in filtered)
-                SchoolRowItem(
-                  schoolName: school['schoolName'],
-                  college: school['college'],
-                  majorCodeName: school['majorCodeName'],
-                  ratio: school['ratio'],
-                  isTarget: school['isTarget'],
-                  tags: List<String>.from(school['tags']),
-                  trendData: List<Map<String, dynamic>>.from(
-                    school['trendData'],
-                  ),
-                  onTargetToggle: (isTarget) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(isTarget ? '已设为一志愿目标院校！' : '已取消一志愿目标'),
-                        duration: const Duration(seconds: 1),
+                  // 列表
+                  if (filtered.isEmpty)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 40.0),
+                      child: Center(
+                        child: Text(
+                          '未检索到符合条件的院校',
+                          style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
+                        ),
                       ),
-                    );
-                  },
-                ),
-          ],
-        ),
-      ),
+                    )
+                  else
+                    for (final school in filtered)
+                      SchoolRowItem(
+                        schoolName: school['schoolName'],
+                        college: school['college'],
+                        majorCodeName: school['majorCodeName'],
+                        ratio: school['ratio'],
+                        isTarget: school['isTarget'],
+                        tags: List<String>.from(school['tags']),
+                        trendData: List<Map<String, dynamic>>.from(
+                          school['trendData'],
+                        ),
+                        onTargetToggle: (isTarget) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                isTarget ? '已设为一志愿目标院校！' : '已取消一志愿目标',
+                              ),
+                              duration: const Duration(seconds: 1),
+                            ),
+                          );
+                        },
+                      ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }
