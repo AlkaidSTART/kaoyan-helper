@@ -11,6 +11,8 @@ import '../features/quiz/quiz_view.dart';
 import '../features/mistakes/mistakes_view.dart';
 import '../features/schools/schools_view.dart';
 import '../features/flashcards/flashcards_view.dart';
+import '../features/rest/rest_view.dart';
+import '../features/rest/widgets/floating_pomodoro_bubble.dart';
 
 // 快捷键意图定义
 class ToggleNavRailIntent extends Intent {
@@ -40,6 +42,7 @@ class AppShell extends ConsumerWidget {
       const MistakesView(),
       const SchoolsView(),
       const FlashcardsView(),
+      const RestView(),
       const Center(child: Text('AI 助教独立视窗')),
     ];
 
@@ -80,23 +83,28 @@ class AppShell extends ConsumerWidget {
             autofocus: true,
             child: Scaffold(
               appBar: const ShellTopAppBar(),
-              body: Row(
+              body: Stack(
                 children: [
-                  const SideNavRail(),
-                  VerticalDivider(
-                    thickness: 1,
-                    width: 1,
-                    color: Theme.of(context).colorScheme.outlineVariant,
-                  ),
-                  Expanded(
-                    child: Center(
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 960),
-                        child: pages[activeIndex],
+                  Row(
+                    children: [
+                      const SideNavRail(),
+                      VerticalDivider(
+                        thickness: 1,
+                        width: 1,
+                        color: Theme.of(context).colorScheme.outlineVariant,
                       ),
-                    ),
+                      Expanded(
+                        child: Center(
+                          child: ConstrainedBox(
+                            constraints: const BoxConstraints(maxWidth: 960),
+                            child: pages[activeIndex],
+                          ),
+                        ),
+                      ),
+                      const AiChatPanel(),
+                    ],
                   ),
-                  const AiChatPanel(),
+                  const FloatingPomodoroBubble(),
                 ],
               ),
             ),
@@ -110,7 +118,7 @@ class AppShell extends ConsumerWidget {
       appBar: AppBar(title: const Text('登科')),
       body: pages[activeIndex],
       bottomNavigationBar: NavigationBar(
-        selectedIndex: activeIndex > 4 ? 0 : activeIndex,
+        selectedIndex: activeIndex > 5 ? 0 : activeIndex,
         onDestinationSelected: (index) {
           ref.read(currentNavIndexProvider.notifier).setIndex(index);
         },
@@ -139,6 +147,11 @@ class AppShell extends ConsumerWidget {
             icon: Icon(Icons.style_outlined),
             selectedIcon: Icon(Icons.style_rounded),
             label: '背诵',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.self_improvement_outlined),
+            selectedIcon: Icon(Icons.self_improvement_rounded),
+            label: '休息',
           ),
         ],
       ),

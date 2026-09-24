@@ -11,11 +11,11 @@ class SideNavRail extends ConsumerWidget {
     final isExpanded = ref.watch(navRailExpandedProvider);
 
     return NavigationRail(
-      selectedIndex: currentIndex,
+      selectedIndex: currentIndex > 5 ? 0 : currentIndex,
       extended: isExpanded,
       onDestinationSelected: (index) {
-        if (index == 5) {
-          // 助教按钮，切换右侧面板，不改变当前主视窗
+        if (index == 6) {
+          // 助教按钮：切换右侧面板抽屉，不改变主视窗当前页面
           ref.read(aiPanelExpandedProvider.notifier).toggle();
           return;
         }
@@ -52,6 +52,11 @@ class SideNavRail extends ConsumerWidget {
           icon: Icon(Icons.style_outlined),
           selectedIcon: Icon(Icons.style_rounded),
           label: Text('背诵'),
+        ),
+        NavigationRailDestination(
+          icon: Icon(Icons.self_improvement_outlined),
+          selectedIcon: Icon(Icons.self_improvement_rounded),
+          label: Text('休息'),
         ),
         NavigationRailDestination(
           icon: Icon(Icons.smart_toy_outlined),
