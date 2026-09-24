@@ -11,6 +11,7 @@
 - **沉浸无干扰**：核心刷题、背诵界面降噪，次要控件低优先级呈现。
 - **全平台一致**：单代码库跨 Android / iOS / Web / macOS / Windows，核心逻辑与布局行为统一，仅保留平台原生必要手势与窗口特性。
 - **触摸与键鼠兼修**：最小交互热区 48x48 dp，桌面端全链路支持快捷键与 Hover。
+- **图标纯净严谨**：全工程严禁使用任何系统 Emoji。统一使用 Material Symbols Outlined 专业线性图标库与 StatusDot 组件。
 
 ---
 
@@ -21,6 +22,7 @@
 | `01-color-system.md` | 三套主题、M3 容器层级、WCAG 对比度、学科色、图表序列色 |
 | `02-motion-system.md` | 三档时长、曲线规范、答题/翻卡微交互、无障碍规范 |
 | `03-layout-adaptive.md` | 响应式断点、桌面/平板/移动三端 Shell 结构、键盘快捷键映射 |
+| `04-icon-system.md` | 专业图标选型标准、全局业务图标映射表、状态指示圆点规范 |
 | `modules/dashboard.md` | 学习看板：数据卡片、倒计时、折线图组件 |
 | `modules/quiz.md` | 题库刷题：题目容器、选项微交互、公式渲染、解析折叠 |
 | `modules/mistakes.md` | 错题本：筛选工具栏、错题卡片、消除状态流转 |
