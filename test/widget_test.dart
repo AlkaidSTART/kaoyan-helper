@@ -60,8 +60,8 @@ void main() {
       // 初始状态下 AI 面板关闭
       expect(container.read(aiPanelExpandedProvider), isFalse);
 
-      // 点击导航栏的助教展开
-      await tester.tap(find.text('助教'));
+      // 点击导航栏的助教图标展开
+      await tester.tap(find.byIcon(Icons.smart_toy_outlined));
       await tester.pumpAndSettle();
 
       expect(container.read(aiPanelExpandedProvider), isTrue);

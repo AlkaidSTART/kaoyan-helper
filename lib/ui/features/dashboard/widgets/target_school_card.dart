@@ -93,15 +93,22 @@ class TargetSchoolCard extends StatelessWidget {
               ),
               child: Column(
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: [
-                      _buildScoreYear(context, '2022', 360),
-                      Icon(Icons.arrow_forward_rounded, size: 16, color: theme.colorScheme.outline),
-                      _buildScoreYear(context, '2023', 375),
-                      Icon(Icons.arrow_forward_rounded, size: 16, color: theme.colorScheme.outline),
-                      _buildScoreYear(context, '2024', 382, isHighlight: true),
-                    ],
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        _buildScoreYear(context, '2022', 360),
+                        const SizedBox(width: 8),
+                        Icon(Icons.arrow_forward_rounded, size: 16, color: theme.colorScheme.outline),
+                        const SizedBox(width: 8),
+                        _buildScoreYear(context, '2023', 375),
+                        const SizedBox(width: 8),
+                        Icon(Icons.arrow_forward_rounded, size: 16, color: theme.colorScheme.outline),
+                        const SizedBox(width: 8),
+                        _buildScoreYear(context, '2024', 382, isHighlight: true),
+                      ],
+                    ),
                   ),
                   const SizedBox(height: 12),
                   // 微型可视化高度示意条

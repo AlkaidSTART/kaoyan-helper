@@ -49,28 +49,32 @@ class StatCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 10),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.baseline,
-              textBaseline: TextBaseline.alphabetic,
-              children: [
-                NumberTicker(
-                  value: value,
-                  suffix: suffix,
-                  style: theme.textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: valueColor ?? theme.colorScheme.onSurface,
-                  ),
-                ),
-                if (subtitle != null) ...[
-                  const SizedBox(width: 6),
-                  Text(
-                    subtitle!,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerLeft,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.baseline,
+                textBaseline: TextBaseline.alphabetic,
+                children: [
+                  NumberTicker(
+                    value: value,
+                    suffix: suffix,
+                    style: theme.textTheme.headlineMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: valueColor ?? theme.colorScheme.onSurface,
                     ),
                   ),
+                  if (subtitle != null) ...[
+                    const SizedBox(width: 6),
+                    Text(
+                      subtitle!,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
                 ],
-              ],
+              ),
             ),
           ],
         ),
