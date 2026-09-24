@@ -116,16 +116,32 @@ class SemanticColors extends ThemeExtension<SemanticColors> {
     if (other is! SemanticColors) return this;
     return SemanticColors(
       success: Color.lerp(success, other.success, t)!,
-      successContainer: Color.lerp(successContainer, other.successContainer, t)!,
+      successContainer: Color.lerp(
+        successContainer,
+        other.successContainer,
+        t,
+      )!,
       warning: Color.lerp(warning, other.warning, t)!,
-      warningContainer: Color.lerp(warningContainer, other.warningContainer, t)!,
+      warningContainer: Color.lerp(
+        warningContainer,
+        other.warningContainer,
+        t,
+      )!,
       danger: Color.lerp(danger, other.danger, t)!,
       dangerContainer: Color.lerp(dangerContainer, other.dangerContainer, t)!,
       politics: Color.lerp(politics, other.politics, t)!,
-      politicsContainer: Color.lerp(politicsContainer, other.politicsContainer, t)!,
+      politicsContainer: Color.lerp(
+        politicsContainer,
+        other.politicsContainer,
+        t,
+      )!,
       politicsText: Color.lerp(politicsText, other.politicsText, t)!,
       english: Color.lerp(english, other.english, t)!,
-      englishContainer: Color.lerp(englishContainer, other.englishContainer, t)!,
+      englishContainer: Color.lerp(
+        englishContainer,
+        other.englishContainer,
+        t,
+      )!,
       englishText: Color.lerp(englishText, other.englishText, t)!,
       math: Color.lerp(math, other.math, t)!,
       mathContainer: Color.lerp(mathContainer, other.mathContainer, t)!,

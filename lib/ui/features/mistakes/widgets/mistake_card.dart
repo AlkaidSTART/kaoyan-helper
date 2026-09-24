@@ -33,7 +33,8 @@ class MistakeCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final semantic = theme.extension<SemanticColors>() ?? SemanticColors.standard;
+    final semantic =
+        theme.extension<SemanticColors>() ?? SemanticColors.standard;
 
     Color statusColor = semantic.danger;
     String statusLabel = '待消除 (需连对 2 次消除)';
@@ -58,7 +59,10 @@ class MistakeCard extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 3,
+                  ),
                   decoration: BoxDecoration(
                     color: tagBgColor,
                     borderRadius: BorderRadius.circular(6),
@@ -115,7 +119,10 @@ class MistakeCard extends StatelessWidget {
                 ),
                 const SizedBox(width: 12),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 1,
+                  ),
                   decoration: BoxDecoration(
                     color: semantic.dangerContainer,
                     borderRadius: BorderRadius.circular(4),

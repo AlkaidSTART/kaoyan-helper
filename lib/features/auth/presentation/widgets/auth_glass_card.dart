@@ -14,7 +14,8 @@ class AuthGlassCard extends ConsumerStatefulWidget {
   ConsumerState<AuthGlassCard> createState() => _AuthGlassCardState();
 }
 
-class _AuthGlassCardState extends ConsumerState<AuthGlassCard> with SingleTickerProviderStateMixin {
+class _AuthGlassCardState extends ConsumerState<AuthGlassCard>
+    with SingleTickerProviderStateMixin {
   int _activeTab = 0; // 0: 验证码, 1: 密码
   final TextEditingController _targetController = TextEditingController();
   final TextEditingController _secretController = TextEditingController();
@@ -57,19 +58,21 @@ class _AuthGlassCardState extends ConsumerState<AuthGlassCard> with SingleTicker
   void _handleSendCode() async {
     final target = _targetController.text.trim();
     if (target.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('请输入手机号或邮箱')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('请输入手机号或邮箱')));
       _triggerShake();
       return;
     }
-    final success = await ref.read(authNotifierProvider.notifier).sendCode(target);
+    final success = await ref
+        .read(authNotifierProvider.notifier)
+        .sendCode(target);
     if (success && mounted) {
       setState(() => _countdownSeconds = 60);
       _startCountdown();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('验证码已发送 (测试环境可用 123456)')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('验证码已发送 (测试环境可用 123456)')));
     }
   }
 
@@ -88,9 +91,9 @@ class _AuthGlassCardState extends ConsumerState<AuthGlassCard> with SingleTicker
 
     if (!_agreedToTerms) {
       _triggerShake();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('请先勾选并同意服务协议与隐私政策')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('请先勾选并同意服务协议与隐私政策')));
       return;
     }
 
@@ -100,16 +103,22 @@ class _AuthGlassCardState extends ConsumerState<AuthGlassCard> with SingleTicker
     if (target.isEmpty || secret.isEmpty) {
       _triggerShake();
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(_activeTab == 0 ? '请填写完整的手机号/邮箱与验证码' : '请填写手机号/邮箱与密码')),
+        SnackBar(
+          content: Text(_activeTab == 0 ? '请填写完整的手机号/邮箱与验证码' : '请填写手机号/邮箱与密码'),
+        ),
       );
       return;
     }
 
     bool success = false;
     if (_activeTab == 0) {
-      success = await ref.read(authNotifierProvider.notifier).loginWithCode(target, secret);
+      success = await ref
+          .read(authNotifierProvider.notifier)
+          .loginWithCode(target, secret);
     } else {
-      success = await ref.read(authNotifierProvider.notifier).loginWithPassword(target, secret);
+      success = await ref
+          .read(authNotifierProvider.notifier)
+          .loginWithPassword(target, secret);
     }
 
     if (success && mounted) {
@@ -184,22 +193,33 @@ class _AuthGlassCardState extends ConsumerState<AuthGlassCard> with SingleTicker
                       onTap: () {
                         setState(() {
                           _targetController.text = '13800000000';
-                          _secretController.text = _activeTab == 0 ? '123456' : 'password123';
+                          _secretController.text = _activeTab == 0
+                              ? '123456'
+                              : 'password123';
                           _agreedToTerms = true;
                         });
                         ref.read(authNotifierProvider.notifier).clearError();
                       },
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
                         decoration: BoxDecoration(
                           color: const Color(0xFFE67E22).withAlpha(25),
                           borderRadius: BorderRadius.circular(6),
-                          border: Border.all(color: const Color(0xFFE67E22).withAlpha(60)),
+                          border: Border.all(
+                            color: const Color(0xFFE67E22).withAlpha(60),
+                          ),
                         ),
                         child: const Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(Icons.bolt_outlined, size: 13, color: Color(0xFFE67E22)),
+                            Icon(
+                              Icons.bolt_outlined,
+                              size: 13,
+                              color: Color(0xFFE67E22),
+                            ),
                             SizedBox(width: 2),
                             Text(
                               '填入测试账号',
@@ -237,20 +257,32 @@ class _AuthGlassCardState extends ConsumerState<AuthGlassCard> with SingleTicker
                 // 错误提示条
                 if (authState.errorMessage != null) ...[
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
                     decoration: BoxDecoration(
                       color: const Color(0xFFFBECEB),
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: const Color(0xFFD4453A).withAlpha(60)),
+                      border: Border.all(
+                        color: const Color(0xFFD4453A).withAlpha(60),
+                      ),
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.error_outline_rounded, size: 16, color: Color(0xFFD4453A)),
+                        const Icon(
+                          Icons.error_outline_rounded,
+                          size: 16,
+                          color: Color(0xFFD4453A),
+                        ),
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
                             authState.errorMessage!,
-                            style: const TextStyle(fontSize: 12, color: Color(0xFFD4453A)),
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Color(0xFFD4453A),
+                            ),
                           ),
                         ),
                       ],
@@ -375,7 +407,9 @@ class _AuthGlassCardState extends ConsumerState<AuthGlassCard> with SingleTicker
             style: TextStyle(
               fontSize: 13,
               fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-              color: isSelected ? const Color(0xFF204374) : const Color(0xFF7C6B5D),
+              color: isSelected
+                  ? const Color(0xFF204374)
+                  : const Color(0xFF7C6B5D),
             ),
           ),
         ),
@@ -394,10 +428,7 @@ class _AuthGlassCardState extends ConsumerState<AuthGlassCard> with SingleTicker
       decoration: BoxDecoration(
         color: Colors.white.withAlpha(180),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: const Color(0xFFDFD5CA),
-          width: 1.5,
-        ),
+        border: Border.all(color: const Color(0xFFDFD5CA), width: 1.5),
       ),
       child: TextField(
         controller: controller,
@@ -408,7 +439,10 @@ class _AuthGlassCardState extends ConsumerState<AuthGlassCard> with SingleTicker
           hintStyle: const TextStyle(fontSize: 13, color: Color(0xFFB0A395)),
           prefixIcon: Icon(icon, size: 18, color: const Color(0xFF7C6B5D)),
           border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 12,
+            vertical: 12,
+          ),
         ),
       ),
     );
@@ -420,10 +454,7 @@ class _AuthGlassCardState extends ConsumerState<AuthGlassCard> with SingleTicker
       decoration: BoxDecoration(
         color: Colors.white.withAlpha(180),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: const Color(0xFFDFD5CA),
-          width: 1.5,
-        ),
+        border: Border.all(color: const Color(0xFFDFD5CA), width: 1.5),
       ),
       child: Row(
         children: [
@@ -436,10 +467,17 @@ class _AuthGlassCardState extends ConsumerState<AuthGlassCard> with SingleTicker
               decoration: const InputDecoration(
                 hintText: '6 位验证码',
                 hintStyle: TextStyle(fontSize: 13, color: Color(0xFFB0A395)),
-                prefixIcon: Icon(Icons.shield_outlined, size: 18, color: Color(0xFF7C6B5D)),
+                prefixIcon: Icon(
+                  Icons.shield_outlined,
+                  size: 18,
+                  color: Color(0xFF7C6B5D),
+                ),
                 counterText: '',
                 border: InputBorder.none,
-                contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 12,
+                ),
               ),
             ),
           ),
@@ -474,10 +512,7 @@ class _AuthGlassCardState extends ConsumerState<AuthGlassCard> with SingleTicker
       decoration: BoxDecoration(
         color: Colors.white.withAlpha(180),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: const Color(0xFFDFD5CA),
-          width: 1.5,
-        ),
+        border: Border.all(color: const Color(0xFFDFD5CA), width: 1.5),
       ),
       child: TextField(
         controller: _secretController,
@@ -486,17 +521,27 @@ class _AuthGlassCardState extends ConsumerState<AuthGlassCard> with SingleTicker
         decoration: InputDecoration(
           hintText: '请输入登录密码',
           hintStyle: const TextStyle(fontSize: 13, color: Color(0xFFB0A395)),
-          prefixIcon: const Icon(Icons.lock_outline_rounded, size: 18, color: Color(0xFF7C6B5D)),
+          prefixIcon: const Icon(
+            Icons.lock_outline_rounded,
+            size: 18,
+            color: Color(0xFF7C6B5D),
+          ),
           suffixIcon: IconButton(
             icon: Icon(
-              _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+              _obscurePassword
+                  ? Icons.visibility_off_outlined
+                  : Icons.visibility_outlined,
               size: 18,
               color: const Color(0xFF7C6B5D),
             ),
-            onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+            onPressed: () =>
+                setState(() => _obscurePassword = !_obscurePassword),
           ),
           border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 12,
+            vertical: 12,
+          ),
         ),
       ),
     );

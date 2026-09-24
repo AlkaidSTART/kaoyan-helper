@@ -21,9 +21,27 @@ class _SchoolsViewState extends State<SchoolsView> {
       'isTarget': true,
       'tags': ['985', '211', '双一流'],
       'trendData': [
-        {'year': 2024, 'plan': 45, 'applied': 380, 'admitted': 48, 'score': 382},
-        {'year': 2023, 'plan': 40, 'applied': 350, 'admitted': 42, 'score': 375},
-        {'year': 2022, 'plan': 38, 'applied': 300, 'admitted': 38, 'score': 360},
+        {
+          'year': 2024,
+          'plan': 45,
+          'applied': 380,
+          'admitted': 48,
+          'score': 382,
+        },
+        {
+          'year': 2023,
+          'plan': 40,
+          'applied': 350,
+          'admitted': 42,
+          'score': 375,
+        },
+        {
+          'year': 2022,
+          'plan': 38,
+          'applied': 300,
+          'admitted': 38,
+          'score': 360,
+        },
       ],
     },
     {
@@ -34,9 +52,27 @@ class _SchoolsViewState extends State<SchoolsView> {
       'isTarget': false,
       'tags': ['985', '211', '双一流'],
       'trendData': [
-        {'year': 2024, 'plan': 60, 'applied': 310, 'admitted': 62, 'score': 355},
-        {'year': 2023, 'plan': 55, 'applied': 290, 'admitted': 56, 'score': 350},
-        {'year': 2022, 'plan': 50, 'applied': 260, 'admitted': 52, 'score': 345},
+        {
+          'year': 2024,
+          'plan': 60,
+          'applied': 310,
+          'admitted': 62,
+          'score': 355,
+        },
+        {
+          'year': 2023,
+          'plan': 55,
+          'applied': 290,
+          'admitted': 56,
+          'score': 350,
+        },
+        {
+          'year': 2022,
+          'plan': 50,
+          'applied': 260,
+          'admitted': 52,
+          'score': 345,
+        },
       ],
     },
     {
@@ -47,9 +83,27 @@ class _SchoolsViewState extends State<SchoolsView> {
       'isTarget': false,
       'tags': ['985', '211', '双一流'],
       'trendData': [
-        {'year': 2024, 'plan': 35, 'applied': 410, 'admitted': 36, 'score': 390},
-        {'year': 2023, 'plan': 30, 'applied': 360, 'admitted': 32, 'score': 385},
-        {'year': 2022, 'plan': 30, 'applied': 330, 'admitted': 30, 'score': 378},
+        {
+          'year': 2024,
+          'plan': 35,
+          'applied': 410,
+          'admitted': 36,
+          'score': 390,
+        },
+        {
+          'year': 2023,
+          'plan': 30,
+          'applied': 360,
+          'admitted': 32,
+          'score': 385,
+        },
+        {
+          'year': 2022,
+          'plan': 30,
+          'applied': 330,
+          'admitted': 30,
+          'score': 378,
+        },
       ],
     },
     {
@@ -60,9 +114,27 @@ class _SchoolsViewState extends State<SchoolsView> {
       'isTarget': false,
       'tags': ['211', '双一流'],
       'trendData': [
-        {'year': 2024, 'plan': 70, 'applied': 300, 'admitted': 72, 'score': 340},
-        {'year': 2023, 'plan': 65, 'applied': 280, 'admitted': 66, 'score': 335},
-        {'year': 2022, 'plan': 60, 'applied': 250, 'admitted': 62, 'score': 330},
+        {
+          'year': 2024,
+          'plan': 70,
+          'applied': 300,
+          'admitted': 72,
+          'score': 340,
+        },
+        {
+          'year': 2023,
+          'plan': 65,
+          'applied': 280,
+          'admitted': 66,
+          'score': 335,
+        },
+        {
+          'year': 2022,
+          'plan': 60,
+          'applied': 250,
+          'admitted': 62,
+          'score': 330,
+        },
       ],
     },
   ];
@@ -81,7 +153,8 @@ class _SchoolsViewState extends State<SchoolsView> {
     final filtered = _schools.where((s) {
       final name = (s['schoolName'] as String).toLowerCase();
       final major = (s['majorCodeName'] as String).toLowerCase();
-      final matchesKeyword = keyword.isEmpty || name.contains(keyword) || major.contains(keyword);
+      final matchesKeyword =
+          keyword.isEmpty || name.contains(keyword) || major.contains(keyword);
       final tags = s['tags'] as List<String>;
       final matchesTag = _selectedTag == '全部' || tags.contains(_selectedTag);
       return matchesKeyword && matchesTag;
@@ -102,13 +175,21 @@ class _SchoolsViewState extends State<SchoolsView> {
                     onChanged: (_) => setState(() {}),
                     decoration: InputDecoration(
                       hintText: '搜索院校或专业代码 (例: 浙江大学 / 085404)',
-                      hintStyle: TextStyle(color: theme.colorScheme.outline, fontSize: 13),
+                      hintStyle: TextStyle(
+                        color: theme.colorScheme.outline,
+                        fontSize: 13,
+                      ),
                       prefixIcon: const Icon(Icons.search_rounded, size: 20),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: theme.colorScheme.outlineVariant),
+                        borderSide: BorderSide(
+                          color: theme.colorScheme.outlineVariant,
+                        ),
                       ),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 10,
+                      ),
                     ),
                   ),
                 ),
@@ -155,7 +236,9 @@ class _SchoolsViewState extends State<SchoolsView> {
                   ratio: school['ratio'],
                   isTarget: school['isTarget'],
                   tags: List<String>.from(school['tags']),
-                  trendData: List<Map<String, dynamic>>.from(school['trendData']),
+                  trendData: List<Map<String, dynamic>>.from(
+                    school['trendData'],
+                  ),
                   onTargetToggle: (isTarget) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(

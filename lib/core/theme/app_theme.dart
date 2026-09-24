@@ -65,9 +65,7 @@ class AppTheme {
         ),
         indicatorColor: colorScheme.primaryContainer,
       ),
-      extensions: const [
-        SemanticColors.standard,
-      ],
+      extensions: const [SemanticColors.standard],
     );
   }
 }

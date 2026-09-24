@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
 
 Duration accessibleDuration(BuildContext context, Duration normal) {
-  final disable = MediaQuery.maybeDisableAnimationsOf(context) ??
-      WidgetsBinding.instance.platformDispatcher.accessibilityFeatures.reduceMotion;
+  final disable =
+      MediaQuery.maybeDisableAnimationsOf(context) ??
+      WidgetsBinding
+          .instance
+          .platformDispatcher
+          .accessibilityFeatures
+          .reduceMotion;
   return disable ? Duration.zero : normal;
 }
 
@@ -20,17 +25,17 @@ class NumberTicker extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final duration = accessibleDuration(context, const Duration(milliseconds: 350));
+    final duration = accessibleDuration(
+      context,
+      const Duration(milliseconds: 350),
+    );
 
     return TweenAnimationBuilder<int>(
       tween: IntTween(begin: 0, end: value),
       duration: duration,
       curve: Curves.easeOutCubic,
       builder: (context, val, child) {
-        return Text(
-          '$val$suffix',
-          style: style,
-        );
+        return Text('$val$suffix', style: style);
       },
     );
   }

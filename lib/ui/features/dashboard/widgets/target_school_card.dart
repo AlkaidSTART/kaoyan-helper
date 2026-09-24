@@ -8,7 +8,8 @@ class TargetSchoolCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final semantic = theme.extension<SemanticColors>() ?? SemanticColors.standard;
+    final semantic =
+        theme.extension<SemanticColors>() ?? SemanticColors.standard;
 
     // 报录比 8.2:1 处于 5-10 之间，属于 warning 语义色
     const ratio = 8.2;
@@ -100,13 +101,26 @@ class TargetSchoolCard extends StatelessWidget {
                       children: [
                         _buildScoreYear(context, '2022', 360),
                         const SizedBox(width: 8),
-                        Icon(Icons.arrow_forward_rounded, size: 16, color: theme.colorScheme.outline),
+                        Icon(
+                          Icons.arrow_forward_rounded,
+                          size: 16,
+                          color: theme.colorScheme.outline,
+                        ),
                         const SizedBox(width: 8),
                         _buildScoreYear(context, '2023', 375),
                         const SizedBox(width: 8),
-                        Icon(Icons.arrow_forward_rounded, size: 16, color: theme.colorScheme.outline),
+                        Icon(
+                          Icons.arrow_forward_rounded,
+                          size: 16,
+                          color: theme.colorScheme.outline,
+                        ),
                         const SizedBox(width: 8),
-                        _buildScoreYear(context, '2024', 382, isHighlight: true),
+                        _buildScoreYear(
+                          context,
+                          '2024',
+                          382,
+                          isHighlight: true,
+                        ),
                       ],
                     ),
                   ),
@@ -144,7 +158,12 @@ class TargetSchoolCard extends StatelessWidget {
     );
   }
 
-  Widget _buildScoreYear(BuildContext context, String year, int score, {bool isHighlight = false}) {
+  Widget _buildScoreYear(
+    BuildContext context,
+    String year,
+    int score, {
+    bool isHighlight = false,
+  }) {
     final theme = Theme.of(context);
     return Column(
       children: [
@@ -160,14 +179,21 @@ class TargetSchoolCard extends StatelessWidget {
           style: TextStyle(
             fontSize: 14,
             fontWeight: isHighlight ? FontWeight.bold : FontWeight.w500,
-            color: isHighlight ? theme.colorScheme.primary : theme.colorScheme.onSurface,
+            color: isHighlight
+                ? theme.colorScheme.primary
+                : theme.colorScheme.onSurface,
           ),
         ),
       ],
     );
   }
 
-  Widget _buildBar(BuildContext context, int score, int maxScore, {bool isHighlight = false}) {
+  Widget _buildBar(
+    BuildContext context,
+    int score,
+    int maxScore, {
+    bool isHighlight = false,
+  }) {
     final theme = Theme.of(context);
     final ratio = score / maxScore;
     return Expanded(

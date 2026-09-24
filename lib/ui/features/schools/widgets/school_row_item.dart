@@ -41,14 +41,17 @@ class _SchoolRowItemState extends State<SchoolRowItem> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final semantic = theme.extension<SemanticColors>() ?? SemanticColors.standard;
+    final semantic =
+        theme.extension<SemanticColors>() ?? SemanticColors.standard;
 
     final Color ratioColor = widget.ratio > 10
         ? semantic.danger
         : (widget.ratio >= 5 ? semantic.warning : semantic.success);
     final Color ratioBgColor = widget.ratio > 10
         ? semantic.dangerContainer
-        : (widget.ratio >= 5 ? semantic.warningContainer : semantic.successContainer);
+        : (widget.ratio >= 5
+              ? semantic.warningContainer
+              : semantic.successContainer);
 
     return Card(
       elevation: 0,
@@ -80,9 +83,13 @@ class _SchoolRowItemState extends State<SchoolRowItem> {
                             for (final tag in widget.tags) ...[
                               Container(
                                 margin: const EdgeInsets.only(right: 4),
-                                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 5,
+                                  vertical: 1,
+                                ),
                                 decoration: BoxDecoration(
-                                  color: theme.colorScheme.surfaceContainerHighest,
+                                  color:
+                                      theme.colorScheme.surfaceContainerHighest,
                                   borderRadius: BorderRadius.circular(4),
                                 ),
                                 child: Text(
@@ -113,7 +120,10 @@ class _SchoolRowItemState extends State<SchoolRowItem> {
                     child: Row(
                       children: [
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
                           decoration: BoxDecoration(
                             color: ratioBgColor,
                             borderRadius: BorderRadius.circular(6),
@@ -142,8 +152,12 @@ class _SchoolRowItemState extends State<SchoolRowItem> {
                   IconButton(
                     tooltip: _isTarget ? '已设为一志愿目标' : '设为目标院校',
                     icon: Icon(
-                      _isTarget ? Icons.star_rounded : Icons.star_outline_rounded,
-                      color: _isTarget ? theme.colorScheme.primary : theme.colorScheme.outline,
+                      _isTarget
+                          ? Icons.star_rounded
+                          : Icons.star_outline_rounded,
+                      color: _isTarget
+                          ? theme.colorScheme.primary
+                          : theme.colorScheme.outline,
                     ),
                     onPressed: () {
                       setState(() => _isTarget = !_isTarget);
@@ -152,7 +166,9 @@ class _SchoolRowItemState extends State<SchoolRowItem> {
                   ),
                   const SizedBox(width: 8),
                   Icon(
-                    _isExpanded ? Icons.keyboard_arrow_up_rounded : Icons.keyboard_arrow_down_rounded,
+                    _isExpanded
+                        ? Icons.keyboard_arrow_up_rounded
+                        : Icons.keyboard_arrow_down_rounded,
                     color: theme.colorScheme.outline,
                   ),
                 ],
@@ -163,10 +179,15 @@ class _SchoolRowItemState extends State<SchoolRowItem> {
           // 展开的 3 年历年趋势
           if (_isExpanded)
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 14.0),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 20.0,
+                vertical: 14.0,
+              ),
               decoration: BoxDecoration(
                 color: theme.colorScheme.surfaceContainerLowest,
-                borderRadius: const BorderRadius.vertical(bottom: Radius.circular(12)),
+                borderRadius: const BorderRadius.vertical(
+                  bottom: Radius.circular(12),
+                ),
                 border: Border(
                   top: BorderSide(color: theme.colorScheme.outlineVariant),
                 ),

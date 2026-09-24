@@ -22,7 +22,8 @@ class QuizOptionCard extends StatefulWidget {
   State<QuizOptionCard> createState() => _QuizOptionCardState();
 }
 
-class _QuizOptionCardState extends State<QuizOptionCard> with SingleTickerProviderStateMixin {
+class _QuizOptionCardState extends State<QuizOptionCard>
+    with SingleTickerProviderStateMixin {
   late final AnimationController _shakeController;
   late final Animation<double> _shakeAnimation;
 
@@ -45,7 +46,8 @@ class _QuizOptionCardState extends State<QuizOptionCard> with SingleTickerProvid
   @override
   void didUpdateWidget(covariant QuizOptionCard oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.state == OptionFeedbackState.wrong && oldWidget.state != OptionFeedbackState.wrong) {
+    if (widget.state == OptionFeedbackState.wrong &&
+        oldWidget.state != OptionFeedbackState.wrong) {
       _shakeController.forward(from: 0.0);
     }
   }
@@ -129,12 +131,20 @@ class _QuizOptionCardState extends State<QuizOptionCard> with SingleTickerProvid
           if (widget.state == OptionFeedbackState.correct)
             const Padding(
               padding: EdgeInsets.only(left: 8.0),
-              child: Icon(Icons.check_circle_rounded, color: Color(0xFF2E9E6E), size: 20),
+              child: Icon(
+                Icons.check_circle_rounded,
+                color: Color(0xFF2E9E6E),
+                size: 20,
+              ),
             )
           else if (widget.state == OptionFeedbackState.wrong)
             const Padding(
               padding: EdgeInsets.only(left: 8.0),
-              child: Icon(Icons.cancel_rounded, color: Color(0xFFD4453A), size: 20),
+              child: Icon(
+                Icons.cancel_rounded,
+                color: Color(0xFFD4453A),
+                size: 20,
+              ),
             ),
         ],
       ),

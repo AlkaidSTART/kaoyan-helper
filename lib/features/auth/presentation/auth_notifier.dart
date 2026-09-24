@@ -41,7 +41,11 @@ class AuthNotifier extends Notifier<AuthState> {
     final repo = ref.read(authRepositoryProvider);
     try {
       final user = await repo.loginWithCode(target, code);
-      state = state.copyWith(isAuthenticated: true, isLoading: false, currentUser: user);
+      state = state.copyWith(
+        isAuthenticated: true,
+        isLoading: false,
+        currentUser: user,
+      );
       return true;
     } on AppException catch (e) {
       state = state.copyWith(isLoading: false, errorMessage: e.message);
@@ -57,7 +61,11 @@ class AuthNotifier extends Notifier<AuthState> {
     final repo = ref.read(authRepositoryProvider);
     try {
       final user = await repo.loginWithPassword(target, password);
-      state = state.copyWith(isAuthenticated: true, isLoading: false, currentUser: user);
+      state = state.copyWith(
+        isAuthenticated: true,
+        isLoading: false,
+        currentUser: user,
+      );
       return true;
     } on AppException catch (e) {
       state = state.copyWith(isLoading: false, errorMessage: e.message);
@@ -102,4 +110,6 @@ class AuthNotifier extends Notifier<AuthState> {
   }
 }
 
-final authNotifierProvider = NotifierProvider<AuthNotifier, AuthState>(AuthNotifier.new);
+final authNotifierProvider = NotifierProvider<AuthNotifier, AuthState>(
+  AuthNotifier.new,
+);

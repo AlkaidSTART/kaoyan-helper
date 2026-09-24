@@ -27,14 +27,16 @@ class _FlashcardsViewState extends State<FlashcardsView> {
       'phonetic': '/ˈvʌlnərəbl/',
       'meaning': 'adj. 易受伤害的，脆弱的；有弱点的',
       'collocation': '核心考点: be vulnerable to (极易受……侵害)',
-      'example': 'Small businesses are particularly vulnerable in times of economic recession.',
+      'example':
+          'Small businesses are particularly vulnerable in times of economic recession.',
     },
     {
       'word': 'arbitrary',
       'phonetic': '/ˈɑːrbɪtreri/',
       'meaning': 'adj. 任意的，专断的，随心所欲的',
       'collocation': '阅读搭配: make an arbitrary decision (做出武断的裁决)',
-      'example': 'The committee was accused of making arbitrary decisions without consulting members.',
+      'example':
+          'The committee was accused of making arbitrary decisions without consulting members.',
     },
   ];
 
@@ -54,7 +56,8 @@ class _FlashcardsViewState extends State<FlashcardsView> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final semantic = theme.extension<SemanticColors>() ?? SemanticColors.standard;
+    final semantic =
+        theme.extension<SemanticColors>() ?? SemanticColors.standard;
     final card = _deck[_currentIndex];
     final progress = (_currentIndex + 1) / _deck.length;
 
@@ -72,7 +75,11 @@ class _FlashcardsViewState extends State<FlashcardsView> {
                 children: [
                   Row(
                     children: [
-                      Icon(Icons.style_outlined, size: 20, color: theme.colorScheme.primary),
+                      Icon(
+                        Icons.style_outlined,
+                        size: 20,
+                        color: theme.colorScheme.primary,
+                      ),
                       const SizedBox(width: 8),
                       Text(
                         '英语大纲高频核心词',
@@ -189,11 +196,18 @@ class _FlashcardsViewState extends State<FlashcardsView> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.touch_app_outlined, size: 16, color: theme.colorScheme.outline),
+                  Icon(
+                    Icons.touch_app_outlined,
+                    size: 16,
+                    color: theme.colorScheme.outline,
+                  ),
                   const SizedBox(width: 6),
                   Text(
                     '点击卡片任意处或按空格翻转查看释义',
-                    style: TextStyle(fontSize: 12, color: theme.colorScheme.outline),
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: theme.colorScheme.outline,
+                    ),
                   ),
                 ],
               ),

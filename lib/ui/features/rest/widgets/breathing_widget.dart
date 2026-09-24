@@ -7,7 +7,8 @@ class BreathingWidget extends StatefulWidget {
   State<BreathingWidget> createState() => _BreathingWidgetState();
 }
 
-class _BreathingWidgetState extends State<BreathingWidget> with SingleTickerProviderStateMixin {
+class _BreathingWidgetState extends State<BreathingWidget>
+    with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
   String _guideText = '吸气……';
 

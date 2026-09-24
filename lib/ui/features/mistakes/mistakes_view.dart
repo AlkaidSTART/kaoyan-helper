@@ -28,7 +28,8 @@ class _MistakesViewState extends State<MistakesView> {
       'id': 'm2',
       'subjectId': 2,
       'tag': '英 · 阅读',
-      'stem': 'According to the passage, the primary reason for environmental changes is not merely natural shifts but...',
+      'stem':
+          'According to the passage, the primary reason for environmental changes is not merely natural shifts but...',
       'lastWrongTime': '昨天 15:20',
       'wrongCount': 2,
       'status': MistakeStatus.critical,
@@ -47,20 +48,40 @@ class _MistakesViewState extends State<MistakesView> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final semantic = theme.extension<SemanticColors>() ?? SemanticColors.standard;
+    final semantic =
+        theme.extension<SemanticColors>() ?? SemanticColors.standard;
 
     final subjectChips = [
-      {'name': '全部', 'bg': theme.colorScheme.surfaceContainerHighest, 'text': theme.colorScheme.onSurface},
-      {'name': '思想政治', 'bg': semantic.politicsContainer, 'text': semantic.politicsText},
-      {'name': '考研英语', 'bg': semantic.englishContainer, 'text': semantic.englishText},
+      {
+        'name': '全部',
+        'bg': theme.colorScheme.surfaceContainerHighest,
+        'text': theme.colorScheme.onSurface,
+      },
+      {
+        'name': '思想政治',
+        'bg': semantic.politicsContainer,
+        'text': semantic.politicsText,
+      },
+      {
+        'name': '考研英语',
+        'bg': semantic.englishContainer,
+        'text': semantic.englishText,
+      },
       {'name': '考研数学', 'bg': semantic.mathContainer, 'text': semantic.mathText},
-      {'name': '专业课', 'bg': semantic.majorContainer, 'text': semantic.majorText},
+      {
+        'name': '专业课',
+        'bg': semantic.majorContainer,
+        'text': semantic.majorText,
+      },
     ];
 
     final filteredMistakes = _mistakes.where((m) {
-      if (_selectedSubject != 0 && m['subjectId'] != _selectedSubject) return false;
-      if (_selectedStatus == 0 && m['status'] == MistakeStatus.mastered) return false;
-      if (_selectedStatus == 1 && m['status'] != MistakeStatus.mastered) return false;
+      if (_selectedSubject != 0 && m['subjectId'] != _selectedSubject)
+        return false;
+      if (_selectedStatus == 0 && m['status'] == MistakeStatus.mastered)
+        return false;
+      if (_selectedStatus == 1 && m['status'] != MistakeStatus.mastered)
+        return false;
       return true;
     }).toList();
 
@@ -81,8 +102,12 @@ class _MistakesViewState extends State<MistakesView> {
                       subjectChips[i]['name'] as String,
                       style: TextStyle(
                         fontSize: 12,
-                        fontWeight: _selectedSubject == i ? FontWeight.bold : FontWeight.normal,
-                        color: _selectedSubject == i ? Colors.white : subjectChips[i]['text'] as Color,
+                        fontWeight: _selectedSubject == i
+                            ? FontWeight.bold
+                            : FontWeight.normal,
+                        color: _selectedSubject == i
+                            ? Colors.white
+                            : subjectChips[i]['text'] as Color,
                       ),
                     ),
                     selected: _selectedSubject == i,
@@ -156,10 +181,14 @@ class _MistakesViewState extends State<MistakesView> {
                   tag: m['tag'],
                   tagBgColor: m['subjectId'] == 1
                       ? semantic.politicsContainer
-                      : (m['subjectId'] == 2 ? semantic.englishContainer : semantic.majorContainer),
+                      : (m['subjectId'] == 2
+                            ? semantic.englishContainer
+                            : semantic.majorContainer),
                   tagTextColor: m['subjectId'] == 1
                       ? semantic.politicsText
-                      : (m['subjectId'] == 2 ? semantic.englishText : semantic.majorText),
+                      : (m['subjectId'] == 2
+                            ? semantic.englishText
+                            : semantic.majorText),
                   stem: m['stem'],
                   lastWrongTime: m['lastWrongTime'],
                   wrongCount: m['wrongCount'],

@@ -28,7 +28,9 @@ class _SunriseSubmitButtonState extends State<SunriseSubmitButton> {
       child: GestureDetector(
         onTapDown: isEnabled ? (_) => setState(() => _isPressed = true) : null,
         onTapUp: isEnabled ? (_) => setState(() => _isPressed = false) : null,
-        onTapCancel: isEnabled ? () => setState(() => _isPressed = false) : null,
+        onTapCancel: isEnabled
+            ? () => setState(() => _isPressed = false)
+            : null,
         onTap: isEnabled ? widget.onPressed : null,
         child: AnimatedScale(
           scale: _isPressed ? 0.98 : 1.0,
@@ -48,10 +50,7 @@ class _SunriseSubmitButtonState extends State<SunriseSubmitButton> {
                       end: Alignment.centerRight,
                     )
                   : const LinearGradient(
-                      colors: [
-                        Color(0xFFDFD5CA),
-                        Color(0xFFEADFD4),
-                      ],
+                      colors: [Color(0xFFDFD5CA), Color(0xFFEADFD4)],
                     ),
               borderRadius: BorderRadius.circular(14),
               boxShadow: isEnabled

@@ -35,12 +35,7 @@ class _QuizViewState extends ConsumerState<QuizView> {
       'subject': '政治 · 史纲',
       'tag': '2023 真题 · 单选',
       'stem': '标志着中国共产党在政治上开始走向成熟的会议是：',
-      'options': [
-        '中共二大',
-        '八七会议',
-        '遵义会议',
-        '中共七大',
-      ],
+      'options': ['中共二大', '八七会议', '遵义会议', '中共七大'],
       'correctIndex': 2,
       'explanation':
           '遵义会议确立了以毛泽东为代表的马克思主义正确路线在中共中央的领导地位，在极其危急的情况下挽救了党、挽救了红军、挽救了中国革命，是中国共产党第一次独立自主地运用马克思列宁主义基本原理解决中国革命的路线、方针和政策问题，标志着中国共产党在政治上开始走向成熟。',
@@ -57,7 +52,8 @@ class _QuizViewState extends ConsumerState<QuizView> {
 
   void _handleNext() {
     setState(() {
-      _currentQuestionIndex = (_currentQuestionIndex + 1) % _mockQuestions.length;
+      _currentQuestionIndex =
+          (_currentQuestionIndex + 1) % _mockQuestions.length;
       _selectedIndex = null;
       _isAnswered = false;
     });
@@ -66,7 +62,8 @@ class _QuizViewState extends ConsumerState<QuizView> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final semantic = theme.extension<SemanticColors>() ?? SemanticColors.standard;
+    final semantic =
+        theme.extension<SemanticColors>() ?? SemanticColors.standard;
     final q = _mockQuestions[_currentQuestionIndex];
     final letters = ['A', 'B', 'C', 'D'];
 
@@ -85,7 +82,10 @@ class _QuizViewState extends ConsumerState<QuizView> {
                   Row(
                     children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
                           color: semantic.politicsContainer,
                           borderRadius: BorderRadius.circular(6),
@@ -101,7 +101,10 @@ class _QuizViewState extends ConsumerState<QuizView> {
                       ),
                       const SizedBox(width: 10),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
                           color: theme.colorScheme.surfaceContainerHighest,
                           borderRadius: BorderRadius.circular(6),
@@ -172,7 +175,9 @@ class _QuizViewState extends ConsumerState<QuizView> {
                 duration: const Duration(milliseconds: 250),
                 firstCurve: Curves.easeOutCubic,
                 secondCurve: Curves.easeInCubic,
-                crossFadeState: _isAnswered ? CrossFadeState.showSecond : CrossFadeState.showFirst,
+                crossFadeState: _isAnswered
+                    ? CrossFadeState.showSecond
+                    : CrossFadeState.showFirst,
                 firstChild: const SizedBox(width: double.infinity),
                 secondChild: Container(
                   width: double.infinity,
@@ -187,7 +192,11 @@ class _QuizViewState extends ConsumerState<QuizView> {
                     children: [
                       Row(
                         children: [
-                          Icon(Icons.check_circle_outline_rounded, size: 20, color: semantic.success),
+                          Icon(
+                            Icons.check_circle_outline_rounded,
+                            size: 20,
+                            color: semantic.success,
+                          ),
                           const SizedBox(width: 8),
                           Text(
                             '正确答案: ${letters[q['correctIndex']]}',
@@ -203,7 +212,11 @@ class _QuizViewState extends ConsumerState<QuizView> {
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Icon(Icons.menu_book_outlined, size: 18, color: theme.colorScheme.primary),
+                          Icon(
+                            Icons.menu_book_outlined,
+                            size: 18,
+                            color: theme.colorScheme.primary,
+                          ),
                           const SizedBox(width: 8),
                           Text(
                             '官方解析：',
@@ -233,7 +246,9 @@ class _QuizViewState extends ConsumerState<QuizView> {
                         children: [
                           OutlinedButton.icon(
                             onPressed: () {
-                              ref.read(aiPanelExpandedProvider.notifier).setExpanded(true);
+                              ref
+                                  .read(aiPanelExpandedProvider.notifier)
+                                  .setExpanded(true);
                             },
                             icon: const Icon(Icons.auto_awesome, size: 18),
                             label: const Text('AI 深度解析'),
@@ -241,7 +256,10 @@ class _QuizViewState extends ConsumerState<QuizView> {
                           const Spacer(),
                           FilledButton.icon(
                             onPressed: _handleNext,
-                            icon: const Icon(Icons.arrow_forward_rounded, size: 18),
+                            icon: const Icon(
+                              Icons.arrow_forward_rounded,
+                              size: 18,
+                            ),
                             label: const Text('下一题'),
                           ),
                         ],

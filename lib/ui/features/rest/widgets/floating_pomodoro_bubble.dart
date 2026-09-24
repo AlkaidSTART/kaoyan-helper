@@ -6,10 +6,12 @@ class FloatingPomodoroBubble extends ConsumerStatefulWidget {
   const FloatingPomodoroBubble({super.key});
 
   @override
-  ConsumerState<FloatingPomodoroBubble> createState() => _FloatingPomodoroBubbleState();
+  ConsumerState<FloatingPomodoroBubble> createState() =>
+      _FloatingPomodoroBubbleState();
 }
 
-class _FloatingPomodoroBubbleState extends ConsumerState<FloatingPomodoroBubble> {
+class _FloatingPomodoroBubbleState
+    extends ConsumerState<FloatingPomodoroBubble> {
   bool _isExpanded = false;
   int _selectedMinutes = 25;
   bool _isRunning = true;
@@ -17,11 +19,17 @@ class _FloatingPomodoroBubbleState extends ConsumerState<FloatingPomodoroBubble>
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isAiExpanded = ref.watch(aiPanelExpandedProvider);
+
+    // 当右侧 AI 助教抽屉展开时，番茄钟自动左移避让 400px
+    final double rightOffset = isAiExpanded ? 420.0 : 20.0;
 
     if (!_isExpanded) {
-      // 收起态：48x48dp 小球，环形进度圈，中间显示 24m
-      return Positioned(
-        right: 20,
+      // 收起态：48x48dp 小球，环形进度圈，中间显示 25m
+      return AnimatedPositioned(
+        duration: const Duration(milliseconds: 240),
+        curve: Curves.easeOutCubic,
+        right: rightOffset,
         bottom: 30,
         child: MouseRegion(
           cursor: SystemMouseCursors.click,
@@ -71,8 +79,10 @@ class _FloatingPomodoroBubbleState extends ConsumerState<FloatingPomodoroBubble>
     }
 
     // 展开态：260x180dp 卡片
-    return Positioned(
-      right: 20,
+    return AnimatedPositioned(
+      duration: const Duration(milliseconds: 240),
+      curve: Curves.easeOutCubic,
+      right: rightOffset,
       bottom: 30,
       child: Material(
         color: Colors.transparent,
@@ -100,11 +110,18 @@ class _FloatingPomodoroBubbleState extends ConsumerState<FloatingPomodoroBubble>
                 children: [
                   Row(
                     children: [
-                      Icon(Icons.timer_outlined, size: 18, color: theme.colorScheme.primary),
+                      Icon(
+                        Icons.timer_outlined,
+                        size: 18,
+                        color: theme.colorScheme.primary,
+                      ),
                       const SizedBox(width: 6),
                       const Text(
                         '番茄专注钟',
-                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 13,
+                        ),
                       ),
                     ],
                   ),
@@ -118,14 +135,19 @@ class _FloatingPomodoroBubbleState extends ConsumerState<FloatingPomodoroBubble>
               ),
               const SizedBox(height: 12),
 
-              // 模式选择
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  _buildModeChip('专注 25m', 25),
-                  _buildModeChip('深度 50m', 50),
-                  _buildModeChip('短休 5m', 5),
-                ],
+              // 模式选择（FittedBox 确保在不同字体和系统下绝对不溢出）
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerLeft,
+                child: Row(
+                  children: [
+                    _buildModeChip('专注 25m', 25),
+                    const SizedBox(width: 8),
+                    _buildModeChip('深度 50m', 50),
+                    const SizedBox(width: 8),
+                    _buildModeChip('短休 5m', 5),
+                  ],
+                ),
               ),
               const SizedBox(height: 14),
 
@@ -150,10 +172,15 @@ class _FloatingPomodoroBubbleState extends ConsumerState<FloatingPomodoroBubble>
                     child: OutlinedButton(
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 8),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
                       ),
                       onPressed: () => setState(() => _isRunning = !_isRunning),
-                      child: Text(_isRunning ? '暂停' : '继续', style: const TextStyle(fontSize: 12)),
+                      child: Text(
+                        _isRunning ? '暂停' : '继续',
+                        style: const TextStyle(fontSize: 12),
+                      ),
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -161,7 +188,9 @@ class _FloatingPomodoroBubbleState extends ConsumerState<FloatingPomodoroBubble>
                     child: FilledButton(
                       style: FilledButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 8),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
                       ),
                       onPressed: () {
                         // 前往休息页面 (Index 5)
@@ -189,10 +218,14 @@ class _FloatingPomodoroBubbleState extends ConsumerState<FloatingPomodoroBubble>
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         decoration: BoxDecoration(
-          color: isSelected ? theme.colorScheme.primaryContainer : theme.colorScheme.surfaceContainerLowest,
+          color: isSelected
+              ? theme.colorScheme.primaryContainer
+              : theme.colorScheme.surfaceContainerLowest,
           borderRadius: BorderRadius.circular(6),
           border: Border.all(
-            color: isSelected ? theme.colorScheme.primary : theme.colorScheme.outlineVariant,
+            color: isSelected
+                ? theme.colorScheme.primary
+                : theme.colorScheme.outlineVariant,
           ),
         ),
         child: Text(
@@ -200,7 +233,9 @@ class _FloatingPomodoroBubbleState extends ConsumerState<FloatingPomodoroBubble>
           style: TextStyle(
             fontSize: 11,
             fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-            color: isSelected ? theme.colorScheme.onPrimaryContainer : theme.colorScheme.onSurfaceVariant,
+            color: isSelected
+                ? theme.colorScheme.onPrimaryContainer
+                : theme.colorScheme.onSurfaceVariant,
           ),
         ),
       ),

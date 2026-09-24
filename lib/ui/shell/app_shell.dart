@@ -46,15 +46,22 @@ class AppShell extends ConsumerWidget {
       const Center(child: Text('AI 助教独立视窗')),
     ];
 
-    final activeIndex = (currentIndex >= 0 && currentIndex < pages.length) ? currentIndex : 0;
+    final activeIndex = (currentIndex >= 0 && currentIndex < pages.length)
+        ? currentIndex
+        : 0;
 
     // 快捷键映射
     final shortcuts = <ShortcutActivator, Intent>{
-      LogicalKeySet(LogicalKeyboardKey.meta, LogicalKeyboardKey.keyB): const ToggleNavRailIntent(),
-      LogicalKeySet(LogicalKeyboardKey.control, LogicalKeyboardKey.keyB): const ToggleNavRailIntent(),
-      LogicalKeySet(LogicalKeyboardKey.meta, LogicalKeyboardKey.keyJ): const ToggleAiPanelIntent(),
-      LogicalKeySet(LogicalKeyboardKey.control, LogicalKeyboardKey.keyJ): const ToggleAiPanelIntent(),
-      const SingleActivator(LogicalKeyboardKey.escape): const ClosePanelIntent(),
+      LogicalKeySet(LogicalKeyboardKey.meta, LogicalKeyboardKey.keyB):
+          const ToggleNavRailIntent(),
+      LogicalKeySet(LogicalKeyboardKey.control, LogicalKeyboardKey.keyB):
+          const ToggleNavRailIntent(),
+      LogicalKeySet(LogicalKeyboardKey.meta, LogicalKeyboardKey.keyJ):
+          const ToggleAiPanelIntent(),
+      LogicalKeySet(LogicalKeyboardKey.control, LogicalKeyboardKey.keyJ):
+          const ToggleAiPanelIntent(),
+      const SingleActivator(LogicalKeyboardKey.escape):
+          const ClosePanelIntent(),
     };
 
     final actions = <Type, Action<Intent>>{

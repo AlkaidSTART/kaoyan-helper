@@ -88,15 +88,9 @@ class DashboardView extends StatelessWidget {
                 const Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(
-                      flex: 3,
-                      child: TaskCenterCard(),
-                    ),
+                    Expanded(flex: 3, child: TaskCenterCard()),
                     SizedBox(width: 20),
-                    Expanded(
-                      flex: 2,
-                      child: TargetSchoolCard(),
-                    ),
+                    Expanded(flex: 2, child: TargetSchoolCard()),
                   ],
                 )
               else

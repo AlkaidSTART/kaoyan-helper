@@ -8,7 +8,8 @@ class MuyuReliefWidget extends StatefulWidget {
   State<MuyuReliefWidget> createState() => _MuyuReliefWidgetState();
 }
 
-class _MuyuReliefWidgetState extends State<MuyuReliefWidget> with SingleTickerProviderStateMixin {
+class _MuyuReliefWidgetState extends State<MuyuReliefWidget>
+    with SingleTickerProviderStateMixin {
   int _counter = 88;
   late final AnimationController _strikeController;
   final List<_FloatingText> _floatingTexts = [];
@@ -41,19 +42,16 @@ class _MuyuReliefWidgetState extends State<MuyuReliefWidget> with SingleTickerPr
   }
 
   void _strike() {
-    _strikeController.forward(from: 0.0).then((_) => _strikeController.reverse());
+    _strikeController
+        .forward(from: 0.0)
+        .then((_) => _strikeController.reverse());
     setState(() {
       _counter++;
       final text = _textTemplates[_random.nextInt(_textTemplates.length)];
-      final offset = Offset(
-        (_random.nextDouble() - 0.5) * 60,
-        -20.0,
+      final offset = Offset((_random.nextDouble() - 0.5) * 60, -20.0);
+      _floatingTexts.add(
+        _FloatingText(key: UniqueKey(), text: text, initialOffset: offset),
       );
-      _floatingTexts.add(_FloatingText(
-        key: UniqueKey(),
-        text: text,
-        initialOffset: offset,
-      ));
     });
   }
 
@@ -106,11 +104,15 @@ class _MuyuReliefWidgetState extends State<MuyuReliefWidget> with SingleTickerPr
               // 物理木鱼本体
               ScaleTransition(
                 scale: Tween<double>(begin: 1.0, end: 0.92).animate(
-                  CurvedAnimation(parent: _strikeController, curve: Curves.easeOutQuad),
+                  CurvedAnimation(
+                    parent: _strikeController,
+                    curve: Curves.easeOutQuad,
+                  ),
                 ),
                 child: MouseRegion(
                   cursor: SystemMouseCursors.click,
                   child: GestureDetector(
+                    key: const Key('muyu_strike_target'),
                     onTap: _strike,
                     child: Container(
                       width: 170,
@@ -170,10 +172,7 @@ class _MuyuReliefWidgetState extends State<MuyuReliefWidget> with SingleTickerPr
         const SizedBox(height: 30),
         Text(
           '点击木鱼释放焦虑 · 积蓄备考心流',
-          style: TextStyle(
-            fontSize: 13,
-            color: theme.colorScheme.outline,
-          ),
+          style: TextStyle(fontSize: 13, color: theme.colorScheme.outline),
         ),
       ],
     );
@@ -208,7 +207,8 @@ class _FloatingTextView extends StatefulWidget {
   State<_FloatingTextView> createState() => _FloatingTextViewState();
 }
 
-class _FloatingTextViewState extends State<_FloatingTextView> with SingleTickerProviderStateMixin {
+class _FloatingTextViewState extends State<_FloatingTextView>
+    with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
   late final Animation<double> _translateY;
   late final Animation<double> _opacity;
@@ -221,9 +221,10 @@ class _FloatingTextViewState extends State<_FloatingTextView> with SingleTickerP
       duration: const Duration(milliseconds: 650),
     );
 
-    _translateY = Tween<double>(begin: 0.0, end: -70.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic),
-    );
+    _translateY = Tween<double>(
+      begin: 0.0,
+      end: -70.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic));
 
     _opacity = Tween<double>(begin: 1.0, end: 0.0).animate(
       CurvedAnimation(
@@ -247,7 +248,10 @@ class _FloatingTextViewState extends State<_FloatingTextView> with SingleTickerP
       animation: _controller,
       builder: (context, child) {
         return Transform.translate(
-          offset: Offset(widget.offset.dx, widget.offset.dy + _translateY.value),
+          offset: Offset(
+            widget.offset.dx,
+            widget.offset.dy + _translateY.value,
+          ),
           child: Opacity(
             opacity: _opacity.value,
             child: Container(

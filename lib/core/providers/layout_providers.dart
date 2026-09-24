@@ -8,7 +8,9 @@ class NavRailExpandedNotifier extends Notifier<bool> {
   void setExpanded(bool expanded) => state = expanded;
 }
 
-final navRailExpandedProvider = NotifierProvider<NavRailExpandedNotifier, bool>(NavRailExpandedNotifier.new);
+final navRailExpandedProvider = NotifierProvider<NavRailExpandedNotifier, bool>(
+  NavRailExpandedNotifier.new,
+);
 
 class AiPanelExpandedNotifier extends Notifier<bool> {
   @override
@@ -18,7 +20,9 @@ class AiPanelExpandedNotifier extends Notifier<bool> {
   void setExpanded(bool expanded) => state = expanded;
 }
 
-final aiPanelExpandedProvider = NotifierProvider<AiPanelExpandedNotifier, bool>(AiPanelExpandedNotifier.new);
+final aiPanelExpandedProvider = NotifierProvider<AiPanelExpandedNotifier, bool>(
+  AiPanelExpandedNotifier.new,
+);
 
 class CurrentNavIndexNotifier extends Notifier<int> {
   @override
@@ -27,4 +31,6 @@ class CurrentNavIndexNotifier extends Notifier<int> {
   void setIndex(int index) => state = index;
 }
 
-final currentNavIndexProvider = NotifierProvider<CurrentNavIndexNotifier, int>(CurrentNavIndexNotifier.new);
+final currentNavIndexProvider = NotifierProvider<CurrentNavIndexNotifier, int>(
+  CurrentNavIndexNotifier.new,
+);

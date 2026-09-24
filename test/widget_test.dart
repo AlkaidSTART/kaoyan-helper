@@ -12,7 +12,9 @@ class AuthenticatedAuthNotifier extends AuthNotifier {
 
 void main() {
   group('Web UI Shell & Dashboard Tests', () {
-    testWidgets('Desktop AppShell and Dashboard smoke test', (WidgetTester tester) async {
+    testWidgets('Desktop AppShell and Dashboard smoke test', (
+      WidgetTester tester,
+    ) async {
       // 模拟桌面端分辨率 1280x800
       tester.view.physicalSize = const Size(1280, 800);
       tester.view.devicePixelRatio = 1.0;
@@ -53,7 +55,9 @@ void main() {
       expect(find.text('报录比: 8.2:1'), findsOneWidget);
     });
 
-    testWidgets('AI Chat Panel toggle and interaction test', (WidgetTester tester) async {
+    testWidgets('AI Chat Panel toggle and interaction test', (
+      WidgetTester tester,
+    ) async {
       tester.view.physicalSize = const Size(1280, 800);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
@@ -67,10 +71,7 @@ void main() {
       addTearDown(container.dispose);
 
       await tester.pumpWidget(
-        UncontrolledProviderScope(
-          container: container,
-          child: const MyApp(),
-        ),
+        UncontrolledProviderScope(container: container, child: const MyApp()),
       );
       await tester.pumpAndSettle();
 

@@ -34,7 +34,11 @@ class ShellTopAppBar extends ConsumerWidget implements PreferredSizeWidget {
             ),
           ),
           const SizedBox(width: 24),
-          Icon(Icons.school_outlined, size: 18, color: theme.colorScheme.onSurfaceVariant),
+          Icon(
+            Icons.school_outlined,
+            size: 18,
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
           const SizedBox(width: 6),
           Text(
             schoolText,
@@ -43,7 +47,11 @@ class ShellTopAppBar extends ConsumerWidget implements PreferredSizeWidget {
             ),
           ),
           const SizedBox(width: 24),
-          Icon(Icons.timer_outlined, size: 18, color: theme.colorScheme.onSurfaceVariant),
+          Icon(
+            Icons.timer_outlined,
+            size: 18,
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
           const SizedBox(width: 6),
           Text(
             daysText,
@@ -65,7 +73,9 @@ class ShellTopAppBar extends ConsumerWidget implements PreferredSizeWidget {
           icon: Icon(
             Icons.auto_awesome,
             size: 20,
-            color: isAiExpanded ? theme.colorScheme.primary : theme.colorScheme.onSurfaceVariant,
+            color: isAiExpanded
+                ? theme.colorScheme.primary
+                : theme.colorScheme.onSurfaceVariant,
           ),
           onPressed: () {
             ref.read(aiPanelExpandedProvider.notifier).toggle();
@@ -95,7 +105,11 @@ class ShellTopAppBar extends ConsumerWidget implements PreferredSizeWidget {
                     CircleAvatar(
                       radius: 14,
                       backgroundColor: theme.colorScheme.primaryContainer,
-                      child: Icon(Icons.person_outline, size: 16, color: theme.colorScheme.onPrimaryContainer),
+                      child: Icon(
+                        Icons.person_outline,
+                        size: 16,
+                        color: theme.colorScheme.onPrimaryContainer,
+                      ),
                     ),
                     const SizedBox(width: 10),
                     Text(
@@ -123,9 +137,16 @@ class ShellTopAppBar extends ConsumerWidget implements PreferredSizeWidget {
                 value: 'logout',
                 child: Row(
                   children: [
-                    Icon(Icons.logout_rounded, size: 18, color: theme.colorScheme.error),
+                    Icon(
+                      Icons.logout_rounded,
+                      size: 18,
+                      color: theme.colorScheme.error,
+                    ),
                     const SizedBox(width: 10),
-                    Text('退出登录', style: TextStyle(color: theme.colorScheme.error)),
+                    Text(
+                      '退出登录',
+                      style: TextStyle(color: theme.colorScheme.error),
+                    ),
                   ],
                 ),
               ),
@@ -133,7 +154,11 @@ class ShellTopAppBar extends ConsumerWidget implements PreferredSizeWidget {
             child: CircleAvatar(
               radius: 16,
               backgroundColor: theme.colorScheme.primaryContainer,
-              child: Icon(Icons.person_outline, size: 18, color: theme.colorScheme.onPrimaryContainer),
+              child: Icon(
+                Icons.person_outline,
+                size: 18,
+                color: theme.colorScheme.onPrimaryContainer,
+              ),
             ),
           ),
         ),
@@ -142,10 +167,7 @@ class ShellTopAppBar extends ConsumerWidget implements PreferredSizeWidget {
       scrolledUnderElevation: 0,
       bottom: PreferredSize(
         preferredSize: const Size.fromHeight(1.0),
-        child: Container(
-          color: theme.colorScheme.outlineVariant,
-          height: 1.0,
-        ),
+        child: Container(color: theme.colorScheme.outlineVariant, height: 1.0),
       ),
     );
   }

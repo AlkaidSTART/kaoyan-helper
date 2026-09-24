@@ -7,7 +7,8 @@ class TaskCenterCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final semantic = theme.extension<SemanticColors>() ?? SemanticColors.standard;
+    final semantic =
+        theme.extension<SemanticColors>() ?? SemanticColors.standard;
 
     return Card(
       child: Padding(
@@ -50,9 +51,7 @@ class TaskCenterCard extends StatelessWidget {
               decoration: BoxDecoration(
                 color: semantic.politicsContainer,
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                  color: semantic.politics.withAlpha(50),
-                ),
+                border: Border.all(color: semantic.politics.withAlpha(50)),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -66,7 +65,10 @@ class TaskCenterCard extends StatelessWidget {
                     ),
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 2,
+                    ),
                     decoration: BoxDecoration(
                       color: semantic.danger.withAlpha(20),
                       borderRadius: BorderRadius.circular(4),

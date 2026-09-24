@@ -18,13 +18,11 @@ class _AiChatPanelState extends ConsumerState<AiChatPanel> {
       'isUser': false,
       'content': '你好！我是你的考研 AI 助教。针对今日马原“矛盾普遍性与特殊性”的错题，有什么疑问随时问我。',
     },
-    {
-      'isUser': true,
-      'content': '这道题为什么不选 C 选项呢？',
-    },
+    {'isUser': true, 'content': '这道题为什么不选 C 选项呢？'},
     {
       'isUser': false,
-      'content': '这道题的核心考点在于：普遍性寓于特殊性之中，并通过特殊性表现出来。C 选项错在将两者的包含关系倒置了。在真题中这种设错方式非常典型，注意识别关键词。',
+      'content':
+          '这道题的核心考点在于：普遍性寓于特殊性之中，并通过特殊性表现出来。C 选项错在将两者的包含关系倒置了。在真题中这种设错方式非常典型，注意识别关键词。',
     },
   ];
 
@@ -70,10 +68,7 @@ class _AiChatPanelState extends ConsumerState<AiChatPanel> {
       width: isExpanded ? 400.0 : 0.0,
       decoration: BoxDecoration(
         border: Border(
-          left: BorderSide(
-            color: theme.colorScheme.outlineVariant,
-            width: 1.0,
-          ),
+          left: BorderSide(color: theme.colorScheme.outlineVariant, width: 1.0),
         ),
         color: theme.colorScheme.surface,
       ),
@@ -94,7 +89,11 @@ class _AiChatPanelState extends ConsumerState<AiChatPanel> {
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.smart_toy_outlined, size: 20, color: theme.colorScheme.primary),
+                      Icon(
+                        Icons.smart_toy_outlined,
+                        size: 20,
+                        color: theme.colorScheme.primary,
+                      ),
                       const SizedBox(width: 8),
                       Text(
                         'AI 助教',
@@ -104,7 +103,10 @@ class _AiChatPanelState extends ConsumerState<AiChatPanel> {
                       ),
                       const SizedBox(width: 8),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
                         decoration: BoxDecoration(
                           color: theme.colorScheme.primaryContainer,
                           borderRadius: BorderRadius.circular(10),
@@ -123,7 +125,9 @@ class _AiChatPanelState extends ConsumerState<AiChatPanel> {
                         tooltip: '收起助教 (Esc / Cmd+J)',
                         icon: const Icon(Icons.close_rounded, size: 20),
                         onPressed: () {
-                          ref.read(aiPanelExpandedProvider.notifier).setExpanded(false);
+                          ref
+                              .read(aiPanelExpandedProvider.notifier)
+                              .setExpanded(false);
                         },
                       ),
                     ],
@@ -142,7 +146,11 @@ class _AiChatPanelState extends ConsumerState<AiChatPanel> {
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.bookmark_outline, size: 16, color: theme.colorScheme.primary),
+                      Icon(
+                        Icons.bookmark_outline,
+                        size: 16,
+                        color: theme.colorScheme.primary,
+                      ),
                       const SizedBox(width: 6),
                       Expanded(
                         child: Text(
@@ -162,9 +170,13 @@ class _AiChatPanelState extends ConsumerState<AiChatPanel> {
                 // 对话消息列表
                 Expanded(
                   child: ListView.separated(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 8,
+                    ),
                     itemCount: _messages.length,
-                    separatorBuilder: (context, index) => const SizedBox(height: 14),
+                    separatorBuilder: (context, index) =>
+                        const SizedBox(height: 14),
                     itemBuilder: (context, index) {
                       final msg = _messages[index];
                       final isUser = msg['isUser'] as bool;
@@ -175,7 +187,10 @@ class _AiChatPanelState extends ConsumerState<AiChatPanel> {
                           alignment: Alignment.centerRight,
                           child: Container(
                             constraints: const BoxConstraints(maxWidth: 280),
-                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 10,
+                            ),
                             decoration: BoxDecoration(
                               color: theme.colorScheme.primary,
                               borderRadius: const BorderRadius.only(
@@ -255,11 +270,17 @@ class _AiChatPanelState extends ConsumerState<AiChatPanel> {
 
                 // 推荐追问 Chips
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
                   child: Row(
                     children: [
                       ActionChip(
-                        label: const Text('通俗化举个例子', style: TextStyle(fontSize: 12)),
+                        label: const Text(
+                          '通俗化举个例子',
+                          style: TextStyle(fontSize: 12),
+                        ),
                         onPressed: () {
                           _textController.text = '通俗化举个例子';
                           _sendMessage();
@@ -267,7 +288,10 @@ class _AiChatPanelState extends ConsumerState<AiChatPanel> {
                       ),
                       const SizedBox(width: 8),
                       ActionChip(
-                        label: const Text('出个同类变式题', style: TextStyle(fontSize: 12)),
+                        label: const Text(
+                          '出个同类变式题',
+                          style: TextStyle(fontSize: 12),
+                        ),
                         onPressed: () {
                           _textController.text = '出个同类变式题';
                           _sendMessage();
@@ -311,9 +335,14 @@ class _AiChatPanelState extends ConsumerState<AiChatPanel> {
                             ),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(color: theme.colorScheme.outlineVariant),
+                              borderSide: BorderSide(
+                                color: theme.colorScheme.outlineVariant,
+                              ),
                             ),
-                            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 8,
+                            ),
                           ),
                           onSubmitted: (_) => _sendMessage(),
                         ),
