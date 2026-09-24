@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/providers/layout_providers.dart';
 
 class FloatingPomodoroBubble extends ConsumerStatefulWidget {
@@ -193,8 +194,13 @@ class _FloatingPomodoroBubbleState
                         ),
                       ),
                       onPressed: () {
-                        // 前往休息页面 (Index 5)
+                        // 前往休息页面 (Index 5 / /rest)
                         ref.read(currentNavIndexProvider.notifier).setIndex(5);
+                        try {
+                          context.go('/rest');
+                        } catch (_) {
+                          // Fallback if router not in context
+                        }
                         setState(() => _isExpanded = false);
                       },
                       child: const Text('前往休息', style: TextStyle(fontSize: 12)),
