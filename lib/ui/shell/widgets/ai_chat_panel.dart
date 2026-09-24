@@ -30,7 +30,7 @@ class AiChatPanel extends ConsumerWidget {
                     IconButton(
                       icon: const Icon(Icons.close_outlined),
                       onPressed: () {
-                        ref.read(aiPanelExpandedProvider.notifier).state = false;
+                        ref.read(aiPanelExpandedProvider.notifier).setExpanded(false);
                       },
                     ),
                   ],

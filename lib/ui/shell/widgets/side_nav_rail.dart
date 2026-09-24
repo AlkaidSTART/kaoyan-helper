@@ -16,16 +16,15 @@ class SideNavRail extends ConsumerWidget {
       onDestinationSelected: (index) {
         if (index == 5) {
           // 助教按钮，切换右侧面板，不改变当前主视窗
-          final isAiExpanded = ref.read(aiPanelExpandedProvider);
-          ref.read(aiPanelExpandedProvider.notifier).state = !isAiExpanded;
+          ref.read(aiPanelExpandedProvider.notifier).toggle();
           return;
         }
-        ref.read(currentNavIndexProvider.notifier).state = index;
+        ref.read(currentNavIndexProvider.notifier).setIndex(index);
       },
       leading: IconButton(
         icon: const Icon(Icons.menu_outlined),
         onPressed: () {
-          ref.read(navRailExpandedProvider.notifier).state = !isExpanded;
+          ref.read(navRailExpandedProvider.notifier).toggle();
         },
       ),
       destinations: const [
