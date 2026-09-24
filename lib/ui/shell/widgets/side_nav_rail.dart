@@ -1,13 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../core/providers/layout_providers.dart';
 
 class SideNavRail extends ConsumerWidget {
-  const SideNavRail({super.key});
+  final StatefulNavigationShell? navigationShell;
+
+  const SideNavRail({super.key, this.navigationShell});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final currentIndex = ref.watch(currentNavIndexProvider);
+    final int currentIndex =
+        navigationShell?.currentIndex ?? ref.watch(currentNavIndexProvider);
     final isExpanded = ref.watch(navRailExpandedProvider);
 
     return NavigationRail(
@@ -19,7 +23,11 @@ class SideNavRail extends ConsumerWidget {
           ref.read(aiPanelExpandedProvider.notifier).toggle();
           return;
         }
-        ref.read(currentNavIndexProvider.notifier).setIndex(index);
+        if (navigationShell != null) {
+          navigationShell!.goBranch(index);
+        } else {
+          ref.read(currentNavIndexProvider.notifier).setIndex(index);
+        }
       },
       leading: IconButton(
         icon: const Icon(Icons.menu_outlined),
