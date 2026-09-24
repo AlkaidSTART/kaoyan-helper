@@ -30,3 +30,4 @@
 | `modules/flashcards.md` | 闪卡背诵：3D 翻转、评级按键、卡片进出场过渡 |
 | `modules/ai-chat.md` | AI 助教：侧边滑入面板与独立页面、流式渲染、追问 Chip |
 | `modules/rest.md` | 休息与专注：悬浮番茄钟、呼吸导引、考研木鱼、舒尔特方格 |
+| `modules/auth.md` | 认证与励志：倒计时战报、一志愿拟录取、手机/Google/GitHub 登录 |
