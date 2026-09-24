@@ -50,13 +50,15 @@ void main() {
 
         // 切换至“深呼吸”
         await tester.tap(find.text('深呼吸'));
-        await tester.pumpAndSettle();
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 300));
 
         expect(find.text('4-4-4 箱式平复呼吸法'), findsOneWidget);
 
         // 切换至“舒尔特方格”
         await tester.tap(find.text('舒尔特方格'));
-        await tester.pumpAndSettle();
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 300));
 
         expect(find.text('目标数字：1'), findsOneWidget);
         expect(find.text('按顺序依次快速点选 1 至 25，训练视野聚焦与反应力'), findsOneWidget);
