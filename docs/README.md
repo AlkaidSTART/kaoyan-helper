@@ -32,11 +32,18 @@ docs/
 - **[docs/p2-development/](p2-development/README.md)**：任务拆解与开发日志指引
 - **[docs/p3-verification/](p3-verification/README.md)**：测试验收与交付标准指引
 
+### 已建立流转的功能模块：
+- **CI/CD 流水线 (`ci-cd/`)**：
+  - [P0 需求定义](p0-definition/ci-cd/README.md)
+  - [P1 架构设计](p1-design/ci-cd/README.md)
+  - [P2 任务拆解与决策](p2-development/ci-cd/README.md)
+  - [P3 质量验证与验收](p3-verification/ci-cd/README.md)
+
 ---
 
 ## 三、任务与会话追溯系统 (Task & Session Logs)
 记录每次对话/迭代的具体任务规划、技术决策以及变动文件明细：
 
 - **[docs/tasks/](tasks/README.md)**：任务历史总览
-  - `docs/tasks/YYYY-MM-DD-<task-name>/plan.md`（原始诉求、决策与计划）
-  - `docs/tasks/YYYY-MM-DD-<task-name>/changed-files.md`（修改文件清单审计）
+  - [2026-09-24 全业务组件 UI/动效方案细化与架构规范固化](tasks/2026-09-24-ui-spec-and-architecture-setup/plan.md)
+  - [2026-09-24 GitHub Actions CI/CD 流水线建设与规范落地](tasks/2026-09-24-github-ci-cd-pipeline/plan.md)
