@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 
 Duration accessibleDuration(BuildContext context, Duration normal) {
-  final reduce = MediaQuery.maybeOf(context)?.accessibilityFeatures.reduceMotion ?? false;
-  return reduce ? Duration.zero : normal;
+  final disable = MediaQuery.maybeDisableAnimationsOf(context) ??
+      WidgetsBinding.instance.platformDispatcher.accessibilityFeatures.reduceMotion;
+  return disable ? Duration.zero : normal;
 }
 
 class NumberTicker extends StatelessWidget {
