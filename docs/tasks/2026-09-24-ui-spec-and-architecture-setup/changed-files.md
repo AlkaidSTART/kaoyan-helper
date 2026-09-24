@@ -5,15 +5,16 @@
 
 ---
 
-## 1. 结构整理与文件迁移 (Moved / Reorganized)
+## 1. 全局架构与顶层设计规范 (Global Directives · 保留在 docs/ 根目录)
 
-| 原路径 | 新路径 | 归类说明 |
+| 文件路径 | 状态 | 作用与定位 |
 |---|---|---|
-| `docs/prd-mvp.md` | `docs/p0-definition/prd-mvp.md` | 收纳至 P0 需求定义 |
-| `docs/tech-stack.md` | `docs/p1-design/tech-stack.md` | 收纳至 P1 技术架构设计 |
-| `docs/ui-design/` | `docs/p1-design/ui-design/` | 收纳至 P1 视觉与交互设计 |
-| `docs/ui-design.md` | `docs/p1-design/ui-design.md` | 收纳至 P1 总体设计文档 |
-| `docs/tdd.md` | `docs/p3-verification/tdd.md` | 收纳至 P3 测试与质量规范 |
+| `docs/prd-mvp.md` | 保留于根目录 | 全局产品架构、用户画像、核心痛点与 MVP 功能边界底座 |
+| `docs/tech-stack.md` | 保留于根目录 | 全局技术栈（Flutter + Supabase + Riverpod + Dio）选型与架构规范 |
+| `docs/ui-design/` | 保留于根目录 | 全局 UI 设计系统（色彩、抗疲劳分级、动效、断点布局、图标系统）与各模块规范 |
+| `docs/ui-design.md` | 保留于根目录 | 全局 UI 设计与交互规范总览文档 |
+| `docs/tdd.md` | 保留于根目录 | 全局测试金字塔、TDD 流程、Mock 策略与质量保障规范 |
+| `docs/README.md` | 新增 | 文档中心导航索引（清晰划分全局指导、功能流转与任务追溯） |
 
 ---
 
