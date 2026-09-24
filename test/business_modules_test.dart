@@ -45,7 +45,7 @@ void main() {
 
       // 验证进入第二题
       expect(find.text('政治 · 史纲'), findsOneWidget);
-      expect(find.textContaining('遵义会议'), findsOneWidget);
+      expect(find.text('标志着中国共产党在政治上开始走向成熟的会议是：'), findsOneWidget);
     });
 
     testWidgets('MistakesView: filter by subject and redo elimination', (WidgetTester tester) async {
