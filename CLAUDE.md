@@ -31,6 +31,14 @@ docs/
 3. **P2 开发阶段 (`docs/p2-development/<feature>/`)**：严格按 Todo 清单执行最小步长变更，记录编码过程中的关键决策与实际问题。
 4. **P3 验证阶段 (`docs/p3-verification/<feature>/`)**：执行 `flutter analyze` 与 `flutter test`，记录回归验证与多端适配结果。
 
+### 任务与会话追溯系统 (Task & Session Logs)：
+**每次较大型对话、功能规划或迭代开发，必须在 `docs/tasks/` 下建立以日期命名的任务专属文件夹：**
+```
+docs/tasks/YYYY-MM-DD-<task-name>/
+  ├── plan.md            # 记录本次任务的原始诉求、决策过程与实施计划
+  └── changed-files.md   # 完整记录本次任务新增、修改、重命名或删除的文件明细及原因
+```
+
 ---
 
 ## 2. 技术栈与架构选型
