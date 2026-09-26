@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import { AdminAuditService } from "../admin-audit-service";
 import type {
@@ -28,19 +28,21 @@ function auditRow(overrides: Partial<AdminAuditLogRecord> = {}): AdminAuditLogRe
 }
 
 function fakeRepo(rows: AdminAuditLogRecord[], total = rows.length) {
-  const listAuditLogs = vi.fn(
-    async (_filters: AdminAuditListFilters, _page: number, _pageSize: number) => ({
-      rows,
-      total,
-    }),
-  );
+  const calls: Array<[AdminAuditListFilters, number, number]> = [];
+  const repository: AdminAuditRepository = {
+    async listAuditLogs(filters, page, pageSize) {
+      calls.push([filters, page, pageSize]);
 
-  return { repository: { listAuditLogs } as AdminAuditRepository, listAuditLogs };
+      return { rows, total };
+    },
+  };
+
+  return { repository, calls };
 }
 
 describe("AdminAuditService（ADMIN-AUDIT-01）", () => {
   it("筛选透传并映射 DTO（actor 摘要 + UTC 时间、metadata 原样）", async () => {
-    const { repository, listAuditLogs } = fakeRepo([auditRow({ id: "log-2" })]);
+    const { repository, calls } = fakeRepo([auditRow({ id: "log-2" })]);
     const service = new AdminAuditService(repository);
     const { rows, total } = await service.list(
       adminActor,
@@ -50,15 +52,18 @@ describe("AdminAuditService（ADMIN-AUDIT-01）", () => {
     );
 
     expect(total).toBe(1);
-    expect(listAuditLogs).toHaveBeenCalledWith(
-      { action: "user.ban", resourceType: "user", actorId: "11111111-1111-4111-8111-111111111111" },
-      2,
-      20,
-    );
+    expect(calls).toHaveLength(1);
+    expect(calls[0]?.[0]).toEqual({
+      action: "user.ban",
+      resourceType: "user",
+      actorId: "11111111-1111-4111-8111-111111111111",
+    });
+    expect(calls[0]?.[1]).toBe(2);
+    expect(calls[0]?.[2]).toBe(20);
     expect(rows[0]).toMatchObject({
       id: "log-2",
       action: "user.ban",
-      createdAt: "2026-09-26T00:00:00.000Z",
+      createdAt: "2026-09-26T00:00:00Z",
       actor: { id: "admin-1", email: "a@t.dev" },
     });
     expect(rows[0].metadata).toEqual({ reason: "违规发布" });

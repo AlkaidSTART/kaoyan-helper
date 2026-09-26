@@ -1,24 +1,27 @@
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import { AdminStatsService } from "../admin-stats-service";
 import type { AdminUserStatsRepository } from "../admin-stats-service";
 
-const DAY_MS = 86_400_000;
+function fakeRepo(overrides: { total?: number; range?: number } = {}) {
+  const registeredCalls: Array<[Date, Date]> = [];
+  const repository: AdminUserStatsRepository = {
+    async countTotalUsers() {
+      return overrides.total ?? 1_284;
+    },
+    async countUsersRegistered(from, toExclusive) {
+      registeredCalls.push([from, toExclusive]);
 
-function fakeRepo(overrides: { total?: number; range?: number; prev?: number } = {}) {
-  const countTotalUsers = vi.fn(async () => overrides.total ?? 1_284);
-  const countUsersRegistered = vi.fn(async () => overrides.range ?? 66);
-
-  return {
-    repository: { countTotalUsers, countUsersRegistered } as AdminUserStatsRepository,
-    countTotalUsers,
-    countUsersRegistered,
+      return overrides.range ?? 66;
+    },
   };
+
+  return { repository, registeredCalls };
 }
 
 describe("AdminStatsService（ADMIN-STAT-01）", () => {
   it("返回累计与区间新增，且前一窗口为紧邻等长区间", async () => {
-    const { repository, countUsersRegistered } = fakeRepo({ total: 1_284, range: 66 });
+    const { repository, registeredCalls } = fakeRepo({ total: 1_284, range: 66 });
     const service = new AdminStatsService(repository);
     const stats = await service.getUserStats({
       from: "2026-09-20",
@@ -28,15 +31,15 @@ describe("AdminStatsService（ADMIN-STAT-01）", () => {
 
     expect(stats).toEqual({ totalUsers: 1_284, newUsers: 66, prevNewUsers: 66 });
 
-    const [rangeArgs, prevArgs] = countUsersRegistered.mock.calls;
-    expect(rangeArgs?.[0].toISOString()).toBe("2026-09-20T00:00:00.000Z");
-    expect(rangeArgs?.[1].toISOString()).toBe("2026-09-27T00:00:00.000Z");
-    expect(prevArgs?.[0].toISOString()).toBe("2026-09-13T00:00:00.000Z");
-    expect(prevArgs?.[1].toISOString()).toBe("2026-09-20T00:00:00.000Z");
+    expect(registeredCalls).toHaveLength(2);
+    expect(registeredCalls[0]?.[0].toISOString()).toBe("2026-09-20T00:00:00.000Z");
+    expect(registeredCalls[0]?.[1].toISOString()).toBe("2026-09-27T00:00:00.000Z");
+    expect(registeredCalls[1]?.[0].toISOString()).toBe("2026-09-13T00:00:00.000Z");
+    expect(registeredCalls[1]?.[1].toISOString()).toBe("2026-09-20T00:00:00.000Z");
   });
 
   it("单日区间的前一窗口为前一天", async () => {
-    const { repository, countUsersRegistered } = fakeRepo();
+    const { repository, registeredCalls } = fakeRepo();
     const service = new AdminStatsService(repository);
     await service.getUserStats({
       from: "2026-09-26",
@@ -44,9 +47,10 @@ describe("AdminStatsService（ADMIN-STAT-01）", () => {
       timeZone: "Asia/Shanghai",
     });
 
-    const [rangeArgs, prevArgs] = countUsersRegistered.mock.calls;
-    expect(rangeArgs?.[1].getTime() - rangeArgs?.[0].getTime()).toBe(DAY_MS);
-    expect(prevArgs?.[0].toISOString()).toBe("2026-09-25T00:00:00.000Z");
+    expect(registeredCalls).toHaveLength(2);
+    expect(registeredCalls[0]?.[0].toISOString()).toBe("2026-09-26T00:00:00.000Z");
+    expect(registeredCalls[0]?.[1].toISOString()).toBe("2026-09-27T00:00:00.000Z");
+    expect(registeredCalls[1]?.[0].toISOString()).toBe("2026-09-25T00:00:00.000Z");
   });
 
   it("非法时区返回 422", async () => {
