@@ -26,3 +26,17 @@
 ## 验收指标
 
 - `POST /api/v1/auth/login/password` 不再返回 503；错误凭证返回 401 `AUTH_INVALID_CREDENTIALS`，正确凭证返回 200。
+
+## 执行结果（2026-09-26 更新）
+
+1. ① 缺 `DATABASE_URL` → 用户补充后暴露 ② 数据库密码错误（`password authentication failed for user "postgres"`）→ 密码修正后暴露 ③ 数据库无任何业务表（全新 Supabase 项目）→ ④ dev server 进程持缓存的旧 Prisma 客户端（`globalThis` 单例），需整进程重启 → ⑤ 库中无管理员账号（按设计由受控运维流程写入）。
+2. 已执行：
+   - 清理 `admin/.env` 中从 Supabase 控制台误粘贴的无变量名片段（裸连接串与 host/port 参数行）。
+   - `pnpm prisma db push` 同步 18 张业务表（经 session pooler）。
+   - 补应用 `supabase/migrations/20260926130000_admin_prisma_auth.sql` 与 `20260926140000_user_sessions.sql`（含 `set_updated_at()` 函数、RLS 启用与 anon/authenticated 收权，防止密码哈希经 Supabase Data API 暴露）；三表 RLS 已验证开启。
+   - 重启 admin dev server（端口 3001，脱离终端后台运行，日志 `/tmp/admin-kaoyan-dev.log`）。
+   - 端到端验证：临时创建管理员 → 登录返回 200 + 会话 Cookie → 删除临时账号（`admin_credentials` 复归 0 行）。
+3. 遗留事项：
+   - 首个正式管理员账号需用户自行执行凭据写入（email + 密码由用户决定）。
+   - baseline 迁移 `20260926120000_baseline_backend_api.sql`（894 行，面向 Flutter 端完整后端）未应用，后续需单独决策（建议经 Supabase CLI 走迁移历史管理）。
+   - `DIRECT_URL` 曾因 `.env` 解析失败被打印进本地任务日志，介意可轮换数据库密码。
