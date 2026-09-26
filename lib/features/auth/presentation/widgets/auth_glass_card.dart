@@ -60,7 +60,7 @@ class _AuthGlassCardState extends ConsumerState<AuthGlassCard>
     if (target.isEmpty) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text('请输入手机号或邮箱')));
+      ).showSnackBar(const SnackBar(content: Text('请输入邮箱地址')));
       _triggerShake();
       return;
     }
@@ -72,7 +72,7 @@ class _AuthGlassCardState extends ConsumerState<AuthGlassCard>
       _startCountdown();
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text('验证码已发送 (测试环境可用 123456)')));
+      ).showSnackBar(const SnackBar(content: Text('验证码已发送，请前往邮箱查收')));
     }
   }
 
@@ -103,9 +103,7 @@ class _AuthGlassCardState extends ConsumerState<AuthGlassCard>
     if (target.isEmpty || secret.isEmpty) {
       _triggerShake();
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(_activeTab == 0 ? '请填写完整的手机号/邮箱与验证码' : '请填写手机号/邮箱与密码'),
-        ),
+        SnackBar(content: Text(_activeTab == 0 ? '请填写完整的邮箱与验证码' : '请填写邮箱与密码')),
       );
       return;
     }
@@ -191,8 +189,9 @@ class _AuthGlassCardState extends ConsumerState<AuthGlassCard>
                     InkWell(
                       borderRadius: BorderRadius.circular(6),
                       onTap: () {
+                        // 后端仅支持邮箱验证码登录，此处预填示例邮箱与演示码便于联调。
                         setState(() {
-                          _targetController.text = '13800000000';
+                          _targetController.text = 'user@example.com';
                           _secretController.text = _activeTab == 0
                               ? '123456'
                               : 'password123';
@@ -222,7 +221,7 @@ class _AuthGlassCardState extends ConsumerState<AuthGlassCard>
                             ),
                             SizedBox(width: 2),
                             Text(
-                              '填入测试账号',
+                              '填入示例邮箱',
                               style: TextStyle(
                                 fontSize: 11,
                                 fontWeight: FontWeight.bold,
@@ -291,10 +290,10 @@ class _AuthGlassCardState extends ConsumerState<AuthGlassCard>
                   const SizedBox(height: 14),
                 ],
 
-                // 手机号/邮箱输入框
+                // 邮箱输入框（后端仅支持邮箱验证码登录）
                 _buildInputField(
                   controller: _targetController,
-                  hintText: '手机号 / 考研备考邮箱',
+                  hintText: '考研备考邮箱',
                   icon: Icons.person_outline_rounded,
                   keyboardType: TextInputType.emailAddress,
                 ),

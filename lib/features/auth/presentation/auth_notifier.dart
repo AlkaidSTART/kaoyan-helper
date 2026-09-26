@@ -6,12 +6,16 @@ import '../domain/user_model.dart';
 class AuthState {
   final bool isAuthenticated;
   final bool isLoading;
+
+  /// 启动会话恢复进行中：路由在恢复完成前不强制跳转登录页。
+  final bool isRestoring;
   final UserModel? currentUser;
   final String? errorMessage;
 
   const AuthState({
     this.isAuthenticated = false,
     this.isLoading = false,
+    this.isRestoring = false,
     this.currentUser,
     this.errorMessage,
   });
@@ -19,14 +23,17 @@ class AuthState {
   AuthState copyWith({
     bool? isAuthenticated,
     bool? isLoading,
+    bool? isRestoring,
     UserModel? currentUser,
     String? errorMessage,
     bool clearError = false,
+    bool clearUser = false,
   }) {
     return AuthState(
       isAuthenticated: isAuthenticated ?? this.isAuthenticated,
       isLoading: isLoading ?? this.isLoading,
-      currentUser: currentUser ?? this.currentUser,
+      isRestoring: isRestoring ?? this.isRestoring,
+      currentUser: clearUser ? null : (currentUser ?? this.currentUser),
       errorMessage: clearError ? null : (errorMessage ?? this.errorMessage),
     );
   }
@@ -34,7 +41,25 @@ class AuthState {
 
 class AuthNotifier extends Notifier<AuthState> {
   @override
-  AuthState build() => const AuthState();
+  AuthState build() {
+    Future<void>(() => restoreSession());
+    return const AuthState(isRestoring: true);
+  }
+
+  /// 以本地持久化凭证恢复登录态（AUTH-07）。
+  Future<void> restoreSession() async {
+    final repo = ref.read(authRepositoryProvider);
+    try {
+      final user = await repo.restoreSession();
+      state = state.copyWith(
+        isRestoring: false,
+        isAuthenticated: user != null,
+        currentUser: user,
+      );
+    } catch (_) {
+      state = state.copyWith(isRestoring: false);
+    }
+  }
 
   Future<bool> loginWithCode(String target, String code) async {
     state = state.copyWith(isLoading: true, clearError: true);

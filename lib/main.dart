@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'core/theme/app_theme.dart';
-import 'features/auth/presentation/auth_notifier.dart';
-import 'features/auth/presentation/login_page.dart';
-import 'ui/shell/app_shell.dart';
 
-void main() {
+import 'core/router/app_router.dart';
+import 'core/theme/app_theme.dart';
+
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
   runApp(const ProviderScope(child: MyApp()));
 }
 
@@ -14,18 +14,13 @@ class MyApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isAuthenticated = ref.watch(authNotifierProvider).isAuthenticated;
+    final router = ref.watch(routerProvider);
 
-    return MaterialApp(
+    return MaterialApp.router(
       title: '登科',
       theme: AppTheme.warmAmber,
       debugShowCheckedModeBanner: false,
-      home: AnimatedSwitcher(
-        duration: const Duration(milliseconds: 250),
-        switchInCurve: Curves.easeOutCubic,
-        switchOutCurve: Curves.easeInCubic,
-        child: isAuthenticated ? const AppShell() : const LoginPage(),
-      ),
+      routerConfig: router,
     );
   }
 }

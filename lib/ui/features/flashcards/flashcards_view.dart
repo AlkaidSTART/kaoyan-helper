@@ -1,65 +1,87 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../../core/errors/app_exception.dart';
 import '../../../core/theme/semantic_colors.dart';
+import '../../../features/flashcards/presentation/flashcards_providers.dart';
+import '../../../features/flashcards/domain/flashcard_models.dart';
 import '../../widgets/status_dot.dart';
 import 'widgets/flip_card.dart';
 
-class FlashcardsView extends StatefulWidget {
+class FlashcardsView extends ConsumerStatefulWidget {
   const FlashcardsView({super.key});
 
   @override
-  State<FlashcardsView> createState() => _FlashcardsViewState();
+  ConsumerState<FlashcardsView> createState() => _FlashcardsViewState();
 }
 
-class _FlashcardsViewState extends State<FlashcardsView> {
-  int _currentIndex = 0;
+class _FlashcardsViewState extends ConsumerState<FlashcardsView> {
   bool _isFlipped = false;
 
-  final List<Map<String, dynamic>> _deck = [
-    {
-      'word': 'abandon',
-      'phonetic': '/əˈbændən/',
-      'meaning': 'v. 放弃，遗弃；离弃',
-      'collocation': '真题搭配: abandon oneself to (沉溺于……)',
-      'example': 'The research project was abandoned due to a lack of funding.',
-    },
-    {
-      'word': 'vulnerable',
-      'phonetic': '/ˈvʌlnərəbl/',
-      'meaning': 'adj. 易受伤害的，脆弱的；有弱点的',
-      'collocation': '核心考点: be vulnerable to (极易受……侵害)',
-      'example':
-          'Small businesses are particularly vulnerable in times of economic recession.',
-    },
-    {
-      'word': 'arbitrary',
-      'phonetic': '/ˈɑːrbɪtreri/',
-      'meaning': 'adj. 任意的，专断的，随心所欲的',
-      'collocation': '阅读搭配: make an arbitrary decision (做出武断的裁决)',
-      'example':
-          'The committee was accused of making arbitrary decisions without consulting members.',
-    },
-  ];
+  void _resetFlip() {
+    if (_isFlipped && mounted) {
+      setState(() => _isFlipped = false);
+    }
+  }
 
-  void _handleRating(String rating) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('已标记：$rating，切至下一张'),
-        duration: const Duration(milliseconds: 700),
-      ),
-    );
-    setState(() {
-      _isFlipped = false;
-      _currentIndex = (_currentIndex + 1) % _deck.length;
-    });
+  Future<void> _handleRating(String rating) async {
+    _resetFlip();
+
+    try {
+      final result = await ref.read(dueSessionProvider.notifier).rate(rating);
+
+      if (!mounted) {
+        return;
+      }
+
+      final checkIn = result.checkInDate;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            checkIn != null ? '今日到期卡片已清空，打卡成功！' : '已标记：$rating，切至下一张',
+          ),
+          duration: const Duration(milliseconds: 700),
+        ),
+      );
+    } on AppException catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(error.message)));
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final sessionState = ref.watch(dueSessionProvider);
+
+    return sessionState.when(
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (error, _) => _buildError(theme, error),
+      data: (session) {
+        if (session == null) {
+          return const SizedBox.shrink();
+        }
+
+        final card = session.current;
+        if (card == null || session.due.dueRemaining == 0) {
+          return _buildCompleted(theme, session.due);
+        }
+
+        return _buildSessionBody(theme, session, card);
+      },
+    );
+  }
+
+  Widget _buildSessionBody(ThemeData theme, DueSession session, DueCard card) {
     final semantic =
         theme.extension<SemanticColors>() ?? SemanticColors.standard;
-    final card = _deck[_currentIndex];
-    final progress = (_currentIndex + 1) / _deck.length;
+    final due = session.due;
+    final progress = due.items.isEmpty
+        ? 0.0
+        : session.completedCount / due.items.length;
 
     return Center(
       child: ConstrainedBox(
@@ -82,7 +104,9 @@ class _FlashcardsViewState extends State<FlashcardsView> {
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        '英语大纲高频核心词',
+                        card.card.category.isEmpty
+                            ? '今日到期卡片'
+                            : card.card.category,
                         style: theme.textTheme.titleSmall?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
@@ -90,7 +114,7 @@ class _FlashcardsViewState extends State<FlashcardsView> {
                     ],
                   ),
                   Text(
-                    '${_currentIndex + 1} / ${_deck.length} 张',
+                    '${session.completedCount + 1} / ${due.items.length} 张',
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       color: theme.colorScheme.primary,
@@ -118,8 +142,8 @@ class _FlashcardsViewState extends State<FlashcardsView> {
                 child: FlipCard(
                   isFlipped: _isFlipped,
                   onFlip: () => setState(() => _isFlipped = !_isFlipped),
-                  front: _buildFrontCard(card),
-                  back: _buildBackCard(card),
+                  front: _buildFrontCard(theme, card.card),
+                  back: _buildBackCard(theme, card.card),
                 ),
               ),
               const SizedBox(height: 32),
@@ -132,24 +156,30 @@ class _FlashcardsViewState extends State<FlashcardsView> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     _buildRatingButton(
+                      theme: theme,
+                      semantic: semantic,
                       label: '忘记',
                       shortcut: '1',
                       dotColor: semantic.danger,
-                      onTap: () => _handleRating('忘记'),
+                      rating: 'forgot',
                     ),
                     const SizedBox(width: 16),
                     _buildRatingButton(
+                      theme: theme,
+                      semantic: semantic,
                       label: '模糊',
                       shortcut: '2',
                       dotColor: semantic.warning,
-                      onTap: () => _handleRating('模糊'),
+                      rating: 'fuzzy',
                     ),
                     const SizedBox(width: 16),
                     _buildRatingButton(
+                      theme: theme,
+                      semantic: semantic,
                       label: '牢记',
                       shortcut: '3',
                       dotColor: semantic.success,
-                      onTap: () => _handleRating('牢记'),
+                      rating: 'remembered',
                     ),
                   ],
                 ),
@@ -161,8 +191,7 @@ class _FlashcardsViewState extends State<FlashcardsView> {
     );
   }
 
-  Widget _buildFrontCard(Map<String, dynamic> card) {
-    final theme = Theme.of(context);
+  Widget _buildFrontCard(ThemeData theme, Flashcard card) {
     return Card(
       elevation: 2,
       shape: RoundedRectangleBorder(
@@ -175,21 +204,18 @@ class _FlashcardsViewState extends State<FlashcardsView> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text(
-                card['word'],
-                style: theme.textTheme.headlineMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 1.0,
-                  color: theme.colorScheme.onSurface,
-                ),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                card['phonetic'],
-                style: TextStyle(
-                  fontSize: 16,
-                  color: theme.colorScheme.onSurfaceVariant,
-                  fontFamily: 'monospace',
+              Flexible(
+                child: SingleChildScrollView(
+                  child: Text(
+                    card.front,
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 1.0,
+                      color: theme.colorScheme.onSurface,
+                      height: 1.5,
+                    ),
+                  ),
                 ),
               ),
               const SizedBox(height: 36),
@@ -218,8 +244,7 @@ class _FlashcardsViewState extends State<FlashcardsView> {
     );
   }
 
-  Widget _buildBackCard(Map<String, dynamic> card) {
-    final theme = Theme.of(context);
+  Widget _buildBackCard(ThemeData theme, Flashcard card) {
     return Card(
       elevation: 2,
       shape: RoundedRectangleBorder(
@@ -234,61 +259,52 @@ class _FlashcardsViewState extends State<FlashcardsView> {
           children: [
             Row(
               children: [
-                Text(
-                  card['word'],
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: theme.colorScheme.primary,
+                Flexible(
+                  child: Text(
+                    card.front,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: theme.colorScheme.primary,
+                    ),
                   ),
                 ),
-                const SizedBox(width: 8),
-                Text(
-                  card['phonetic'],
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
+                if (card.tags.isNotEmpty) ...[
+                  const SizedBox(width: 8),
+                  for (final tag in card.tags.take(3))
+                    Padding(
+                      padding: const EdgeInsets.only(right: 4),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 5,
+                          vertical: 1,
+                        ),
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.surfaceContainerHighest,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          tag,
+                          style: TextStyle(
+                            fontSize: 10,
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
               ],
             ),
             const SizedBox(height: 16),
-            Text(
-              card['meaning'],
-              style: theme.textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
-              ),
-            ),
-            const SizedBox(height: 12),
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.surfaceContainerLowest,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: theme.colorScheme.outlineVariant),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    card['collocation'],
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: theme.colorScheme.onSurface,
-                    ),
+            Expanded(
+              child: SingleChildScrollView(
+                child: Text(
+                  card.back,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 16,
+                    height: 1.6,
                   ),
-                  const SizedBox(height: 6),
-                  Text(
-                    card['example'],
-                    style: TextStyle(
-                      fontSize: 12.5,
-                      fontStyle: FontStyle.italic,
-                      height: 1.4,
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ],
+                ),
               ),
             ),
           ],
@@ -298,17 +314,22 @@ class _FlashcardsViewState extends State<FlashcardsView> {
   }
 
   Widget _buildRatingButton({
+    required ThemeData theme,
+    required SemanticColors semantic,
     required String label,
     required String shortcut,
     required Color dotColor,
-    required VoidCallback onTap,
+    required String rating,
   }) {
+    final session = ref.read(dueSessionProvider).value;
+    final isBusy = session?.reviewing ?? false;
+
     return OutlinedButton(
       style: OutlinedButton.styleFrom(
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       ),
-      onPressed: onTap,
+      onPressed: isBusy ? null : () => _handleRating(rating),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -319,6 +340,66 @@ class _FlashcardsViewState extends State<FlashcardsView> {
           Text(
             '($shortcut)',
             style: const TextStyle(fontSize: 11, color: Color(0xFF7C6B5D)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCompleted(ThemeData theme, DueList due) {
+    final remaining = due.dueRemaining;
+
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            Icons.verified_outlined,
+            size: 44,
+            color: theme.colorScheme.primary,
+          ),
+          const SizedBox(height: 12),
+          Text(
+            '本轮到期卡片已清空',
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            remaining > 0 ? '仍有 $remaining 张到期，继续加油' : '休息一下，明天按遗忘曲线再来复习',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 16),
+          OutlinedButton.icon(
+            onPressed: () => ref.read(dueSessionProvider.notifier).refresh(),
+            icon: const Icon(Icons.refresh_rounded, size: 18),
+            label: Text(remaining > 0 ? '加载下一批' : '刷新队列'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildError(ThemeData theme, Object error) {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            Icons.style_outlined,
+            size: 40,
+            color: theme.colorScheme.outline,
+          ),
+          const SizedBox(height: 12),
+          Text(error is AppException ? error.message : '卡片加载失败，请稍后重试'),
+          const SizedBox(height: 12),
+          OutlinedButton.icon(
+            onPressed: () => ref.read(dueSessionProvider.notifier).refresh(),
+            icon: const Icon(Icons.refresh_rounded, size: 18),
+            label: const Text('重新加载'),
           ),
         ],
       ),

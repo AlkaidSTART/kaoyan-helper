@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import 'widgets/ai_chat_panel.dart';
 import 'widgets/side_nav_rail.dart';
@@ -28,13 +29,24 @@ class ClosePanelIntent extends Intent {
 }
 
 class AppShell extends ConsumerWidget {
-  const AppShell({super.key});
+  final StatefulNavigationShell? navigationShell;
+
+  const AppShell({super.key, this.navigationShell});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final width = MediaQuery.sizeOf(context).width;
     final isDesktop = width >= 1024;
-    final currentIndex = ref.watch(currentNavIndexProvider);
+    final int currentIndex =
+        navigationShell?.currentIndex ?? ref.watch(currentNavIndexProvider);
+
+    // Keep legacy provider in sync with router branch
+    if (navigationShell != null &&
+        ref.read(currentNavIndexProvider) != currentIndex) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ref.read(currentNavIndexProvider.notifier).setIndex(currentIndex);
+      });
+    }
 
     final pages = [
       const DashboardView(),
@@ -94,7 +106,7 @@ class AppShell extends ConsumerWidget {
                 children: [
                   Row(
                     children: [
-                      const SideNavRail(),
+                      SideNavRail(navigationShell: navigationShell),
                       VerticalDivider(
                         thickness: 1,
                         width: 1,
@@ -104,7 +116,7 @@ class AppShell extends ConsumerWidget {
                         child: Center(
                           child: ConstrainedBox(
                             constraints: const BoxConstraints(maxWidth: 960),
-                            child: pages[activeIndex],
+                            child: navigationShell ?? pages[activeIndex],
                           ),
                         ),
                       ),
@@ -123,11 +135,15 @@ class AppShell extends ConsumerWidget {
     // 非桌面端的简单 fallback (平板或移动端)
     return Scaffold(
       appBar: AppBar(title: const Text('登科')),
-      body: pages[activeIndex],
+      body: navigationShell ?? pages[activeIndex],
       bottomNavigationBar: NavigationBar(
         selectedIndex: activeIndex > 5 ? 0 : activeIndex,
         onDestinationSelected: (index) {
-          ref.read(currentNavIndexProvider.notifier).setIndex(index);
+          if (navigationShell != null) {
+            navigationShell!.goBranch(index);
+          } else {
+            ref.read(currentNavIndexProvider.notifier).setIndex(index);
+          }
         },
         destinations: const [
           NavigationDestination(

@@ -1,0 +1,354 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id              String           @id @db.Uuid
+  email           String
+  nickname        String?
+  avatarUrl       String?          @map("avatar_url")
+  examYear        Int?             @map("exam_year")
+  role            String
+  isBanned        Boolean          @default(false) @map("is_banned")
+  bannedUntil     DateTime?        @map("banned_until") @db.Timestamptz(6)
+  createdAt       DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime         @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  adminCredential AdminCredential?
+  adminSessions   AdminSession[]
+  userSessions    UserSession[]
+  targets         UserTarget[]
+  questions       Question[]       @relation("QuestionCreator")
+  attempts        QuestionAttempt[]
+  mistakes        MistakeRecord[]
+  flashcards      Flashcard[]
+  cardProgresses  CardProgress[]
+  cardReviews     CardReviewEvent[]
+  checkIns        CheckInRecord[]
+  aiUsage         AiUsageDaily[]
+  reviewedQuestions Question[]     @relation("QuestionReviewer")
+  adminAuditLogs  AdminAuditLog[]
+  schoolImportJobs SchoolImportJob[]
+  activities      UserActivity[]
+
+  @@index([role])
+  @@index([isBanned])
+  @@map("users")
+}
+
+model UserSession {
+  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tokenHash  String    @unique @map("token_hash")
+  userId     String    @map("user_id") @db.Uuid
+  clientType String    @default("flutter") @map("client_type")
+  deviceName String?   @map("device_name")
+  expiresAt  DateTime  @map("expires_at") @db.Timestamptz(6)
+  revokedAt  DateTime? @map("revoked_at") @db.Timestamptz(6)
+  lastSeenAt DateTime  @map("last_seen_at") @db.Timestamptz(6)
+  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, expiresAt])
+  @@index([expiresAt])
+  @@map("user_sessions")
+}
+
+model AdminCredential {
+  userId       String   @id @map("user_id") @db.Uuid
+  passwordHash String   @map("password_hash")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("admin_credentials")
+}
+
+model AdminSession {
+  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tokenHash  String    @unique @map("token_hash")
+  userId     String    @map("user_id") @db.Uuid
+  deviceName String?   @map("device_name")
+  expiresAt  DateTime  @map("expires_at") @db.Timestamptz(6)
+  revokedAt  DateTime? @map("revoked_at") @db.Timestamptz(6)
+  lastSeenAt DateTime  @map("last_seen_at") @db.Timestamptz(6)
+  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, expiresAt])
+  @@index([expiresAt])
+  @@map("admin_sessions")
+}
+
+// ---------------------------------------------------------------------------
+// 业务域模型：与 supabase/migrations/20260926120000_baseline_backend_api.sql 对齐
+// ---------------------------------------------------------------------------
+
+model UserTarget {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  schoolId  String   @map("school_id") @db.Uuid
+  type      String
+  majorCode String?  @map("major_code")
+  majorName String?  @map("major_name")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  school    School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, schoolId, type, majorCode])
+  @@index([userId])
+  @@map("user_targets")
+}
+
+model Question {
+  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  subject      String
+  chapter      String?
+  year         Int?
+  type         String
+  stem         String
+  options      Json      @default("[]")
+  answer       String
+  explanation  String?
+  difficulty   String?
+  source       String    @default("ugc")
+  visibility   String    @default("private")
+  reviewStatus String    @default("pending") @map("review_status")
+  isApproved   Boolean   @default(false) @map("is_approved")
+  reviewedById String?   @map("reviewed_by") @db.Uuid
+  reviewedAt   DateTime? @map("reviewed_at") @db.Timestamptz(6)
+  reviewNote   String?   @map("review_note")
+  creatorId    String?   @map("creator_id") @db.Uuid
+  isDeleted    Boolean   @default(false) @map("is_deleted")
+  deletedReason String?  @map("deleted_reason")
+  version      Int       @default(1)
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  creator      User?     @relation("QuestionCreator", fields: [creatorId], references: [id], onDelete: SetNull)
+  reviewer     User?     @relation("QuestionReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
+  attempts     QuestionAttempt[]
+  mistakes     MistakeRecord[]
+
+  @@index([subject, chapter, year])
+  @@index([creatorId])
+  @@index([reviewStatus])
+  @@map("questions")
+}
+
+model QuestionAttempt {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  attemptId  String   @map("attempt_id") @db.Uuid
+  userId     String   @map("user_id") @db.Uuid
+  questionId String   @map("question_id") @db.Uuid
+  answer     String
+  isCorrect  Boolean  @map("is_correct")
+  result     Json
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, attemptId])
+  @@index([userId, createdAt])
+  @@map("question_attempts")
+}
+
+model MistakeRecord {
+  id                String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId            String    @map("user_id") @db.Uuid
+  questionId        String    @map("question_id") @db.Uuid
+  status            String    @default("active")
+  errorCount        Int       @default(1) @map("error_count")
+  consecutiveCorrect Int      @default(0) @map("consecutive_correct")
+  lastWrongAt       DateTime  @default(now()) @map("last_wrong_at") @db.Timestamptz(6)
+  masteredAt        DateTime? @map("mastered_at") @db.Timestamptz(6)
+  version           Int       @default(1)
+  createdAt         DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt         DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  question          Question  @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, questionId])
+  @@index([userId, status])
+  @@map("mistake_records")
+}
+
+model School {
+  id                String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name              String          @unique
+  province          String?
+  region            String?
+  is985             Boolean         @default(false) @map("is_985")
+  is211             Boolean         @default(false) @map("is_211")
+  isDoubleFirstClass Boolean        @default(false) @map("is_double_first_class")
+  isSelfMarking     Boolean         @default(false) @map("is_self_marking")
+  isPublished       Boolean         @default(false) @map("is_published")
+  version           Int             @default(1)
+  createdAt         DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt         DateTime        @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  programs          SchoolProgram[]
+  targets           UserTarget[]
+
+  @@map("schools")
+}
+
+model SchoolProgram {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  schoolId       String   @map("school_id") @db.Uuid
+  majorCode      String   @map("major_code")
+  majorName      String   @map("major_name")
+  year           Int
+  studyMode      String?  @map("study_mode")
+  planEnrollment Int?     @map("plan_enrollment")
+  minScore       Decimal? @map("min_score") @db.Decimal(6, 2)
+  avgScore       Decimal? @map("avg_score") @db.Decimal(6, 2)
+  isPublished    Boolean  @default(false) @map("is_published")
+  version        Int      @default(1)
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  school         School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+
+  @@unique([schoolId, majorCode, year])
+  @@index([schoolId, majorCode, year])
+  @@map("school_programs")
+}
+
+model Flashcard {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  source    String   @default("ugc")
+  creatorId String?  @map("creator_id") @db.Uuid
+  category  String
+  front     String
+  back      String
+  tags      String[] @default([])
+  isDeleted Boolean  @default(false) @map("is_deleted")
+  version   Int      @default(1)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  creator   User?    @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  progress  CardProgress[]
+
+  @@index([creatorId])
+  @@map("flashcards")
+}
+
+model CardProgress {
+  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId       String    @map("user_id") @db.Uuid
+  cardId       String    @map("card_id") @db.Uuid
+  repetitions  Int       @default(0)
+  intervalDays Int       @default(0) @map("interval_days")
+  easeFactor   Decimal   @default(2.50) @map("ease_factor") @db.Decimal(4, 2)
+  dueAt        DateTime  @default(now()) @map("due_at") @db.Timestamptz(6)
+  lastRating   String?   @map("last_rating")
+  version      Int       @default(1)
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  card         Flashcard @relation(fields: [cardId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, cardId])
+  @@index([userId, dueAt])
+  @@map("card_progress")
+}
+
+model CardReviewEvent {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId         String   @map("user_id") @db.Uuid
+  cardId         String   @map("card_id") @db.Uuid
+  idempotencyKey String   @map("idempotency_key")
+  rating         String
+  result         Json
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, idempotencyKey])
+  @@map("card_review_events")
+}
+
+model CheckInRecord {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId      String   @map("user_id") @db.Uuid
+  checkInDate DateTime @map("check_in_date") @db.Date
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, checkInDate])
+  @@index([userId, checkInDate])
+  @@map("check_in_records")
+}
+
+model AiUsageDaily {
+  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId           String   @map("user_id") @db.Uuid
+  usageDate        DateTime @map("usage_date") @db.Date
+  callCount        Int      @default(0) @map("call_count")
+  promptTokens     Int      @default(0) @map("prompt_tokens")
+  completionTokens Int      @default(0) @map("completion_tokens")
+  costEstimate     Decimal  @default(0) @map("cost_estimate") @db.Decimal(12, 6)
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, usageDate])
+  @@map("ai_usage_daily")
+}
+
+// ---------------------------------------------------------------------------
+// 管理域：审计日志与院校导入任务（对齐 supabase/migrations 基线表）
+// ---------------------------------------------------------------------------
+
+model AdminAuditLog {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  actorId      String   @map("actor_id") @db.Uuid
+  action       String
+  resourceType String   @map("resource_type")
+  resourceId   String?  @map("resource_id")
+  requestId    String?  @map("request_id")
+  metadata     Json     @default("{}")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  actor        User     @relation(fields: [actorId], references: [id], onDelete: Cascade)
+
+  @@index([actorId, createdAt(sort: Desc)])
+  @@index([resourceType, resourceId])
+  @@map("admin_audit_logs")
+}
+
+model SchoolImportJob {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  actorId   String   @map("actor_id") @db.Uuid
+  format    String
+  mode      String
+  status    String   @default("validated")
+  summary   Json     @default("{}")
+  payload   Json     @default("[]")
+  version   Int      @default(1)
+  expiresAt DateTime @map("expires_at") @db.Timestamptz(6)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  actor     User     @relation(fields: [actorId], references: [id], onDelete: Cascade)
+
+  @@map("school_import_jobs")
+}
+
+// ---------------------------------------------------------------------------
+// 观测域：用户活动事件（p1 admin-readonly-activity ADR-2）
+// 服务端在既有写路径成功后旁路落一条事件；summary 只存最少必要字段。
+// ---------------------------------------------------------------------------
+
+model UserActivity {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  type      String
+  summary   Json     @default("{}")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([createdAt(sort: Desc)])
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([type, createdAt(sort: Desc)])
+  @@map("user_activities")
+}
