@@ -2,7 +2,7 @@
 
 > 版本：v1.0  
 > 日期：2026-09-26  
-> 状态：P2-0 实施准备与 P2-1 API 基础层已完成；P2-2 及后续待实现  
+> 状态：P2-0 实施准备与 P2-1 API 基础层已完成；P2-2 及后续待实现
 > 上游需求：`docs/p0-definition/next-backend-api-rbac/definition.md`  
 > 上游设计：`docs/p1-design/next-backend-api-rbac/design.md`  
 > 接口契约：`docs/p1-design/next-backend-api-rbac/api-contract.md`

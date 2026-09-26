@@ -2,7 +2,7 @@
 
 > 版本：v1.0  
 > 日期：2026-09-26  
-> 状态：基础层实现与自动化验证已完成，Flutter、Supabase 与业务 E2E 不在本轮范围  
+> 状态：基础层实现与自动化验证已完成，Flutter、Supabase 与业务 E2E 不在本轮范围
 > 上游需求：`docs/p0-definition/next-backend-api-foundation/definition.md`  
 > 上游设计：`docs/p1-design/next-backend-api-foundation/design.md`  
 > 开发清单：`docs/p2-development/next-backend-api-foundation/development.md`

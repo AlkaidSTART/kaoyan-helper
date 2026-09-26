@@ -2,7 +2,7 @@
 
 > 版本：v1.0  
 > 日期：2026-09-26  
-> 状态：P2-101 至 P2-109 已实现，自动化验证通过  
+> 状态：P2-101 至 P2-109 已实现，自动化验证通过
 > 上游需求：`docs/p0-definition/next-backend-api-foundation/definition.md`  
 > 上游设计：`docs/p1-design/next-backend-api-foundation/design.md`  
 > 总开发清单：`docs/p2-development/next-backend-api-rbac/development.md` 的 P2-1
