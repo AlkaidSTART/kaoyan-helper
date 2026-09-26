@@ -28,7 +28,9 @@ class DashboardSummary {
       dueCardCount: (json['dueCardCount'] as num?)?.toInt() ?? 0,
       streakDays: (json['streakDays'] as num?)?.toInt() ?? 0,
       totalReviewedCards: (json['totalReviewedCards'] as num?)?.toInt() ?? 0,
-      primaryTarget: target is Map<String, dynamic> ? PrimaryTarget.fromJson(target) : null,
+      primaryTarget: target is Map<String, dynamic>
+          ? PrimaryTarget.fromJson(target)
+          : null,
     );
   }
 

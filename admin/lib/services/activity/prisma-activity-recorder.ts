@@ -22,7 +22,7 @@ export class PrismaActivityRecorder implements ActivityRecorder {
         data: {
           userId: input.userId,
           type: input.type,
-          summary: (input.summary ?? {}) as Record<string, unknown>,
+          summary: JSON.parse(JSON.stringify(input.summary ?? {})),
         },
       });
     } catch (error) {

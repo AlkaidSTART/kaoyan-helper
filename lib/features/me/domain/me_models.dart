@@ -23,7 +23,9 @@ class TargetSchool {
       type: json['type'] as String? ?? 'backup',
       majorCode: json['majorCode'] as String?,
       majorName: json['majorName'] as String?,
-      updatedAt: DateTime.tryParse(json['updatedAt'] as String? ?? '') ?? DateTime.fromMillisecondsSinceEpoch(0),
+      updatedAt:
+          DateTime.tryParse(json['updatedAt'] as String? ?? '') ??
+          DateTime.fromMillisecondsSinceEpoch(0),
     );
   }
 }

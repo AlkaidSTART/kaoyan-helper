@@ -15,7 +15,10 @@ import 'package:kaoyan_helper/features/mistakes/data/mistakes_repository.dart';
 import 'package:kaoyan_helper/features/quiz/data/quiz_repository.dart';
 import 'package:kaoyan_helper/features/schools/data/schools_repository.dart';
 
-Map<String, dynamic> _successEnvelope(dynamic data, {Map<String, dynamic>? pagination}) {
+Map<String, dynamic> _successEnvelope(
+  dynamic data, {
+  Map<String, dynamic>? pagination,
+}) {
   return {
     'success': true,
     'data': data,
@@ -27,7 +30,7 @@ Map<String, dynamic> _successEnvelope(dynamic data, {Map<String, dynamic>? pagin
   };
 }
 
-Map<String, dynamic> _errorEnvelope(String code, String message, ) {
+Map<String, dynamic> _errorEnvelope(String code, String message) {
   return {
     'success': false,
     'error': {'code': code, 'message': message, 'details': null},
@@ -162,39 +165,53 @@ void main() {
       repository = RemoteAuthRepository(client: client, tokenStore: tokenStore);
     });
 
-    test('loginWithCode posts flutter clientType and persists tokens', () async {
-      client.responder = (_) => ApiClientResponse(
-            data: {
-              'accessToken': 'access-1',
-              'refreshToken': 'refresh-1',
-              'expiresIn': 3600,
-              'tokenType': 'Bearer',
-              'user': {'id': 'u-1', 'email': 'user@example.com', 'nickname': '登科同学'},
+    test(
+      'loginWithCode posts flutter clientType and persists tokens',
+      () async {
+        client.responder = (_) => ApiClientResponse(
+          data: {
+            'accessToken': 'access-1',
+            'refreshToken': 'refresh-1',
+            'expiresIn': 3600,
+            'tokenType': 'Bearer',
+            'user': {
+              'id': 'u-1',
+              'email': 'user@example.com',
+              'nickname': '登科同学',
             },
-          );
+          },
+        );
 
-      final user = await repository.loginWithCode('User@Example.com ', '123456');
+        final user = await repository.loginWithCode(
+          'User@Example.com ',
+          '123456',
+        );
 
-      expect(user.id, 'u-1');
-      expect(user.nickname, '登科同学');
-      expect(await tokenStore.readAccessToken(), 'access-1');
-      expect(await tokenStore.readRefreshToken(), 'refresh-1');
+        expect(user.id, 'u-1');
+        expect(user.nickname, '登科同学');
+        expect(await tokenStore.readAccessToken(), 'access-1');
+        expect(await tokenStore.readRefreshToken(), 'refresh-1');
 
-      final call = client.calls.single;
-      expect(call.method, 'POST');
-      expect(call.path, '/auth/login/code');
-      expect(call.body, {
-        'email': 'user@example.com',
-        'code': '123456',
-        'clientType': 'flutter',
-      });
-    });
+        final call = client.calls.single;
+        expect(call.method, 'POST');
+        expect(call.path, '/auth/login/code');
+        expect(call.body, {
+          'email': 'user@example.com',
+          'code': '123456',
+          'clientType': 'flutter',
+        });
+      },
+    );
 
     test('loginWithCode rejects malformed email without request', () async {
       await expectLater(
         repository.loginWithCode('13800000000', '123456'),
         throwsA(
-          isA<AuthException>().having((e) => e.code, 'code', 'VALIDATION_FAILED'),
+          isA<AuthException>().having(
+            (e) => e.code,
+            'code',
+            'VALIDATION_FAILED',
+          ),
         ),
       );
       expect(client.calls, isEmpty);
@@ -215,10 +232,9 @@ void main() {
     });
 
     test('sendCode posts email with login purpose', () async {
-      client.responder = (_) => const ApiClientResponse(data: {
-            'expiresInSeconds': 300,
-            'retryAfterSeconds': 60,
-          });
+      client.responder = (_) => const ApiClientResponse(
+        data: {'expiresInSeconds': 300, 'retryAfterSeconds': 60},
+      );
 
       await repository.sendCode('user@example.com');
 
@@ -230,12 +246,12 @@ void main() {
     test('restoreSession returns user and keeps tokens', () async {
       await tokenStore.save(accessToken: 'access-1', refreshToken: 'refresh-1');
       client.responder = (_) => ApiClientResponse(
-            data: {
-              'user': {'id': 'u-1', 'nickname': '登科同学'},
-              'permissions': ['quiz:read'],
-              'expiresAt': '2026-09-26T18:00:00Z',
-            },
-          );
+        data: {
+          'user': {'id': 'u-1', 'nickname': '登科同学'},
+          'permissions': ['quiz:read'],
+          'expiresAt': '2026-09-26T18:00:00Z',
+        },
+      );
 
       final user = await repository.restoreSession();
 
@@ -253,7 +269,8 @@ void main() {
 
     test('restoreSession clears tokens on auth failure', () async {
       await tokenStore.save(accessToken: 'access-1', refreshToken: 'refresh-1');
-      client.responder = (_) => throw const AuthException('登录已过期', code: 'REFRESH_INVALID');
+      client.responder = (_) =>
+          throw const AuthException('登录已过期', code: 'REFRESH_INVALID');
 
       final user = await repository.restoreSession();
 
@@ -263,7 +280,8 @@ void main() {
 
     test('logout clears tokens even when backend fails', () async {
       await tokenStore.save(accessToken: 'access-1', refreshToken: 'refresh-1');
-      client.responder = (_) => throw const NetworkException('网络不可用', code: 'NETWORK_UNAVAILABLE');
+      client.responder = (_) =>
+          throw const NetworkException('网络不可用', code: 'NETWORK_UNAVAILABLE');
 
       await repository.logout();
 
@@ -281,21 +299,21 @@ void main() {
 
     test('DashboardRepository.getSummary parses aggregate fields', () async {
       client.responder = (_) => ApiClientResponse(
-            data: {
-              'daysUntilExam': 98,
-              'todayQuestionCount': 32,
-              'activeMistakeCount': 5,
-              'dueCardCount': 24,
-              'streakDays': 12,
-              'totalReviewedCards': 316,
-              'primaryTarget': {
-                'schoolId': 's-1',
-                'schoolName': '浙江大学',
-                'majorCode': '085404',
-                'majorName': '计算机技术',
-              },
-            },
-          );
+        data: {
+          'daysUntilExam': 98,
+          'todayQuestionCount': 32,
+          'activeMistakeCount': 5,
+          'dueCardCount': 24,
+          'streakDays': 12,
+          'totalReviewedCards': 316,
+          'primaryTarget': {
+            'schoolId': 's-1',
+            'schoolName': '浙江大学',
+            'majorCode': '085404',
+            'majorName': '计算机技术',
+          },
+        },
+      );
 
       final summary = await DashboardRepository(client: client).getSummary();
 
@@ -306,158 +324,179 @@ void main() {
       expect(client.calls.single.query, {'timezone': 'Asia/Shanghai'});
     });
 
-    test('QuizRepository.listQuestions builds filters and pagination', () async {
-      client.responder = (_) => ApiClientResponse(
-            data: {
-              'items': [
-                {
-                  'id': 'q-1',
-                  'subject': 'politics',
-                  'type': 'single_choice',
-                  'stem': '唯物辩证法的实质和核心是（ ）',
-                  'options': [
-                    {'key': 'A', 'content': '质量互变规律'},
-                    {'key': 'B', 'content': '对立统一规律'},
-                  ],
-                  'source': 'official',
-                },
-              ],
-            },
-            pagination: const ApiPagination(page: 1, pageSize: 20, total: 1, totalPages: 1),
-          );
+    test(
+      'QuizRepository.listQuestions builds filters and pagination',
+      () async {
+        client.responder = (_) => ApiClientResponse(
+          data: {
+            'items': [
+              {
+                'id': 'q-1',
+                'subject': 'politics',
+                'type': 'single_choice',
+                'stem': '唯物辩证法的实质和核心是（ ）',
+                'options': [
+                  {'key': 'A', 'content': '质量互变规律'},
+                  {'key': 'B', 'content': '对立统一规律'},
+                ],
+                'source': 'official',
+              },
+            ],
+          },
+          pagination: const ApiPagination(
+            page: 1,
+            pageSize: 20,
+            total: 1,
+            totalPages: 1,
+          ),
+        );
 
-      final page = await QuizRepository(client: client).listQuestions(
-        scope: 'public',
-        subject: 'politics',
-        search: '辩证法',
-      );
+        final page = await QuizRepository(
+          client: client,
+        ).listQuestions(scope: 'public', subject: 'politics', search: '辩证法');
 
-      expect(page.items.single.stem, contains('唯物辩证法'));
-      expect(page.items.single.options.length, 2);
-      expect(page.total, 1);
-      final call = client.calls.single;
-      expect(call.path, '/questions');
-      expect(call.query?['scope'], 'public');
-      expect(call.query?['subject'], 'politics');
-    });
+        expect(page.items.single.stem, contains('唯物辩证法'));
+        expect(page.items.single.options.length, 2);
+        expect(page.total, 1);
+        final call = client.calls.single;
+        expect(call.path, '/questions');
+        expect(call.query?['scope'], 'public');
+        expect(call.query?['subject'], 'politics');
+      },
+    );
 
     test('QuizRepository.answerQuestion sends client attemptId', () async {
       client.responder = (_) => ApiClientResponse(
-            data: {
-              'isCorrect': false,
-              'correctAnswer': 'B',
-              'explanation': '对立统一规律',
-              'mistake': {'id': 'm-1', 'status': 'active', 'errorCount': 1},
-              'answeredAt': '2026-09-26T10:00:00Z',
-            },
-          );
+        data: {
+          'isCorrect': false,
+          'correctAnswer': 'B',
+          'explanation': '对立统一规律',
+          'mistake': {'id': 'm-1', 'status': 'active', 'errorCount': 1},
+          'answeredAt': '2026-09-26T10:00:00Z',
+        },
+      );
 
-      final result = await QuizRepository(client: client)
-          .answerQuestion('q-1', answer: 'A', attemptId: 'attempt-1');
+      final result = await QuizRepository(
+        client: client,
+      ).answerQuestion('q-1', answer: 'A', attemptId: 'attempt-1');
 
       expect(result.isCorrect, isFalse);
       expect(result.correctAnswer, 'B');
       expect(result.mistakeCreated, isTrue);
-      expect(client.calls.single.body, {'answer': 'A', 'attemptId': 'attempt-1'});
-    });
-
-    test('MistakesRepository.redoMistake parses state machine result', () async {
-      client.responder = (_) => ApiClientResponse(
-            data: {
-              'isCorrect': true,
-              'correctAnswer': 'B',
-              'explanation': null,
-              'mistake': {
-                'id': 'm-1',
-                'status': 'active',
-                'errorCount': 1,
-                'consecutiveCorrect': 1,
-                'lastWrongAt': '2026-09-26T09:00:00Z',
-                'createdAt': '2026-09-20T09:00:00Z',
-                'updatedAt': '2026-09-26T10:00:00Z',
-              },
-              'mastered': false,
-              'answeredAt': '2026-09-26T10:00:00Z',
-            },
-          );
-
-      final result = await MistakesRepository(client: client)
-          .redoMistake('m-1', answer: 'B', attemptId: 'attempt-2');
-
-      expect(result.isCorrect, isTrue);
-      expect(result.mastered, isFalse);
-      expect(result.mistake.consecutiveCorrect, 1);
-    });
-
-    test('SchoolsRepository.addTarget posts type and returns targets', () async {
-      client.responder = (_) => ApiClientResponse(
-            data: {
-              'targets': [
-                {
-                  'schoolId': 's-1',
-                  'schoolName': '浙江大学',
-                  'type': 'primary',
-                  'majorCode': '085404',
-                  'majorName': '计算机技术',
-                },
-              ],
-            },
-          );
-
-      final targets = await SchoolsRepository(client: client).addTarget(
-        's-1',
-        type: 'primary',
-        majorCode: '085404',
-        majorName: '计算机技术',
-      );
-
-      expect(targets.single.schoolName, '浙江大学');
-      expect(targets.single.type, 'primary');
       expect(client.calls.single.body, {
-        'type': 'primary',
-        'majorCode': '085404',
-        'majorName': '计算机技术',
+        'answer': 'A',
+        'attemptId': 'attempt-1',
       });
     });
 
+    test(
+      'MistakesRepository.redoMistake parses state machine result',
+      () async {
+        client.responder = (_) => ApiClientResponse(
+          data: {
+            'isCorrect': true,
+            'correctAnswer': 'B',
+            'explanation': null,
+            'mistake': {
+              'id': 'm-1',
+              'status': 'active',
+              'errorCount': 1,
+              'consecutiveCorrect': 1,
+              'lastWrongAt': '2026-09-26T09:00:00Z',
+              'createdAt': '2026-09-20T09:00:00Z',
+              'updatedAt': '2026-09-26T10:00:00Z',
+            },
+            'mastered': false,
+            'answeredAt': '2026-09-26T10:00:00Z',
+          },
+        );
+
+        final result = await MistakesRepository(
+          client: client,
+        ).redoMistake('m-1', answer: 'B', attemptId: 'attempt-2');
+
+        expect(result.isCorrect, isTrue);
+        expect(result.mastered, isFalse);
+        expect(result.mistake.consecutiveCorrect, 1);
+      },
+    );
+
+    test(
+      'SchoolsRepository.addTarget posts type and returns targets',
+      () async {
+        client.responder = (_) => ApiClientResponse(
+          data: {
+            'targets': [
+              {
+                'schoolId': 's-1',
+                'schoolName': '浙江大学',
+                'type': 'primary',
+                'majorCode': '085404',
+                'majorName': '计算机技术',
+              },
+            ],
+          },
+        );
+
+        final targets = await SchoolsRepository(client: client).addTarget(
+          's-1',
+          type: 'primary',
+          majorCode: '085404',
+          majorName: '计算机技术',
+        );
+
+        expect(targets.single.schoolName, '浙江大学');
+        expect(targets.single.type, 'primary');
+        expect(client.calls.single.body, {
+          'type': 'primary',
+          'majorCode': '085404',
+          'majorName': '计算机技术',
+        });
+      },
+    );
+
     test('FlashcardsRepository.reviewCard sends idempotencyKey', () async {
       client.responder = (_) => ApiClientResponse(
-            data: {
-              'progress': {
-                'repetitions': 1,
-                'intervalDays': 1,
-                'easeFactor': 2.6,
-                'dueAt': '2026-09-27T10:00:00Z',
-                'lastRating': 'remembered',
-              },
-              'dueRemaining': 0,
-              'checkIn': {'checkInDate': '2026-09-26'},
-            },
-          );
+        data: {
+          'progress': {
+            'repetitions': 1,
+            'intervalDays': 1,
+            'easeFactor': 2.6,
+            'dueAt': '2026-09-27T10:00:00Z',
+            'lastRating': 'remembered',
+          },
+          'dueRemaining': 0,
+          'checkIn': {'checkInDate': '2026-09-26'},
+        },
+      );
 
-      final result = await FlashcardsRepository(client: client)
-          .reviewCard('c-1', rating: 'remembered', idempotencyKey: 'idem-1');
+      final result = await FlashcardsRepository(
+        client: client,
+      ).reviewCard('c-1', rating: 'remembered', idempotencyKey: 'idem-1');
 
       expect(result.dueRemaining, 0);
       expect(result.checkInDate, isNotNull);
-      expect(client.calls.single.body, {'rating': 'remembered', 'idempotencyKey': 'idem-1'});
+      expect(client.calls.single.body, {
+        'rating': 'remembered',
+        'idempotencyKey': 'idem-1',
+      });
     });
 
     test('MeRepository.getTargets parses snapshot list', () async {
       client.responder = (_) => ApiClientResponse(
-            data: {
-              'targets': [
-                {
-                  'schoolId': 's-1',
-                  'schoolName': '浙江大学',
-                  'type': 'primary',
-                  'majorCode': '085404',
-                  'majorName': '计算机技术',
-                  'updatedAt': '2026-09-26T10:00:00Z',
-                },
-              ],
+        data: {
+          'targets': [
+            {
+              'schoolId': 's-1',
+              'schoolName': '浙江大学',
+              'type': 'primary',
+              'majorCode': '085404',
+              'majorName': '计算机技术',
+              'updatedAt': '2026-09-26T10:00:00Z',
             },
-          );
+          ],
+        },
+      );
 
       final targets = await MeRepository(client: client).getTargets();
 
@@ -469,7 +508,10 @@ void main() {
   group('DioClient 401 refresh & retry', () {
     test('refreshes tokens once and replays the original request', () async {
       final tokenStore = MemoryAuthTokenStore();
-      await tokenStore.save(accessToken: 'expired', refreshToken: 'refresh-old');
+      await tokenStore.save(
+        accessToken: 'expired',
+        refreshToken: 'refresh-old',
+      );
 
       final requestBodies = <Map<String, dynamic>>[];
       final adapter = _ScriptedAdapter((options) {
@@ -482,12 +524,14 @@ void main() {
 
         if (options.uri.path.endsWith('/auth/refresh')) {
           return ResponseBody.fromString(
-            jsonEncode(_successEnvelope({
-              'accessToken': 'access-new',
-              'refreshToken': 'refresh-new',
-              'expiresIn': 3600,
-              'tokenType': 'Bearer',
-            })),
+            jsonEncode(
+              _successEnvelope({
+                'accessToken': 'access-new',
+                'refreshToken': 'refresh-new',
+                'expiresIn': 3600,
+                'tokenType': 'Bearer',
+              }),
+            ),
             200,
             headers: _jsonHeaders,
           );
@@ -519,44 +563,55 @@ void main() {
       expect(await tokenStore.readAccessToken(), 'access-new');
       expect(await tokenStore.readRefreshToken(), 'refresh-new');
 
-      final refreshCall = requestBodies
-          .firstWhere((call) => (call['path'] as String).endsWith('/auth/refresh'));
+      final refreshCall = requestBodies.firstWhere(
+        (call) => (call['path'] as String).endsWith('/auth/refresh'),
+      );
       expect(refreshCall['body'], {'refreshToken': 'refresh-old'});
     });
 
-    test('unrecoverable refresh clears tokens and reports expired session', () async {
-      final tokenStore = MemoryAuthTokenStore();
-      await tokenStore.save(accessToken: 'expired', refreshToken: 'refresh-old');
+    test(
+      'unrecoverable refresh clears tokens and reports expired session',
+      () async {
+        final tokenStore = MemoryAuthTokenStore();
+        await tokenStore.save(
+          accessToken: 'expired',
+          refreshToken: 'refresh-old',
+        );
 
-      final adapter = _ScriptedAdapter((options) {
-        if (options.uri.path.endsWith('/auth/refresh')) {
+        final adapter = _ScriptedAdapter((options) {
+          if (options.uri.path.endsWith('/auth/refresh')) {
+            return ResponseBody.fromString(
+              jsonEncode(_errorEnvelope('REFRESH_INVALID', '刷新凭证无效')),
+              401,
+              headers: _jsonHeaders,
+            );
+          }
+
           return ResponseBody.fromString(
-            jsonEncode(_errorEnvelope('REFRESH_INVALID', '刷新凭证无效')),
+            jsonEncode(_errorEnvelope('TOKEN_EXPIRED', '访问令牌已过期')),
             401,
             headers: _jsonHeaders,
           );
-        }
+        });
 
-        return ResponseBody.fromString(
-          jsonEncode(_errorEnvelope('TOKEN_EXPIRED', '访问令牌已过期')),
-          401,
-          headers: _jsonHeaders,
+        final client = DioClient(
+          tokenStore: tokenStore,
+          dio: Dio()..httpClientAdapter = adapter,
         );
-      });
 
-      final client = DioClient(
-        tokenStore: tokenStore,
-        dio: Dio()..httpClientAdapter = adapter,
-      );
-
-      await expectLater(
-        DashboardRepository(client: client).getSummary(),
-        throwsA(
-          isA<AuthException>().having((e) => e.code, 'code', 'REFRESH_INVALID'),
-        ),
-      );
-      expect(await tokenStore.readAccessToken(), isNull);
-    });
+        await expectLater(
+          DashboardRepository(client: client).getSummary(),
+          throwsA(
+            isA<AuthException>().having(
+              (e) => e.code,
+              'code',
+              'REFRESH_INVALID',
+            ),
+          ),
+        );
+        expect(await tokenStore.readAccessToken(), isNull);
+      },
+    );
   });
 }
 

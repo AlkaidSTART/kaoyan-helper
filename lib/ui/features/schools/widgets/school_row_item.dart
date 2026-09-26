@@ -61,7 +61,10 @@ class _SchoolRowItemState extends State<SchoolRowItem> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 8.0),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20.0,
+                    vertical: 8.0,
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -457,10 +460,7 @@ class _SchoolRowItemState extends State<SchoolRowItem> {
           child: Row(
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 8,
-                  vertical: 4,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
                   color: ratioBgColor,
                   borderRadius: BorderRadius.circular(6),

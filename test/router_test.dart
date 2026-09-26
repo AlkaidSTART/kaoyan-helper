@@ -88,40 +88,41 @@ void main() {
       expect(container.read(currentNavIndexProvider), 5);
     });
 
-    testWidgets('Authenticated user navigating to /login redirects to /dashboard', (
-      WidgetTester tester,
-    ) async {
-      tester.view.physicalSize = const Size(1280, 800);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(tester.view.resetPhysicalSize);
-      addTearDown(tester.view.resetDevicePixelRatio);
+    testWidgets(
+      'Authenticated user navigating to /login redirects to /dashboard',
+      (WidgetTester tester) async {
+        tester.view.physicalSize = const Size(1280, 800);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
 
-      final container = ProviderContainer(
-        overrides: [
-          authNotifierProvider.overrideWith(AuthenticatedAuthNotifier.new),
-          ...buildTestOverrides(),
-        ],
-      );
-      addTearDown(container.dispose);
+        final container = ProviderContainer(
+          overrides: [
+            authNotifierProvider.overrideWith(AuthenticatedAuthNotifier.new),
+            ...buildTestOverrides(),
+          ],
+        );
+        addTearDown(container.dispose);
 
-      await tester.pumpWidget(
-        UncontrolledProviderScope(container: container, child: const MyApp()),
-      );
-      await tester.pumpAndSettle();
+        await tester.pumpWidget(
+          UncontrolledProviderScope(container: container, child: const MyApp()),
+        );
+        await tester.pumpAndSettle();
 
-      final router = container.read(routerProvider);
+        final router = container.read(routerProvider);
 
-      // Attempt to navigate to /login while authenticated
-      router.go(AppRoutes.login);
-      await tester.pumpAndSettle();
+        // Attempt to navigate to /login while authenticated
+        router.go(AppRoutes.login);
+        await tester.pumpAndSettle();
 
-      // Should be redirected back to /dashboard
-      expect(find.byType(DashboardView), findsOneWidget);
-      expect(
-        router.routerDelegate.currentConfiguration.uri.toString(),
-        AppRoutes.dashboard,
-      );
-    });
+        // Should be redirected back to /dashboard
+        expect(find.byType(DashboardView), findsOneWidget);
+        expect(
+          router.routerDelegate.currentConfiguration.uri.toString(),
+          AppRoutes.dashboard,
+        );
+      },
+    );
 
     testWidgets('SideNavRail destination click drives router branch switch', (
       WidgetTester tester,

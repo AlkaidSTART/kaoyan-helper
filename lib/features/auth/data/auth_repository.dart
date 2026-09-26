@@ -87,14 +87,20 @@ class RemoteAuthRepository implements AuthRepository {
       throw const AuthException('登录响应缺少凭证信息', code: 'BAD_PAYLOAD');
     }
 
-    await _tokenStore.save(accessToken: accessToken, refreshToken: refreshToken);
+    await _tokenStore.save(
+      accessToken: accessToken,
+      refreshToken: refreshToken,
+    );
     return _userFrom(data['user']);
   }
 
   @override
   Future<UserModel> loginWithPassword(String target, String password) async {
     // 契约 AUTH-03：Flutter 密码登录未开放（422 PROVIDER_UNSUPPORTED），客户端快速失败。
-    throw const AuthException('邮箱密码登录暂未开放，请使用验证码登录', code: 'PROVIDER_UNSUPPORTED');
+    throw const AuthException(
+      '邮箱密码登录暂未开放，请使用验证码登录',
+      code: 'PROVIDER_UNSUPPORTED',
+    );
   }
 
   @override
@@ -117,8 +123,9 @@ class RemoteAuthRepository implements AuthRepository {
         '/auth/logout',
         body: refreshToken == null ? null : {'refreshToken': refreshToken},
       );
+    } on AppException {
+      // 契约 AUTH-06：退出幂等且始终清理本地凭证，服务端失败不阻断登出。
     } finally {
-      // 退出登录幂等：无论服务端结果如何都必须清空本地凭证。
       await _tokenStore.clear();
     }
   }

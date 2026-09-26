@@ -8,7 +8,9 @@ class DashboardRepository {
   DashboardRepository({required DioClient client}) : _client = client;
 
   /// `GET /dashboard/summary`：时区默认 Asia/Shanghai，非法时区 422 VALIDATION_FAILED。
-  Future<DashboardSummary> getSummary({String timezone = 'Asia/Shanghai'}) async {
+  Future<DashboardSummary> getSummary({
+    String timezone = 'Asia/Shanghai',
+  }) async {
     final result = await _client.get(
       '/dashboard/summary',
       queryParameters: {'timezone': timezone},

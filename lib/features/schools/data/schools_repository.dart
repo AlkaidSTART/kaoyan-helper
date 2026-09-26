@@ -88,11 +88,7 @@ class SchoolsRepository {
   }) async {
     final result = await _client.post(
       '/schools/$schoolId/target',
-      body: {
-        'type': type,
-        'majorCode': ?majorCode,
-        'majorName': ?majorName,
-      },
+      body: {'type': type, 'majorCode': ?majorCode, 'majorName': ?majorName},
     );
     return _targetsFrom(result.data);
   }
@@ -105,7 +101,7 @@ class SchoolsRepository {
   }) async {
     final result = await _client.delete(
       '/schools/$schoolId/target',
-      body: {'type': type, if (majorCode != null) 'majorCode': majorCode},
+      body: {'type': type, 'majorCode': ?majorCode},
     );
     return _targetsFrom(result.data);
   }

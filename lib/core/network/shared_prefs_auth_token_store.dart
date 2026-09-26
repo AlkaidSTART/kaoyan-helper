@@ -26,7 +26,10 @@ class SharedPrefsAuthTokenStore implements AuthTokenStore {
   }
 
   @override
-  Future<void> save({required String accessToken, required String refreshToken}) async {
+  Future<void> save({
+    required String accessToken,
+    required String refreshToken,
+  }) async {
     final prefs = await _loadPrefs();
     await prefs.setString(_keyAccessToken, accessToken);
     await prefs.setString(_keyRefreshToken, refreshToken);

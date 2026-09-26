@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 
 const SESSION_COOKIE = "admin_session";
 
-const PROTECTED_PREFIXES = ["/dashboard", "/users", "/questions", "/ugc", "/schools"];
+const PROTECTED_PREFIXES = ["/dashboard", "/users", "/questions", "/ugc", "/schools", "/activities"];
 
 /**
  * 导航守卫第一层（Next.js 16 proxy，替代已弃用的 middleware）：

@@ -21,7 +21,7 @@ DioClient (单例；Bearer 拦截器、envelope 解包、401 刷新重放、AppE
 ## 2. ADR 决策记录
 
 ### ADR-1：基址与请求头约定
-- `ApiConfig.baseUrl` 默认 `http://localhost:3000/api/v1`，可用 `--dart-define=API_BASE_URL=...` 覆盖（生产环境注入 HTTPS 域名）。
+- `ApiConfig.baseUrl` 默认 `http://localhost:3001/api/v1`（本地后端固定端口 `next dev -p 3001`），可用 `--dart-define=API_BASE_URL=...` 覆盖（生产环境注入 HTTPS 域名）。
 - Flutter 不使用 Cookie：`Authorization: Bearer <accessToken>`（契约 §3.3）。
 - 统一 `Content-Type: application/json`；列表分页走 `page/pageSize` query。
 

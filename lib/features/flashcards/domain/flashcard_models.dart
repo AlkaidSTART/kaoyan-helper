@@ -29,7 +29,9 @@ class Flashcard {
       category: json['category'] as String? ?? '',
       front: json['front'] as String? ?? '',
       back: json['back'] as String? ?? '',
-      tags: tags is List ? tags.whereType<String>().toList(growable: false) : const [],
+      tags: tags is List
+          ? tags.whereType<String>().toList(growable: false)
+          : const [],
       isMine: json['isMine'] as bool? ?? false,
       createdAt:
           DateTime.tryParse(json['createdAt'] as String? ?? '') ??
@@ -82,7 +84,9 @@ class DueCard {
       card: card is Map<String, dynamic>
           ? Flashcard.fromJson(card)
           : throw const FormatException('due 条目缺少 card'),
-      progress: progress is Map<String, dynamic> ? CardProgress.fromJson(progress) : null,
+      progress: progress is Map<String, dynamic>
+          ? CardProgress.fromJson(progress)
+          : null,
     );
   }
 }

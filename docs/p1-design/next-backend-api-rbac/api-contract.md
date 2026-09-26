@@ -28,8 +28,8 @@
 | Schools | 5 | `/schools/*` |
 | Flashcards | 5 | `/flashcards/*`、`/check-ins` |
 | AI | 2 | `/ai/*` |
-| Admin | 23 | `/admin/*` |
-| **合计** | **58** | `/api/v1` |
+| Admin | 11 | `/admin/*` |
+| **合计** | **46** | `/api/v1` |
 
 ## 3. Auth
 
@@ -231,6 +231,9 @@ SSE 细节、事件格式和超时遵循总设计第 9 节。AI 接口必须先�
 
 ## 11. Admin
 
+> 2026-09-26 产品定位收窄：管理端为**只读观察台**，不执行任何操作（见 `docs/p0-definition/admin-readonly-activity/definition.md`）。
+> 原 ADMIN-USER-03/04（封禁）、ADMIN-Q-03~05（题目增删改）、ADMIN-UGC-02/03（审核）、ADMIN-SCH-02~07（院校/专业维护与导入）已下线；`admin:*` 写权限点同步移除。Prisma 模型保留，回滚走 git 历史。
+
 ### 11.1 管理接口总表
 
 | ID | Method / Path | Auth / Permission | Request | Response `data` | 审计与边界 |
@@ -238,36 +241,22 @@ SSE 细节、事件格式和超时遵循总设计第 9 节。AI 接口必须先�
 | ADMIN-DASH-01 | `GET /admin/dashboard` | 管理员 / `admin:dashboard:read` | `from?, to?, timezone?` | `{dau, wau, questionAnswers, aiCalls, aiCostEstimate, topMistakes, totalUsers, pendingUgcCount}` | 聚合数据；禁止返回用户隐私明文；`pendingUgcCount` 与 UGC 队列默认口径一致 |
 | ADMIN-USER-01 | `GET /admin/users` | 管理员 / `admin:users:read` | `keyword?, role?, isBanned?, page?, pageSize?` | 分页用户摘要 | 搜索邮箱/昵称；结果脱敏策略可配置 |
 | ADMIN-USER-02 | `GET /admin/users/:id` | 管理员 / `admin:users:read` | 路径 `id` | 用户详情 + 学习统计 | 不返回 Auth 内部 secret |
-| ADMIN-USER-03 | `POST /admin/users/:id/ban` | 管理员 / `admin:users:ban` | `{reason, expiresAt?}` | 更新后的用户状态 | 不可封禁自己；不可封禁最后一名有效管理员；必须审计 |
-| ADMIN-USER-04 | `POST /admin/users/:id/unban` | 管理员 / `admin:users:ban` | `{reason}` | 更新后的用户状态 | 幂等；必须审计 |
 | ADMIN-Q-01 | `GET /admin/questions` | 管理员 / `admin:questions:read` | `subject?, source?, reviewStatus?, isApproved?, includeDeleted?, search?, page?, pageSize?` | 分页题目（含答案） | 管理端可读答案；列表必须分页 |
 | ADMIN-Q-02 | `GET /admin/questions/:id` | 管理员 / `admin:questions:read` | 路径 `id` | 完整题目 | 含审核字段 |
-| ADMIN-Q-03 | `POST /admin/questions` | 管理员 / `admin:questions:write` | 完整题目字段 | 创建的题目 | `creatorId` 可为空或管理员 ID；必须审计 |
-| ADMIN-Q-04 | `PATCH /admin/questions/:id` | 管理员 / `admin:questions:write` | 可编辑字段 + `version` | 更新后的题目 | 乐观锁；发布状态变更必须审计 |
-| ADMIN-Q-05 | `DELETE /admin/questions/:id` | 管理员 / `admin:questions:write` | `{reason, version}` | `null` | 软删除；保留历史错题引用；必须审计 |
 | ADMIN-UGC-01 | `GET /admin/ugc` | 管理员 / `admin:ugc:read` | `reviewStatus?, source?, page?, pageSize?` | 分页 UGC 队列 | 默认待审核；包含提交者摘要 |
-| ADMIN-UGC-02 | `POST /admin/ugc/:id/approve` | 管理员 / `admin:ugc:review` | `{note?, version}` | 更新后的题目 | 仅 pending 可批准；并发审核返回 409；审计 |
-| ADMIN-UGC-03 | `POST /admin/ugc/:id/reject` | 管理员 / `admin:ugc:review` | `{reason, version}` | 更新后的题目 | 仅 pending 可驳回；原因必填；审计 |
-| ADMIN-SCH-01 | `GET /admin/schools` | 管理员 / `admin:schools:read` | `keyword?, province?, region?, page?, pageSize?` | 分页院校 | 可包含未发布和导入状态 |
-| ADMIN-SCH-02 | `POST /admin/schools` | 管理员 / `admin:schools:write` | 院校字段 | 创建的院校 | 校名唯一约束；审计 |
-| ADMIN-SCH-03 | `PATCH /admin/schools/:id` | 管理员 / `admin:schools:write` | 可编辑字段 + `version` | 更新后的院校 | 乐观锁；审计 |
-| ADMIN-SCH-04 | `POST /admin/schools/:id/programs` | 管理员 / `admin:schools:write` | 专业年度数据 | 创建/更新后的专业记录 | 以 `schoolId+majorCode+year` 唯一；审计 |
-| ADMIN-SCH-05 | `PATCH /admin/schools/:id/programs/:programId` | 管理员 / `admin:schools:write` | 可编辑字段 + `version` | 更新后的专业记录 | 乐观锁；审计 |
-| ADMIN-SCH-06 | `POST /admin/schools/import` | 管理员 / `admin:schools:write` | `multipart/form-data`：`file`, `format:"csv"\|"json"`, `mode:"validate"\|"commit"` | `{jobId, status, summary}` | 文件大小/行数限制；先校验后提交；审计 |
-| ADMIN-SCH-07 | `POST /admin/schools/import/:jobId/confirm` | 管理员 / `admin:schools:write` | `{jobId, version?}` | `{jobId, status:"completed", summary}` | 仅 validate 成功且未过期的任务可确认；审计 |
-| ADMIN-SCH-08 | `GET /admin/schools/:id/programs` | 管理员 / `admin:schools:read` | 路径 `id`；`year?` | 专业完整列表（不分页） | 含未发布与导入数据；院校不存在 404；供管理端编辑页读取 |
+| ADMIN-SCH-01 | `GET /admin/schools` | 管理员 / `admin:schools:read` | `keyword?, province?, region?, page?, pageSize?` | 分页院校 | 可包含未发布数据 |
+| ADMIN-SCH-08 | `GET /admin/schools/:id/programs` | 管理员 / `admin:schools:read` | 路径 `id`；`year?` | 专业完整列表（不分页） | 含未发布与导入数据；院校不存在 404 |
 | ADMIN-STAT-01 | `GET /admin/stats/users` | 管理员 / `admin:dashboard:read` | `from?, to?, timezone?` | `{totalUsers, newUsers, prevNewUsers}` | 注册统计；口径与看板同构（UTC 日界、默认近 7 天、≤90 天）；`prevNewUsers` 为紧邻等长前一窗口，供环比计算 |
 | ADMIN-AUDIT-01 | `GET /admin/audit-logs` | 管理员 / `admin:audit:read` | `action?, resourceType?, actorId?, page?, pageSize?` | 分页审计日志（含 actor 摘要） | 固定 `createdAt desc`；`metadata` 为写入侧脱敏摘要，原样透出 |
+| ADMIN-ACT-01 | `GET /admin/activities` | 管理员 / `admin:activity:read` | `userId?, type?("login"|"question_attempt"|"card_review"), page?, pageSize?` | 分页活动事件（含用户摘要） | 固定 `createdAt desc`；`summary` 原样透出；事件由服务端在登录 / 答题 / 卡片复习写路径成功后旁路落库（best-effort，采集失败不影响主流程） |
 
 ### 11.2 管理接口额外约束
 
 - 所有管理接口必须经过 `requirePermission`，并在服务层再次确认管理员身份。
-- 管理操作不能因为使用了 service role 而跳过资源状态、版本和业务校验。
-- 封禁用户后，受保护接口应立即返回 403 `USER_BANNED`；MVP 不缓存角色，因此无需等待失效窗口。
-- 审核和导入必须使用幂等键或 version，防止重复点击造成重复写入。
-- 高风险写操作与 `admin_audit_logs` 同事务提交。
+- 管理端不提供任何变更接口：`/api/v1/admin/**` 仅允许 GET。
 - `GET /admin/questions` 和详情可返回答案，普通 `GET /questions` 永远不返回答案。
-- 管理端删除采用软删除；用户端查询自动排除已删除记录。
+- 用户活动埋点必须以旁路方式实现：`ActivityRecorder` 实现自吞异常，答题 / 复习 / 登录主流程不因采集失败受影响。
+- 用户活动 `summary` 只存最少必要字段（id/布尔/枚举），禁止存放题干、答案等正文。
 
 ## 12. 通用错误码补充
 
@@ -288,11 +277,9 @@ SSE 细节、事件格式和超时遵循总设计第 9 节。AI 接口必须先�
 | `QUESTION_NOT_ACCESSIBLE` | 404 | 题目不存在、未批准或不属于本人 |
 | `MISTAKE_NOT_FOUND` | 404 | 错题不存在或不属于本人 |
 | `CARD_NOT_DUE` | 409 | 卡片未到复习时间且接口要求到期 |
-| `UGC_ALREADY_REVIEWED` | 409 | UGC 已被审核 |
-| `IMPORT_VALIDATION_FAILED` | 422 | 导入文件校验失败 |
-| `IMPORT_JOB_EXPIRED` | 409 | 导入确认任务过期 |
-| `LAST_ADMIN_PROTECTED` | 409 | 试图封禁最后一名有效管理员 |
 | `DAILY_LIMIT_EXCEEDED` | 429 | AI 每日配额耗尽 |
+
+> 已退役业务码（2026-09-26 管理端只读化）：`UGC_ALREADY_REVIEWED`、`IMPORT_VALIDATION_FAILED`、`IMPORT_JOB_EXPIRED`、`LAST_ADMIN_PROTECTED` 的触发场景随管理端写接口下线而移除，常量保留在 `lib/api/errors.ts` 以维持错误码注册表稳定。
 
 ## 13. 接口实现验收最低要求
 

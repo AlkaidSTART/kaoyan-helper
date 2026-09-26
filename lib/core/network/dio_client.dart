@@ -35,7 +35,8 @@ class DioClient {
           if (options.extra['requireAuth'] == true) {
             final token = await _tokenStore.readAccessToken();
             if (token != null && token.isNotEmpty) {
-              options.headers['Authorization'] = '${ApiConfig.bearerScheme} $token';
+              options.headers['Authorization'] =
+                  '${ApiConfig.bearerScheme} $token';
             }
           }
           handler.next(options);
@@ -50,7 +51,11 @@ class DioClient {
     bool requireAuth = true,
   }) {
     return _request(
-      () => _dio.get(path, queryParameters: queryParameters, options: _options(requireAuth)),
+      () => _dio.get(
+        path,
+        queryParameters: queryParameters,
+        options: _options(requireAuth),
+      ),
       requireAuth: requireAuth,
     );
   }
@@ -126,7 +131,9 @@ class DioClient {
     }
   }
 
-  Future<ApiClientResponse> _retry(Future<Response<dynamic>> Function() send) async {
+  Future<ApiClientResponse> _retry(
+    Future<Response<dynamic>> Function() send,
+  ) async {
     try {
       final response = await send();
       return ApiEnvelopeParser.parseSuccess(response.data);
@@ -186,13 +193,23 @@ class DioClient {
 
     switch (e.type) {
       case DioExceptionType.badResponse:
-        return ApiEnvelopeParser.parseError(response?.data, response?.statusCode);
+        return ApiEnvelopeParser.parseError(
+          response?.data,
+          response?.statusCode,
+        );
       case DioExceptionType.connectionTimeout:
       case DioExceptionType.sendTimeout:
       case DioExceptionType.receiveTimeout:
-        return const NetworkException('网络连接超时，请检查网络后重试', code: 'NETWORK_TIMEOUT');
+      case DioExceptionType.transformTimeout:
+        return const NetworkException(
+          '网络连接超时，请检查网络后重试',
+          code: 'NETWORK_TIMEOUT',
+        );
       case DioExceptionType.connectionError:
-        return const NetworkException('网络连接不可用，请检查网络后重试', code: 'NETWORK_UNAVAILABLE');
+        return const NetworkException(
+          '网络连接不可用，请检查网络后重试',
+          code: 'NETWORK_UNAVAILABLE',
+        );
       case DioExceptionType.cancel:
         return const NetworkException('请求已取消', code: 'REQUEST_CANCELLED');
       case DioExceptionType.badCertificate:

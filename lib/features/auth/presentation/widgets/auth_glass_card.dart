@@ -103,9 +103,7 @@ class _AuthGlassCardState extends ConsumerState<AuthGlassCard>
     if (target.isEmpty || secret.isEmpty) {
       _triggerShake();
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(_activeTab == 0 ? '请填写完整的邮箱与验证码' : '请填写邮箱与密码'),
-        ),
+        SnackBar(content: Text(_activeTab == 0 ? '请填写完整的邮箱与验证码' : '请填写邮箱与密码')),
       );
       return;
     }

@@ -83,7 +83,8 @@ class QuizRepository {
         'type': type,
         'stem': stem,
         'options': [
-          for (final option in options) {'key': option.key, 'content': option.content},
+          for (final option in options)
+            {'key': option.key, 'content': option.content},
         ],
         'answer': answer,
         'visibility': visibility,
@@ -113,7 +114,8 @@ class QuizRepository {
         'explanation': ?explanation,
         if (options != null)
           'options': [
-            for (final option in options) {'key': option.key, 'content': option.content},
+            for (final option in options)
+              {'key': option.key, 'content': option.content},
           ],
         'difficulty': ?difficulty,
       },

@@ -124,8 +124,9 @@ void main() {
         await tester.enterText(find.byType(TextField), '');
         await tester.pumpAndSettle();
 
-        // 点击条目展开历年趋势
+        // 点击条目展开历年趋势（卡片含 onDoubleTap，需等待双击判定超时）
         await tester.tap(find.text('浙江大学'));
+        await tester.pump(const Duration(milliseconds: 350));
         await tester.pumpAndSettle();
 
         expect(find.text('历年报录与复试线趋势：'), findsOneWidget);

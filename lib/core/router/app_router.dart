@@ -22,8 +22,9 @@ abstract final class AppRoutes {
   static const rest = '/rest';
 }
 
-final GlobalKey<NavigatorState> rootNavigatorKey =
-    GlobalKey<NavigatorState>(debugLabel: 'root');
+final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>(
+  debugLabel: 'root',
+);
 
 class RouterNotifier extends ChangeNotifier {
   final Ref _ref;
@@ -78,10 +79,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.login,
         builder: (context, state) => const LoginPage(),
       ),
-      GoRoute(
-        path: '/',
-        redirect: (_, _) => AppRoutes.dashboard,
-      ),
+      GoRoute(path: '/', redirect: (_, _) => AppRoutes.dashboard),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {
           return AppShell(navigationShell: navigationShell);

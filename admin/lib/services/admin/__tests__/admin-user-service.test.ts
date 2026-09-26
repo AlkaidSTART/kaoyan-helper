@@ -60,11 +60,16 @@ function fakeRepo(rows: AdminUserRecord[]): AdminUserRepository {
 describe("AdminUserService 只读查询", () => {
   it("列表透传仓储并映射 DTO（封禁状态与时间戳）", async () => {
     const service = new AdminUserService(fakeRepo([userRow({ isBanned: true })]));
-    const { rows, total } = await service.list(actor, {
-      keyword: null,
-      role: null,
-      isBanned: null,
-    });
+    const { rows, total } = await service.list(
+      actor,
+      {
+        keyword: null,
+        role: null,
+        isBanned: null,
+      },
+      1,
+      20,
+    );
 
     expect(total).toBe(1);
     expect(rows[0].isBanned).toBe(true);
@@ -90,7 +95,7 @@ describe("AdminUserService 只读查询", () => {
     const service = new AdminUserService(fakeRepo([userRow()]));
 
     await expect(
-      service.list(nonAdminActor, { keyword: null, role: null, isBanned: null }),
+      service.list(nonAdminActor, { keyword: null, role: null, isBanned: null }, 1, 20),
     ).rejects.toMatchObject({ code: "ADMIN_REQUIRED" });
   });
 });

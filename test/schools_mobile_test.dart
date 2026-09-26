@@ -29,8 +29,9 @@ void main() {
         expect(tester.takeException(), isNull);
 
         // 验证院校、专业代码与报录比正常显示
+        // （浙江大学与苏州大学均为计算机科学与技术学院 · 085404，故为 findsWidgets）
         expect(find.text('浙江大学'), findsOneWidget);
-        expect(find.text('计算机科学与技术学院 · 085404 计算机专硕'), findsOneWidget);
+        expect(find.text('计算机科学与技术学院 · 085404 计算机专硕'), findsWidgets);
         expect(find.text('8.2:1 报录'), findsOneWidget);
 
         // 验证下拉刷新组件存在
@@ -124,8 +125,9 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // 单击展开
+      // 单击展开（卡片同时注册了 onTap/onDoubleTap，需等待双击判定超时）
       await tester.tap(find.text('北京航空航天大学'));
+      await tester.pump(const Duration(milliseconds: 350));
       await tester.pumpAndSettle();
 
       expect(find.text('历年报录与复试线趋势：'), findsOneWidget);
@@ -133,6 +135,7 @@ void main() {
 
       // 再次单击折叠
       await tester.tap(find.text('北京航空航天大学'));
+      await tester.pump(const Duration(milliseconds: 350));
       await tester.pumpAndSettle();
 
       expect(find.text('390 分'), findsNothing);
@@ -156,8 +159,8 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // 点击 211 筛选
-      await tester.tap(find.text('211'));
+      // 点击 211 筛选（卡片标签也含 211，需 .first 定位筛选栏 Chip）
+      await tester.tap(find.text('211').first);
       await tester.pumpAndSettle();
 
       // 验证苏州大学 (211) 存在，全部 985 依然根据标签筛选

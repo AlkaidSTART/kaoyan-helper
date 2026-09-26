@@ -227,7 +227,10 @@ class _SchoolsViewState extends State<SchoolsView> {
                           Padding(
                             padding: const EdgeInsets.only(right: 8.0),
                             child: ChoiceChip(
-                              label: Text(tag, style: const TextStyle(fontSize: 12)),
+                              label: Text(
+                                tag,
+                                style: const TextStyle(fontSize: 12),
+                              ),
                               selected: _selectedTag == tag,
                               onSelected: (val) {
                                 if (val) {
@@ -250,7 +253,9 @@ class _SchoolsViewState extends State<SchoolsView> {
                       child: Center(
                         child: Text(
                           '未检索到符合条件的院校',
-                          style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
+                          style: TextStyle(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
                         ),
                       ),
                     )
