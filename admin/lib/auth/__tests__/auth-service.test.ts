@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 
 import { AppError } from "../../api/errors";
+import { getPermissionsForRole } from "../permissions";
 import { createErrorEnvelope } from "../../api/response";
 import type {
   AdminCredentialRecord,
@@ -382,7 +383,7 @@ describe("AuthService.getSession", () => {
 
     expect(result).toEqual({
       user: expect.objectContaining({ email: "admin@example.com", role: "admin" }),
-      permissions: ["admin:dashboard:read"],
+      permissions: getPermissionsForRole("admin"),
       expiresAt: "2026-09-26T22:00:00Z",
     });
     expect(repository.calls.touchSession).toEqual([{ sessionId: repository.session.id, lastSeenAt: NOW }]);

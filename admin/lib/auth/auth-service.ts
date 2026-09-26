@@ -45,7 +45,7 @@ export interface RefreshResult {
 
 export interface SessionResult {
   user: AuthUserDto;
-  permissions: AdminPermission[];
+  permissions: string[];
   expiresAt: string;
 }
 

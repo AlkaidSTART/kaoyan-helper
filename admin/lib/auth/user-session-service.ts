@@ -164,7 +164,6 @@ export class UserSessionService {
     const tokenHash = readTokenHash(rawAccessToken, ACCESS_TOKEN_PREFIX, ERROR_CODES.AUTH_REQUIRED);
     const now = this.now();
     const session = await this.requireSession(tokenHash, ERROR_CODES.AUTH_REQUIRED);
-
     if (session.revokedAt !== null) {
       throw new AppError(ERROR_CODES.AUTH_REQUIRED);
     }
@@ -184,6 +183,16 @@ export class UserSessionService {
       permissions: getPermissionsForRole(session.user.role),
       expiresAt: formatUtcTimestamp(session.expiresAt),
     };
+  }
+
+  private async requireSession(tokenHash: string, errorCode: ErrorCode): Promise<UserSessionRecord> {
+    const session = await this.repository.findSessionByTokenHash(tokenHash);
+
+    if (!session) {
+      throw new AppError(errorCode);
+    }
+
+    return session;
   }
 }
 

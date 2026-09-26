@@ -1,6 +1,6 @@
 import { AppError, ERROR_CODES } from "../api/errors";
 import { toUserDto, type AuthUserDto } from "./auth-service";
-import type { AuthRepository, AuthUserRecord } from "./auth-repository";
+import type { AuthRepository } from "./auth-repository";
 import type { AdminPermission } from "./permissions";
 import { getPermissionsForRole } from "./permissions";
 import type { EmailOtpClient } from "./otp-client";
@@ -152,5 +152,3 @@ export class EmailCodeAuthService {
     };
   }
 }
-
-export type { AuthUserRecord };

@@ -35,6 +35,30 @@ export async function parseJsonRequest(request: Request): Promise<unknown> {
   }
 }
 
+/**
+ * 读取可选 JSON body：空 body 返回 `null`（如 Admin 无 body 的 refresh/logout），
+ * 非空但非法 JSON 仍然报 400。
+ */
+export async function parseOptionalJsonRequest(request: Request): Promise<unknown | null> {
+  let rawBody: string;
+
+  try {
+    rawBody = await request.text();
+  } catch {
+    throw new AppError(ERROR_CODES.INVALID_ARGUMENT);
+  }
+
+  if (rawBody.trim().length === 0) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(rawBody) as unknown;
+  } catch {
+    throw new AppError(ERROR_CODES.INVALID_ARGUMENT);
+  }
+}
+
 export function assertNoImmutableFields(
   value: unknown,
   additionalImmutableFields: readonly string[] = [],
@@ -79,6 +103,22 @@ export async function readAndValidateJson<T>(
   options: ReadAndValidateJsonOptions = {},
 ): Promise<T> {
   const body = await parseJsonRequest(request);
+
+  assertNoImmutableFields(body, options.additionalImmutableFields);
+
+  return validateWithSchema(schema, body);
+}
+
+export async function readOptionalAndValidateJson<T>(
+  request: Request,
+  schema: ZodType<T>,
+  options: ReadAndValidateJsonOptions = {},
+): Promise<T | null> {
+  const body = await parseOptionalJsonRequest(request);
+
+  if (body === null) {
+    return null;
+  }
 
   assertNoImmutableFields(body, options.additionalImmutableFields);
 

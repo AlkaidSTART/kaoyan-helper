@@ -110,6 +110,7 @@ export class PrismaUserSessionRepository implements UserSessionRepository {
             id: input.id ?? crypto.randomUUID(),
             email,
             nickname: input.nickname ?? email.split("@")[0] ?? null,
+            role: "user",
           },
         });
       }),
