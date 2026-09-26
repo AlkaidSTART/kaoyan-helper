@@ -13,7 +13,7 @@
 必须同时成立以下四条规则：
 
 1. 客户端传入的角色、权限、`creatorId`、`userId` 均不可信，一律由服务端从访问令牌和数据库解析。
-2. 路由层与领域服务层必须双重检查权限，不能只在 UI 或 middleware 做一次判断。
+2. 路由层与领域服务层必须双重检查权限，不能只在 UI 或页面导航 proxy 做一次判断。
 3. 普通用户请求优先使用用户 JWT 调 Supabase，保留 RLS 作为纵深防御；高权限跨用户操作才使用 service role，并且必须先通过 RBAC。
 4. 标准答案、官方解析、判题、错题状态、SM-2 计算和 UGC 审核结果均由服务端产生。
 
@@ -60,7 +60,7 @@
 | 边界 | 可信输入 | 不可信输入 | 处理原则 |
 |---|---|---|---|
 | Flutter → Next.js | `Authorization: Bearer <accessToken>` 中的签名身份 | body、query、path、本地角色缓存 | 所有输入重新校验，角色重新读取 |
-| Admin Web → Next.js | HttpOnly Cookie 中的服务端会话 | 页面状态、隐藏字段、客户端权限 | middleware 做导航守卫，Route Handler 再做 API 鉴权 |
+| Admin Web → Next.js | HttpOnly Cookie 中的服务端会话 | 页面状态、隐藏字段、客户端权限 | `proxy.ts` 做页面导航守卫，Route Handler 再做 API 鉴权 |
 | Next.js → Supabase | 服务端解析出的用户身份、权限和资源 ID | 客户端直接提供的 `userId`/`role` | 用户操作使用用户 JWT + RLS；管理操作使用 admin client + 显式 RBAC |
 | Next.js → 外部 AI | 服务端保存的密钥、服务端构造的上下文 | 客户端传入的答案或系统提示词 | 只允许服务端组装提示词，密钥不下发 |
 
@@ -70,7 +70,7 @@
 |---|---|---|
 | Server user client | 普通用户读写个人资料、错题、闪卡、目标院校、答题记录 | 绑定请求中的 access token，保留 RLS |
 | Server anonymous client | 只读已批准的公共题库、院校库、系统卡片 | 不携带 service role |
-| Server admin client | 管理后台跨用户查询、封禁、审核、导入、审计写入 | `SUPABASE_SERVICE_ROLE_KEY` 只存在于服务端；调用前必须 `requirePermission` |
+| Server admin client | 管理后台跨用户查询、封禁、审核、导入、审计写入 | `SUPABASE_SECRET_KEY` 只存在于服务端；调用前必须 `requirePermission` |
 | Browser client | 管理后台仅用于登录与刷新会话；不直接查询业务表 | 不允许在浏览器持有 service role |
 
 ### 2.3 原子业务写入
@@ -113,7 +113,7 @@
 1. 管理后台通过 `POST /api/v1/auth/login/code`，`clientType=admin-web` 登录。
 2. Next.js 校验 `users.role === 'admin'`，否则返回 403 `ADMIN_REQUIRED`。
 3. 登录成功后设置 HttpOnly、Secure、SameSite=Lax 的会话 Cookie。
-4. 管理后台页面导航由 middleware 做第一层守卫，`/api/v1/admin/*` Route Handler 再做权限检查。
+4. 管理后台页面导航由根 `proxy.ts` 做第一层守卫，`/api/v1/admin/*` Route Handler 再做权限检查。
 5. 刷新和退出均通过服务端 Cookie 完成；浏览器 JavaScript 不接触 refresh token。
 6. 角色降权后立即生效，因为 MVP 不缓存角色。
 
@@ -374,10 +374,10 @@ admin/
 │   ├── services/                # 领域服务与事务编排
 │   ├── repositories/            # 数据访问与 DTO 映射
 │   └── audit/                   # 审计日志
-└── middleware.ts                # 管理后台页面导航守卫
+└── proxy.ts                     # 管理后台页面导航守卫（Next.js 16）
 ```
 
-Route Handler 只做协议适配，不写业务规则；领域服务不直接读取 `Request`/`Response`；Repository 不决定权限。实现前必须阅读 `admin/node_modules/next/dist/docs/` 中与 Next.js 16 Route Handlers、cookies、middleware、runtime 相关的本地文档。
+Route Handler 只做协议适配，不写业务规则；领域服务不直接读取 `Request`/`Response`；Repository 不决定权限。实现前必须阅读 `admin/node_modules/next/dist/docs/` 中与 Next.js 16 Route Handlers、cookies、proxy、runtime 相关的本地文档。
 
 ## 8. Flutter 改造边界
 

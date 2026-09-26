@@ -66,7 +66,12 @@
 - [x] 建立 P3 验证清单，覆盖契约、认证、RBAC、所有权、业务、Flutter、Next.js、数据库和多端验收。
 - [x] 建立本次任务审计文件并回填全部文档变更。
 - [x] 完成文档一致性核验：统一 `UGC_ALREADY_REVIEWED`、核对接口计数、分页规则与 401/403/404 语义，确认 P3 无伪造结论。
-- [ ] 后续按 P2 实施 Next.js、Supabase 迁移和 Flutter API 改造。
+- [x] 补齐 P1 数据模型与环境变量文档。
+- [x] 完成 Next.js 16 本地版本文档核对与脚手架审计。
+- [x] 安装 `@supabase/ssr`、`@supabase/supabase-js`、`zod`、`server-only` 运行依赖。
+- [x] 编写 Supabase 基线迁移，暂不应用到远端。
+- [ ] 按 P2 实施 Next.js API 基础层、认证、RBAC 与领域接口。
+- [ ] 完成 Flutter API 迁移。
 - [ ] 实施后在 P3 回填真实验证结果并更新任务 changed-files。
 
 ## 7. 后续实施顺序

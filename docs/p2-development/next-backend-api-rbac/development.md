@@ -64,13 +64,13 @@ P2-12 旧 Supabase 直连迁移与全局文档更新
 
 ### P2-0 实施准备
 
-- [ ] P2-001 核对 `admin/package.json`、Next.js 版本、React 版本、包管理器与现有脚本。
-- [ ] P2-002 阅读 `admin/node_modules/next/dist/docs/` 中 Route Handlers、Cookies、Middleware、Streaming、Runtime 的对应版本文档，并记录关键约束。
-- [ ] P2-003 审计现有 `admin/app`、`admin/lib`、Supabase 客户端与现有管理后台调用路径，标记可复用和必须替换的部分。
-- [ ] P2-004 审计现有 Supabase Schema、RLS、Auth Provider、Storage Bucket 和 Edge Functions，形成迁移清单。
-- [ ] P2-005 定义服务端环境变量名称、校验与启动失败策略；只记录名称，不把密钥写入仓库或文档。
-- [ ] P2-006 确认生产、预览、本地环境的 CORS/Origin 策略和 Cookie Domain 策略。
-- [ ] P2-007 建立 API 变更流程：先更新 P1 契约，再实现 Route Handler，最后补 P3 用例。
+- [x] P2-001 核对 `admin/package.json`、Next.js 版本、React 版本、包管理器与现有脚本。
+- [x] P2-002 阅读 `admin/node_modules/next/dist/docs/` 中 Route Handlers、Cookies、Middleware、Streaming、Runtime 的对应版本文档，并记录关键约束。
+- [x] P2-003 审计现有 `admin/app`、`admin/lib`、Supabase 客户端与现有管理后台调用路径，标记可复用和必须替换的部分。
+- [x] P2-004 审计现有 Supabase Schema、RLS、Auth Provider、Storage Bucket 和 Edge Functions，形成迁移清单。
+- [x] P2-005 定义服务端环境变量名称、校验与启动失败策略；只记录名称，不把密钥写入仓库或文档。
+- [x] P2-006 确认生产、预览、本地环境的 CORS/Origin 策略和 Cookie Domain 策略。
+- [x] P2-007 建立 API 变更流程：先更新 P1 契约，再实现 Route Handler，最后补 P3 用例。
 
 ### P2-1 API 基础层
 
@@ -298,13 +298,25 @@ P2-12 旧 Supabase 直连迁移与全局文档更新
 - 代价：流内 HTTP 状态无法改变，必须用事件传递错误并处理连接释放。
 - 约束：配额在建立流前检查，日志不记录完整 prompt 和用户隐私。
 
+### ADR-012：以基线迁移从零建立 Schema
+
+- 背景：真实审计确认远端 `public` schema 为空，不存在可增量演进的既有结构。
+- 决策：把文档契约直接落为一份可重复执行的基线迁移，包含表、约束、索引、触发器、RLS 与服务端函数。
+- 原因：避免「先猜表结构再改」的双重成本，并让 RLS 与服务端事务从第一天就成立。
+- 代价：需要一次性评审全部表结构；后续变更必须走追加迁移，禁止修改基线。
+- 约束：基线迁移不在本次任务自动应用到远端项目，需人工确认后在 P3 记录演练结果。
+
 ## 6. 实施中问题与决策记录
 
 实现阶段每解决一个真实问题，都在本表追加记录，不只写“已完成”。
 
 | 日期 | 任务 ID | 实际问题 | 排查/决策 | 影响文件 | 状态 |
 |---|---|---|---|---|---|
-| - | - | 待实现阶段回填 | - | - | 待记录 |
+| 2026-09-26 | P2-002 | 本地 `admin/` 为 Next.js 16.3.5，`middleware.ts` 已弃用，`cookies()` 与动态路由 `params` 均为异步 | 以 `admin/node_modules/next/dist/docs/` 实际版本文档为准：改用根 `proxy.ts`（仅做导航守卫，不做唯一鉴权）；`cookies()` 使用 `await`；Route Handler 的 `context.params` 为 `Promise`；不设置已弃用的 `runtime = 'edge'`；每个请求新建 Supabase 客户端 | `admin/proxy.ts`、全部 `app/api/**/route.ts` | 已解决 |
+| 2026-09-26 | P2-001 | `admin/` 仅含脚手架，无 `lib/`、无 API 路由、无测试脚本 | 保留既有 `dev/build/start/lint` 脚本；新增 `@supabase/ssr`、`@supabase/supabase-js`、`zod`、`server-only` 依赖；不为本阶段引入测试框架，P2-108/P2-111 的自动化测试仍待补 | `admin/package.json`、`admin/pnpm-lock.yaml` | 已解决 |
+| 2026-09-26 | P2-004 | `.mcp.json` 固定项目 `roiqsirzrykaebsqpxex`，MCP 工具返回 `INVALID_ARGUMENT`，`_list_projects` 只见两个未激活项目 | 改用只读方式审计：以 `.env.local` 中的键发起 `GET /rest/v1/` OpenAPI 请求（不打印密钥）。结果是 `components.schemas` 为空，仅暴露 `/rpc/rls_auto_enable`；探测业务表全部返回 `PGRST205`。**结论：远端 `public` schema 为空，不存在既有表、RLS 或迁移** | `docs/p1-design/next-backend-api-rbac/data-model.md` | 已解决（结论：从零建基线） |
+| 2026-09-26 | P2-005 | 文档旧稿使用 `SUPABASE_ANON_KEY` / `SUPABASE_SERVICE_ROLE_KEY`，与 `.env.local` 实际命名不一致 | 以实际存在的 `SUPABASE_URL` / `SUPABASE_PUBLISHABLE_KEY` / `SUPABASE_SECRET_KEY` 为准，不新增旧名别名；服务端统一经 `lib/env.ts` 读取 | `docs/p1-design/next-backend-api-rbac/environment.md`、`admin/lib/env.ts` | 已解决 |
+| 2026-09-26 | P2-004 | 远端库为空与既有 Flutter 直连 Supabase 的关系 | 空库意味着旧客户端当前也无业务表可用，因此基线迁移不引入额外回退风险；迁移文件只提交，不自动应用到远端，需人工确认后执行 | `supabase/migrations/*.sql` | 已记录 |
 
 ## 7. 完成定义（DoD）
 
