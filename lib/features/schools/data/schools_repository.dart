@@ -79,6 +79,12 @@ class SchoolsRepository {
     );
   }
 
+  /// `GET /me/targets`：目标院校快照（ME-03，与 SCH-04/05 返回结构同源）。
+  Future<List<TargetSchoolRef>> getTargets() async {
+    final result = await _client.get('/me/targets');
+    return _targetsFrom(result.data);
+  }
+
   /// `POST /schools/:id/target`：加入目标；重复添加幂等返回现有条目。
   Future<List<TargetSchoolRef>> addTarget(
     String schoolId, {

@@ -1,71 +1,60 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../../core/errors/app_exception.dart';
 import '../../../core/providers/layout_providers.dart';
 import '../../../core/theme/semantic_colors.dart';
+import '../../../features/quiz/presentation/quiz_providers.dart';
+import '../../../features/shared/subject_labels.dart';
 import 'widgets/quiz_option_card.dart';
 
-class QuizView extends ConsumerStatefulWidget {
+class QuizView extends ConsumerWidget {
   const QuizView({super.key});
 
   @override
-  ConsumerState<QuizView> createState() => _QuizViewState();
+  Widget build(BuildContext context, WidgetRef ref) {
+    final sessionState = ref.watch(quizSessionProvider);
+
+    return sessionState.when(
+      loading: () => const _QuizPlaceholder(child: CircularProgressIndicator()),
+      error: (error, _) => _QuizError(error: error),
+      data: (session) {
+        if (session == null) {
+          return const _QuizPlaceholder(child: SizedBox.shrink());
+        }
+        return _QuizSessionBody(session: session);
+      },
+    );
+  }
 }
 
-class _QuizViewState extends ConsumerState<QuizView> {
-  int _currentQuestionIndex = 0;
-  int? _selectedIndex;
-  bool _isAnswered = false;
+class _QuizSessionBody extends ConsumerWidget {
+  final QuizSession session;
 
-  final List<Map<String, dynamic>> _mockQuestions = [
-    {
-      'subject': '政治 · 马原',
-      'tag': '2024 真题 · 单选',
-      'stem': '下列关于矛盾普遍性和特殊性关系的表述，正确的是：',
-      'options': [
-        '矛盾普遍性寓于特殊性之中',
-        '矛盾特殊性可以脱离普遍性独立存在',
-        '矛盾普遍性包含矛盾特殊性',
-        '矛盾的同一性是绝对的，斗争性是相对的',
-      ],
-      'correctIndex': 0,
-      'explanation':
-          '矛盾的普遍性即矛盾的共性，矛盾的特殊性即矛盾的个性。矛盾的共性是无条件的、绝对的，矛盾的个性是有条件的、相对的。任何现实存在的事物都是共性和个性的有机统一，共性寓于个性之中，没有离开个性的共性，也没有离开共性的个性。因此 A 选项正确。',
-    },
-    {
-      'subject': '政治 · 史纲',
-      'tag': '2023 真题 · 单选',
-      'stem': '标志着中国共产党在政治上开始走向成熟的会议是：',
-      'options': ['中共二大', '八七会议', '遵义会议', '中共七大'],
-      'correctIndex': 2,
-      'explanation':
-          '遵义会议确立了以毛泽东为代表的马克思主义正确路线在中共中央的领导地位，在极其危急的情况下挽救了党、挽救了红军、挽救了中国革命，是中国共产党第一次独立自主地运用马克思列宁主义基本原理解决中国革命的路线、方针和政策问题，标志着中国共产党在政治上开始走向成熟。',
-    },
-  ];
+  const _QuizSessionBody({required this.session});
 
-  void _handleSelect(int index) {
-    if (_isAnswered) return;
-    setState(() {
-      _selectedIndex = index;
-      _isAnswered = true;
-    });
-  }
+  void _handleSelect(BuildContext context, WidgetRef ref, String key) {
+    if (session.result != null || session.submitting) {
+      return;
+    }
 
-  void _handleNext() {
-    setState(() {
-      _currentQuestionIndex =
-          (_currentQuestionIndex + 1) % _mockQuestions.length;
-      _selectedIndex = null;
-      _isAnswered = false;
+    ref.read(quizSessionProvider.notifier).submit(key).catchError((error) {
+      if (context.mounted && error is AppException) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(error.message)));
+      }
+      return null;
     });
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final semantic =
         theme.extension<SemanticColors>() ?? SemanticColors.standard;
-    final q = _mockQuestions[_currentQuestionIndex];
-    final letters = ['A', 'B', 'C', 'D'];
+    final question = session.current;
+    final result = session.result;
 
     return Center(
       child: ConstrainedBox(
@@ -91,7 +80,7 @@ class _QuizViewState extends ConsumerState<QuizView> {
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: Text(
-                          q['subject'],
+                          SubjectLabels.subject(question.subject),
                           style: TextStyle(
                             color: semantic.politicsText,
                             fontSize: 13,
@@ -110,7 +99,11 @@ class _QuizViewState extends ConsumerState<QuizView> {
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: Text(
-                          q['tag'],
+                          [
+                            if (question.year != null)
+                              '${question.year} 真题',
+                            SubjectLabels.type(question.type),
+                          ].join(' · '),
                           style: TextStyle(
                             color: theme.colorScheme.onSurfaceVariant,
                             fontSize: 12,
@@ -120,7 +113,7 @@ class _QuizViewState extends ConsumerState<QuizView> {
                     ],
                   ),
                   Text(
-                    '${_currentQuestionIndex + 1} / ${_mockQuestions.length}',
+                    '${session.index + 1} / ${session.items.length}',
                     style: theme.textTheme.bodyMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                       color: theme.colorScheme.primary,
@@ -132,7 +125,7 @@ class _QuizViewState extends ConsumerState<QuizView> {
 
               // 题干正文
               Text(
-                q['stem'],
+                question.stem,
                 style: theme.textTheme.titleMedium?.copyWith(
                   fontSize: 17,
                   height: 1.6,
@@ -143,30 +136,32 @@ class _QuizViewState extends ConsumerState<QuizView> {
               const SizedBox(height: 20),
 
               // 选项列表
-              for (int i = 0; i < (q['options'] as List).length; i++) ...[
-                Builder(
-                  builder: (context) {
-                    OptionFeedbackState state = OptionFeedbackState.idle;
-                    if (_isAnswered) {
-                      if (i == q['correctIndex']) {
-                        state = OptionFeedbackState.correct;
-                      } else if (_selectedIndex == i) {
-                        state = OptionFeedbackState.wrong;
-                      }
-                    }
+              for (int i = 0; i < question.options.length; i++) ...[
+                    Builder(
+                      builder: (context) {
+                        final option = question.options[i];
+                        OptionFeedbackState state = OptionFeedbackState.idle;
+                        if (result != null) {
+                          if (option.key == result.correctAnswer) {
+                            state = OptionFeedbackState.correct;
+                          } else if (option.key == session.selectedKey) {
+                            state = OptionFeedbackState.wrong;
+                          }
+                        }
 
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 12.0),
-                      child: QuizOptionCard(
-                        letter: letters[i],
-                        content: q['options'][i],
-                        state: state,
-                        isLocked: _isAnswered,
-                        onTap: () => _handleSelect(i),
-                      ),
-                    );
-                  },
-                ),
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 12.0),
+                          child: QuizOptionCard(
+                            letter: option.key,
+                            content: option.content,
+                            state: state,
+                            isLocked: result != null || session.submitting,
+                            onTap: () =>
+                                _handleSelect(context, ref, option.key),
+                          ),
+                        );
+                      },
+                    ),
               ],
               const SizedBox(height: 16),
 
@@ -175,7 +170,7 @@ class _QuizViewState extends ConsumerState<QuizView> {
                 duration: const Duration(milliseconds: 250),
                 firstCurve: Curves.easeOutCubic,
                 secondCurve: Curves.easeInCubic,
-                crossFadeState: _isAnswered
+                crossFadeState: result != null
                     ? CrossFadeState.showSecond
                     : CrossFadeState.showFirst,
                 firstChild: const SizedBox(width: double.infinity),
@@ -193,15 +188,23 @@ class _QuizViewState extends ConsumerState<QuizView> {
                       Row(
                         children: [
                           Icon(
-                            Icons.check_circle_outline_rounded,
+                            result!.isCorrect
+                                ? Icons.check_circle_outline_rounded
+                                : Icons.cancel_outlined,
                             size: 20,
-                            color: semantic.success,
+                            color: result.isCorrect
+                                ? semantic.success
+                                : semantic.danger,
                           ),
                           const SizedBox(width: 8),
                           Text(
-                            '正确答案: ${letters[q['correctIndex']]}',
+                            result.isCorrect
+                                ? '回答正确，正确答案: ${result.correctAnswer}'
+                                : '回答有误，正确答案: ${result.correctAnswer}',
                             style: TextStyle(
-                              color: semantic.success,
+                              color: result.isCorrect
+                                  ? semantic.success
+                                  : semantic.danger,
                               fontSize: 15,
                               fontWeight: FontWeight.bold,
                             ),
@@ -232,7 +235,7 @@ class _QuizViewState extends ConsumerState<QuizView> {
                       Padding(
                         padding: const EdgeInsets.only(left: 26.0),
                         child: Text(
-                          q['explanation'],
+                          result.explanation ?? '暂无解析',
                           style: TextStyle(
                             fontSize: 14,
                             height: 1.5,
@@ -255,7 +258,9 @@ class _QuizViewState extends ConsumerState<QuizView> {
                           ),
                           const Spacer(),
                           FilledButton.icon(
-                            onPressed: _handleNext,
+                            onPressed: () {
+                              ref.read(quizSessionProvider.notifier).next();
+                            },
                             icon: const Icon(
                               Icons.arrow_forward_rounded,
                               size: 18,
@@ -271,6 +276,60 @@ class _QuizViewState extends ConsumerState<QuizView> {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _QuizPlaceholder extends StatelessWidget {
+  final Widget child;
+
+  const _QuizPlaceholder({required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(40.0),
+        child: child,
+      ),
+    );
+  }
+}
+
+class _QuizError extends ConsumerWidget {
+  final Object error;
+
+  const _QuizError({required this.error});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final appError = error is AppException ? error as AppException : null;
+    final message = error is QuizEmptyException
+        ? '题库暂无可用题目，敬请期待'
+        : (appError?.message ?? '题目加载失败，请稍后重试');
+
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            Icons.quiz_outlined,
+            size: 40,
+            color: Theme.of(context).colorScheme.outline,
+          ),
+          const SizedBox(height: 12),
+          Text(message),
+          if (error is! QuizEmptyException) ...[
+            const SizedBox(height: 12),
+            OutlinedButton.icon(
+              onPressed: () =>
+                  ref.read(quizSessionProvider.notifier).restart(),
+              icon: const Icon(Icons.refresh_rounded, size: 18),
+              label: const Text('重新加载'),
+            ),
+          ],
+        ],
       ),
     );
   }
