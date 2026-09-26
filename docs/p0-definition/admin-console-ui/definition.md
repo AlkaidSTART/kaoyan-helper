@@ -37,3 +37,8 @@
 - 未登录访问受保护路径重定向 `/login`；登录成功进入 `/dashboard`，登出回到登录页。
 - 全部页面图标使用 lucide（无系统 Emoji）；动效只用 shadcn 默认过渡。
 - 示例数据均有"示例"标识或空态说明，不伪造接口成功。
+
+## 5. 状态（2026-09-26 回填）
+
+- P2 全部原子任务完成；tsc / lint / build / 167 项回归测试与运行时冒烟（守卫重定向、错误 envelope）均通过。
+- 验收证据：`docs/p3-verification/admin-console-ui/verification.md`。

@@ -31,6 +31,8 @@ model User {
   checkIns        CheckInRecord[]
   aiUsage         AiUsageDaily[]
   reviewedQuestions Question[]     @relation("QuestionReviewer")
+  adminAuditLogs  AdminAuditLog[]
+  schoolImportJobs SchoolImportJob[]
 
   @@index([role])
   @@index([isBanned])
@@ -292,4 +294,41 @@ model AiUsageDaily {
 
   @@unique([userId, usageDate])
   @@map("ai_usage_daily")
+}
+
+// ---------------------------------------------------------------------------
+// 管理域：审计日志与院校导入任务（对齐 supabase/migrations 基线表）
+// ---------------------------------------------------------------------------
+
+model AdminAuditLog {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  actorId      String   @map("actor_id") @db.Uuid
+  action       String
+  resourceType String   @map("resource_type")
+  resourceId   String?  @map("resource_id")
+  requestId    String?  @map("request_id")
+  metadata     Json     @default("{}")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  actor        User     @relation(fields: [actorId], references: [id], onDelete: Cascade)
+
+  @@index([actorId, createdAt(sort: Desc)])
+  @@index([resourceType, resourceId])
+  @@map("admin_audit_logs")
+}
+
+model SchoolImportJob {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  actorId   String   @map("actor_id") @db.Uuid
+  format    String
+  mode      String
+  status    String   @default("validated")
+  summary   Json     @default("{}")
+  payload   Json     @default("[]")
+  version   Int      @default(1)
+  expiresAt DateTime @map("expires_at") @db.Timestamptz(6)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  actor     User     @relation(fields: [actorId], references: [id], onDelete: Cascade)
+
+  @@map("school_import_jobs")
 }

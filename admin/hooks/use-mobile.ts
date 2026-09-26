@@ -1,19 +1,25 @@
-import * as React from "react"
+import * as React from "react";
 
-const MOBILE_BREAKPOINT = 768
+const MOBILE_BREAKPOINT = 768;
+const QUERY = `(max-width: ${MOBILE_BREAKPOINT - 1}px)`;
 
-export function useIsMobile() {
-  const [isMobile, setIsMobile] = React.useState<boolean | undefined>(undefined)
+function subscribe(onChange: () => void): () => void {
+  const mediaQueryList = window.matchMedia(QUERY);
 
-  React.useEffect(() => {
-    const mql = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`)
-    const onChange = () => {
-      setIsMobile(window.innerWidth < MOBILE_BREAKPOINT)
-    }
-    mql.addEventListener("change", onChange)
-    setIsMobile(window.innerWidth < MOBILE_BREAKPOINT)
-    return () => mql.removeEventListener("change", onChange)
-  }, [])
+  mediaQueryList.addEventListener("change", onChange);
 
-  return !!isMobile
+  return () => mediaQueryList.removeEventListener("change", onChange);
+}
+
+function getSnapshot(): boolean {
+  return window.innerWidth < MOBILE_BREAKPOINT;
+}
+
+function getServerSnapshot(): boolean {
+  // SSR 阶段无法测量视口，默认按桌面布局渲染，水合后由真实快照修正。
+  return false;
+}
+
+export function useIsMobile(): boolean {
+  return React.useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 }

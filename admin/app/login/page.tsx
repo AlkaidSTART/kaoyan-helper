@@ -6,7 +6,6 @@ import { Suspense } from "react";
 import { GraduationCap } from "lucide-react";
 
 import { AuthService } from "@/lib/auth/auth-service";
-import { readSessionCookie } from "@/lib/auth/cookie";
 import { PrismaAuthRepository } from "@/lib/auth/prisma-auth-repository";
 
 import { LoginForm } from "./login-form";
@@ -17,7 +16,7 @@ export default async function LoginPage() {
   const authService = new AuthService({ repository: new PrismaAuthRepository() });
 
   try {
-    await authService.getSession(readSessionCookie(await cookies()));
+    await authService.getSession((await cookies()).get("admin_session")?.value ?? null);
 
     redirect("/dashboard");
   } catch {

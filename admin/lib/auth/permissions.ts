@@ -18,7 +18,18 @@ export const USER_PERMISSIONS = [
   "ai:chat",
 ] as const;
 
-export const ADMIN_PERMISSIONS = ["admin:dashboard:read"] as const;
+export const ADMIN_PERMISSIONS = [
+  "admin:dashboard:read",
+  "admin:users:read",
+  "admin:users:ban",
+  "admin:questions:read",
+  "admin:questions:write",
+  "admin:ugc:read",
+  "admin:ugc:review",
+  "admin:schools:read",
+  "admin:schools:write",
+  "admin:audit:read",
+] as const;
 
 export type UserPermission = (typeof USER_PERMISSIONS)[number];
 
