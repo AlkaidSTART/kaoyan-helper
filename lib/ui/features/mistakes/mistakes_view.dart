@@ -126,7 +126,10 @@ class MistakesView extends ConsumerWidget {
             physics: const AlwaysScrollableScrollPhysics(
               parent: BouncingScrollPhysics(),
             ),
-            padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 24.0,
+              vertical: 20.0,
+            ),
             children: [
               // 学科筛选栏
               Wrap(
@@ -271,9 +274,9 @@ class MistakesView extends ConsumerWidget {
     MistakeRecord mistake,
   ) async {
     if (mistake.question == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('原题已被删除，无法重做；可删除该错题记录')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('原题已被删除，无法重做；可删除该错题记录')));
       return;
     }
 

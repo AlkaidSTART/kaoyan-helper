@@ -14,8 +14,7 @@ class DueSession {
 
   const DueSession({required this.due, this.index = 0, this.reviewing = false});
 
-  DueCard? get current =>
-      index < due.items.length ? due.items[index] : null;
+  DueCard? get current => index < due.items.length ? due.items[index] : null;
 
   /// 已完成张数（进度条用）。
   int get completedCount => index;

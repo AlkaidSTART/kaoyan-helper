@@ -7,15 +7,20 @@ import 'package:kaoyan_helper/features/dashboard/domain/dashboard_summary.dart';
 import 'package:kaoyan_helper/features/dashboard/presentation/dashboard_notifier.dart';
 import 'package:kaoyan_helper/features/flashcards/data/flashcards_repository.dart';
 import 'package:kaoyan_helper/features/flashcards/domain/flashcard_models.dart';
+import 'package:kaoyan_helper/features/flashcards/presentation/flashcards_providers.dart';
 import 'package:kaoyan_helper/features/mistakes/data/mistakes_repository.dart';
 import 'package:kaoyan_helper/features/mistakes/domain/mistake_models.dart';
+import 'package:kaoyan_helper/features/mistakes/presentation/mistakes_providers.dart';
 import 'package:kaoyan_helper/features/quiz/data/quiz_repository.dart';
 import 'package:kaoyan_helper/features/quiz/domain/question_models.dart';
+import 'package:kaoyan_helper/features/quiz/presentation/quiz_providers.dart';
 import 'package:kaoyan_helper/features/schools/data/schools_repository.dart';
 import 'package:kaoyan_helper/features/schools/domain/school_models.dart';
+import 'package:kaoyan_helper/features/schools/presentation/schools_providers.dart';
 import 'package:kaoyan_helper/features/shared/paged_result.dart';
 
-DateTime _hoursAgo(int hours) => DateTime.now().subtract(Duration(hours: hours));
+DateTime _hoursAgo(int hours) =>
+    DateTime.now().subtract(Duration(hours: hours));
 
 const _zjuPrograms = [
   SchoolProgram(
@@ -86,6 +91,9 @@ class FakeQuizRepository implements QuizRepository {
             QuestionOption(key: 'D', content: '矛盾的同一性是绝对的，斗争性是相对的'),
           ],
           source: 'official',
+          isPublic: true,
+          isApproved: true,
+          isMine: false,
           reviewStatus: 'approved',
           createdAt: _hoursAgo(48),
         ),
@@ -103,6 +111,9 @@ class FakeQuizRepository implements QuizRepository {
             QuestionOption(key: 'D', content: '中共七大'),
           ],
           source: 'official',
+          isPublic: true,
+          isApproved: true,
+          isMine: false,
           reviewStatus: 'approved',
           createdAt: _hoursAgo(48),
         ),
@@ -209,7 +220,8 @@ class FakeMistakesRepository implements MistakesRepository {
         'm-2',
         subject: 'english',
         type: 'single_choice',
-        stem: 'According to the passage, the primary reason for environmental changes is not merely natural shifts but...',
+        stem:
+            'According to the passage, the primary reason for environmental changes is not merely natural shifts but...',
         errorCount: 2,
         consecutiveCorrect: 1,
         hoursAgo: 20,
@@ -227,7 +239,9 @@ class FakeMistakesRepository implements MistakesRepository {
 
     final filtered = all
         .where((m) => subject == null || m.question?.subject == subject)
-        .where((m) => status == null || status == 'active' || m.status == status)
+        .where(
+          (m) => status == null || status == 'active' || m.status == status,
+        )
         .toList();
 
     return PagedResult(items: filtered, total: filtered.length, totalPages: 1);
@@ -404,8 +418,7 @@ class FakeSchoolsRepository implements SchoolsRepository {
     String schoolId, {
     required String type,
     String? majorCode,
-  }) async =>
-      const [];
+  }) async => const [];
 }
 
 class FakeFlashcardsRepository implements FlashcardsRepository {
@@ -492,7 +505,7 @@ class FakeFlashcardsRepository implements FlashcardsRepository {
     DateTime? to,
     int page = 1,
     int pageSize = 20,
-  }) async => (const [], 0);
+  }) async => (<CheckInRecord>[], 0);
 }
 
 List<Override> buildTestOverrides({DashboardSummary? dashboardSummary}) {

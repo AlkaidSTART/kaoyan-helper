@@ -38,9 +38,7 @@ class _FlashcardsViewState extends ConsumerState<FlashcardsView> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            checkIn != null
-                ? '今日到期卡片已清空，打卡成功！'
-                : '已标记：$rating，切至下一张',
+            checkIn != null ? '今日到期卡片已清空，打卡成功！' : '已标记：$rating，切至下一张',
           ),
           duration: const Duration(milliseconds: 700),
         ),
@@ -106,7 +104,9 @@ class _FlashcardsViewState extends ConsumerState<FlashcardsView> {
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        card.card.category.isEmpty ? '今日到期卡片' : card.card.category,
+                        card.card.category.isEmpty
+                            ? '今日到期卡片'
+                            : card.card.category,
                         style: theme.textTheme.titleSmall?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
@@ -367,9 +367,7 @@ class _FlashcardsViewState extends ConsumerState<FlashcardsView> {
           ),
           const SizedBox(height: 4),
           Text(
-            remaining > 0
-                ? '仍有 $remaining 张到期，继续加油'
-                : '休息一下，明天按遗忘曲线再来复习',
+            remaining > 0 ? '仍有 $remaining 张到期，继续加油' : '休息一下，明天按遗忘曲线再来复习',
             style: theme.textTheme.bodyMedium?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
             ),
@@ -396,9 +394,7 @@ class _FlashcardsViewState extends ConsumerState<FlashcardsView> {
             color: theme.colorScheme.outline,
           ),
           const SizedBox(height: 12),
-          Text(
-            error is AppException ? error.message : '卡片加载失败，请稍后重试',
-          ),
+          Text(error is AppException ? error.message : '卡片加载失败，请稍后重试'),
           const SizedBox(height: 12),
           OutlinedButton.icon(
             onPressed: () => ref.read(dueSessionProvider.notifier).refresh(),

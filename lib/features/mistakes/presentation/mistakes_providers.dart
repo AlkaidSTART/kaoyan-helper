@@ -121,14 +121,15 @@ final mistakesRepositoryProvider = Provider<MistakesRepository>((ref) {
   return MistakesRepository(client: ref.watch(dioClientProvider));
 });
 
-final mistakesProvider =
-    AsyncNotifierProvider<MistakesNotifier, MistakePage?>(
-      MistakesNotifier.new,
-    );
+final mistakesProvider = AsyncNotifierProvider<MistakesNotifier, MistakePage?>(
+  MistakesNotifier.new,
+);
 
 /// 错题详情缓存提供者（重做对话框使用；family 参数为错题 id）。
-final mistakeDetailProvider =
-    FutureProvider.family<MistakeDetail, String>((ref, id) async {
-      final repository = ref.watch(mistakesRepositoryProvider);
-      return repository.getMistake(id);
-    });
+final mistakeDetailProvider = FutureProvider.family<MistakeDetail, String>((
+  ref,
+  id,
+) async {
+  final repository = ref.watch(mistakesRepositoryProvider);
+  return repository.getMistake(id);
+});

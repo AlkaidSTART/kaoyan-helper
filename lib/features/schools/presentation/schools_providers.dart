@@ -17,8 +17,9 @@ class SchoolPage {
     required this.targets,
   });
 
-  bool isTarget(String schoolId) =>
-      targets.any((target) => target.schoolId == schoolId && target.type == 'primary');
+  bool isTarget(String schoolId) => targets.any(
+    (target) => target.schoolId == schoolId && target.type == 'primary',
+  );
 }
 
 /// 择校状态：未登录为 null；keyword/tag 筛选拉取（SCH-01）。

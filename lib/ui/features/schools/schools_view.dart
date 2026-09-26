@@ -192,18 +192,13 @@ class _SchoolsViewState extends ConsumerState<SchoolsView> {
     );
   }
 
-  Future<void> _handleTargetToggle(
-    SchoolSummary school,
-    bool isTarget,
-  ) async {
+  Future<void> _handleTargetToggle(SchoolSummary school, bool isTarget) async {
     try {
       await ref.read(schoolsProvider.notifier).toggleTarget(school, isTarget);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-              isTarget ? '已设为一志愿目标院校！' : '已取消一志愿目标',
-            ),
+            content: Text(isTarget ? '已设为一志愿目标院校！' : '已取消一志愿目标'),
             duration: const Duration(seconds: 1),
           ),
         );

@@ -88,9 +88,7 @@ class QuizSessionNotifier extends AsyncNotifier<QuizSession?> {
       return;
     }
 
-    state = AsyncData(
-      session.copyWith(submitting: true, selectedKey: answer),
-    );
+    state = AsyncData(session.copyWith(submitting: true, selectedKey: answer));
 
     try {
       final repository = ref.read(quizRepositoryProvider);

@@ -64,9 +64,8 @@ class _RedoDialogState extends ConsumerState<RedoDialog> {
             padding: EdgeInsets.symmetric(vertical: 40),
             child: Center(child: CircularProgressIndicator()),
           ),
-          error: (error, _) => Text(
-            error is AppException ? error.message : '题目加载失败，请关闭后重试',
-          ),
+          error: (error, _) =>
+              Text(error is AppException ? error.message : '题目加载失败，请关闭后重试'),
           data: (data) {
             final options = data.question?.options ?? const [];
             final correctKey = result?.correctAnswer;
@@ -93,7 +92,8 @@ class _RedoDialogState extends ConsumerState<RedoDialog> {
                           : theme.colorScheme.error,
                     ),
                   ),
-                  if (data.explanation != null && data.explanation!.isNotEmpty) ...[
+                  if (data.explanation != null &&
+                      data.explanation!.isNotEmpty) ...[
                     const SizedBox(height: 8),
                     Text(
                       data.explanation!,
@@ -128,9 +128,7 @@ class _RedoDialogState extends ConsumerState<RedoDialog> {
       ),
       actions: [
         TextButton(
-          onPressed: _submitting
-              ? null
-              : () => Navigator.pop(context, result),
+          onPressed: _submitting ? null : () => Navigator.pop(context, result),
           child: Text(result == null ? '关闭' : '完成'),
         ),
         if (result == null)

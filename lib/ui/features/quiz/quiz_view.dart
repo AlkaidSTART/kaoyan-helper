@@ -100,8 +100,7 @@ class _QuizSessionBody extends ConsumerWidget {
                         ),
                         child: Text(
                           [
-                            if (question.year != null)
-                              '${question.year} 真题',
+                            if (question.year != null) '${question.year} 真题',
                             SubjectLabels.type(question.type),
                           ].join(' · '),
                           style: TextStyle(
@@ -137,31 +136,30 @@ class _QuizSessionBody extends ConsumerWidget {
 
               // 选项列表
               for (int i = 0; i < question.options.length; i++) ...[
-                    Builder(
-                      builder: (context) {
-                        final option = question.options[i];
-                        OptionFeedbackState state = OptionFeedbackState.idle;
-                        if (result != null) {
-                          if (option.key == result.correctAnswer) {
-                            state = OptionFeedbackState.correct;
-                          } else if (option.key == session.selectedKey) {
-                            state = OptionFeedbackState.wrong;
-                          }
-                        }
+                Builder(
+                  builder: (context) {
+                    final option = question.options[i];
+                    OptionFeedbackState state = OptionFeedbackState.idle;
+                    if (result != null) {
+                      if (option.key == result.correctAnswer) {
+                        state = OptionFeedbackState.correct;
+                      } else if (option.key == session.selectedKey) {
+                        state = OptionFeedbackState.wrong;
+                      }
+                    }
 
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 12.0),
-                          child: QuizOptionCard(
-                            letter: option.key,
-                            content: option.content,
-                            state: state,
-                            isLocked: result != null || session.submitting,
-                            onTap: () =>
-                                _handleSelect(context, ref, option.key),
-                          ),
-                        );
-                      },
-                    ),
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 12.0),
+                      child: QuizOptionCard(
+                        letter: option.key,
+                        content: option.content,
+                        state: state,
+                        isLocked: result != null || session.submitting,
+                        onTap: () => _handleSelect(context, ref, option.key),
+                      ),
+                    );
+                  },
+                ),
               ],
               const SizedBox(height: 16),
 
@@ -182,95 +180,103 @@ class _QuizSessionBody extends ConsumerWidget {
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(color: theme.colorScheme.outlineVariant),
                   ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(
-                            result!.isCorrect
-                                ? Icons.check_circle_outline_rounded
-                                : Icons.cancel_outlined,
-                            size: 20,
-                            color: result.isCorrect
-                                ? semantic.success
-                                : semantic.danger,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            result.isCorrect
-                                ? '回答正确，正确答案: ${result.correctAnswer}'
-                                : '回答有误，正确答案: ${result.correctAnswer}',
-                            style: TextStyle(
-                              color: result.isCorrect
-                                  ? semantic.success
-                                  : semantic.danger,
-                              fontSize: 15,
-                              fontWeight: FontWeight.bold,
+                  // AnimatedCrossFade 会同时构建两个子树，result 为空时不能解引用
+                  child: result == null
+                      ? const SizedBox.shrink()
+                      : Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Icon(
+                                  result.isCorrect
+                                      ? Icons.check_circle_outline_rounded
+                                      : Icons.cancel_outlined,
+                                  size: 20,
+                                  color: result.isCorrect
+                                      ? semantic.success
+                                      : semantic.danger,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  result.isCorrect
+                                      ? '回答正确，正确答案: ${result.correctAnswer}'
+                                      : '回答有误，正确答案: ${result.correctAnswer}',
+                                  style: TextStyle(
+                                    color: result.isCorrect
+                                        ? semantic.success
+                                        : semantic.danger,
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
                             ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Icon(
-                            Icons.menu_book_outlined,
-                            size: 18,
-                            color: theme.colorScheme.primary,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            '官方解析：',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: theme.colorScheme.onSurface,
-                              fontSize: 14,
+                            const SizedBox(height: 12),
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Icon(
+                                  Icons.menu_book_outlined,
+                                  size: 18,
+                                  color: theme.colorScheme.primary,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  '官方解析：',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: theme.colorScheme.onSurface,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ],
                             ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      Padding(
-                        padding: const EdgeInsets.only(left: 26.0),
-                        child: Text(
-                          result.explanation ?? '暂无解析',
-                          style: TextStyle(
-                            fontSize: 14,
-                            height: 1.5,
-                            color: theme.colorScheme.onSurfaceVariant,
-                          ),
+                            const SizedBox(height: 8),
+                            Padding(
+                              padding: const EdgeInsets.only(left: 26.0),
+                              child: Text(
+                                result.explanation ?? '暂无解析',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  height: 1.5,
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 20),
+                            // 底部操作栏
+                            Row(
+                              children: [
+                                OutlinedButton.icon(
+                                  onPressed: () {
+                                    ref
+                                        .read(aiPanelExpandedProvider.notifier)
+                                        .setExpanded(true);
+                                  },
+                                  icon: const Icon(
+                                    Icons.auto_awesome,
+                                    size: 18,
+                                  ),
+                                  label: const Text('AI 深度解析'),
+                                ),
+                                const Spacer(),
+                                FilledButton.icon(
+                                  onPressed: () {
+                                    ref
+                                        .read(quizSessionProvider.notifier)
+                                        .next();
+                                  },
+                                  icon: const Icon(
+                                    Icons.arrow_forward_rounded,
+                                    size: 18,
+                                  ),
+                                  label: const Text('下一题'),
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
-                      ),
-                      const SizedBox(height: 20),
-                      // 底部操作栏
-                      Row(
-                        children: [
-                          OutlinedButton.icon(
-                            onPressed: () {
-                              ref
-                                  .read(aiPanelExpandedProvider.notifier)
-                                  .setExpanded(true);
-                            },
-                            icon: const Icon(Icons.auto_awesome, size: 18),
-                            label: const Text('AI 深度解析'),
-                          ),
-                          const Spacer(),
-                          FilledButton.icon(
-                            onPressed: () {
-                              ref.read(quizSessionProvider.notifier).next();
-                            },
-                            icon: const Icon(
-                              Icons.arrow_forward_rounded,
-                              size: 18,
-                            ),
-                            label: const Text('下一题'),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
                 ),
               ),
             ],
@@ -289,10 +295,7 @@ class _QuizPlaceholder extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(40.0),
-        child: child,
-      ),
+      child: Padding(padding: const EdgeInsets.all(40.0), child: child),
     );
   }
 }
@@ -323,8 +326,7 @@ class _QuizError extends ConsumerWidget {
           if (error is! QuizEmptyException) ...[
             const SizedBox(height: 12),
             OutlinedButton.icon(
-              onPressed: () =>
-                  ref.read(quizSessionProvider.notifier).restart(),
+              onPressed: () => ref.read(quizSessionProvider.notifier).restart(),
               icon: const Icon(Icons.refresh_rounded, size: 18),
               label: const Text('重新加载'),
             ),

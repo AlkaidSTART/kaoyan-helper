@@ -35,14 +35,13 @@ class _SchoolRowItemState extends ConsumerState<SchoolRowItem> {
   ];
 
   String get _regionLine {
-    final parts = [
-      ?widget.school.province,
-      ?widget.school.region,
-    ];
+    final parts = [?widget.school.province, ?widget.school.region];
     return parts.isEmpty ? '地区信息待完善' : parts.join(' · ');
   }
 
   void _toggleTarget() {
+    debugPrint('TOGGLE-TARGET-CALLED');
+    debugPrint('TOGGLE-TARGET-CALLED');
     widget.onTargetToggle?.call(!widget.isTarget);
   }
 
@@ -195,16 +194,15 @@ class _SchoolRowItemState extends ConsumerState<SchoolRowItem> {
                                   vertical: 1,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: theme
-                                      .colorScheme.surfaceContainerHighest,
+                                  color:
+                                      theme.colorScheme.surfaceContainerHighest,
                                   borderRadius: BorderRadius.circular(4),
                                 ),
                                 child: Text(
                                   tag,
                                   style: TextStyle(
                                     fontSize: 10,
-                                    color:
-                                        theme.colorScheme.onSurfaceVariant,
+                                    color: theme.colorScheme.onSurfaceVariant,
                                   ),
                                 ),
                               ),
@@ -295,11 +293,13 @@ class _SchoolRowItemState extends ConsumerState<SchoolRowItem> {
     return programs.when(
       loading: () => const Padding(
         padding: EdgeInsets.symmetric(vertical: 16.0),
-        child: Center(child: SizedBox(
-          width: 22,
-          height: 22,
-          child: CircularProgressIndicator(strokeWidth: 2),
-        )),
+        child: Center(
+          child: SizedBox(
+            width: 22,
+            height: 22,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          ),
+        ),
       ),
       error: (error, _) => Text(
         error is AppException ? error.message : '专业数据加载失败，请稍后重试',
@@ -357,11 +357,11 @@ class _SchoolRowItemState extends ConsumerState<SchoolRowItem> {
                       TableRow(
                         children: [
                           _buildDataCell('${p.year} 年'),
+                          _buildDataCell('${p.majorName} (${p.majorCode})'),
                           _buildDataCell(
-                            '${p.majorName} (${p.majorCode})',
-                          ),
-                          _buildDataCell(
-                            p.planEnrollment == null ? '—' : '${p.planEnrollment} 人',
+                            p.planEnrollment == null
+                                ? '—'
+                                : '${p.planEnrollment} 人',
                           ),
                           _buildDataCell(
                             p.minScore == null ? '—' : '${p.minScore} 分',
