@@ -192,6 +192,20 @@ export class PrismaAdminSchoolRepository implements AdminSchoolRepository {
     });
   }
 
+  async listPrograms(schoolId: string, year: number | null): Promise<AdminProgramRecord[]> {
+    return this.run(async () => {
+      const rows = await this.client.schoolProgram.findMany({
+        where: {
+          schoolId,
+          ...(year !== null ? { year } : {}),
+        },
+        orderBy: [{ year: "desc" }, { majorCode: "asc" }],
+      });
+
+      return rows as unknown as AdminProgramRecord[];
+    });
+  }
+
   async upsertProgram(
     schoolId: string,
     input: UpsertProgramInput,

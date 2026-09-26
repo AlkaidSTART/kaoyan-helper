@@ -2,12 +2,17 @@ import { AppError, ERROR_CODES } from "./errors";
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
+/** UUID 格式校验（路径与查询参数共用）。 */
+export function isValidUuid(value: string): boolean {
+  return UUID_PATTERN.test(value);
+}
+
 /**
  * 读取路径参数中的 UUID：格式非法视为资源不存在（404 防枚举），
  * 不返回 422 以避免暴露参数语义。
  */
 export function readUuidParam(value: string): string {
-  if (!UUID_PATTERN.test(value)) {
+  if (!isValidUuid(value)) {
     throw new AppError(ERROR_CODES.NOT_FOUND);
   }
 

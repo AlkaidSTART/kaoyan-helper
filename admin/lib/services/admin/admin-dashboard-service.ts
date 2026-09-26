@@ -23,6 +23,10 @@ export interface AdminDashboardDto {
   aiCalls: number;
   aiCostEstimate: number;
   topMistakes: TopMistakeItem[];
+  /** 累计注册用户数（含管理员）。 */
+  totalUsers: number;
+  /** 待审核 UGC 数（source=ugc + pending + 未删除），与 ADMIN-UGC-01 默认队列口径一致。 */
+  pendingUgcCount: number;
 }
 
 export interface AdminDashboardRepository {
@@ -40,6 +44,10 @@ export interface AdminDashboardRepository {
     toExclusive: Date,
     limit: number,
   ): Promise<TopMistakeItem[]>;
+
+  countTotalUsers(): Promise<number>;
+
+  countPendingUgc(): Promise<number>;
 }
 
 const MAX_RANGE_DAYS = 90;
@@ -87,13 +95,16 @@ export class AdminDashboardService {
     const toExclusive = new Date(toDay.getTime() + DAY_MS);
     const wauFrom = new Date(toExclusive.getTime() - WEEK_DAYS * DAY_MS);
 
-    const [dau, questionAnswers, aiUsage, topMistakes, wau] = await Promise.all([
-      this.repository.countDistinctAttemptUsers(fromDay, toExclusive),
-      this.repository.countQuestionAnswers(fromDay, toExclusive),
-      this.repository.sumAiUsage(fromDay, toExclusive),
-      this.repository.listTopMistakes(fromDay, toExclusive, TOP_MISTAKES_LIMIT),
-      this.repository.countDistinctAttemptUsers(wauFrom, toExclusive),
-    ]);
+    const [dau, questionAnswers, aiUsage, topMistakes, wau, totalUsers, pendingUgcCount] =
+      await Promise.all([
+        this.repository.countDistinctAttemptUsers(fromDay, toExclusive),
+        this.repository.countQuestionAnswers(fromDay, toExclusive),
+        this.repository.sumAiUsage(fromDay, toExclusive),
+        this.repository.listTopMistakes(fromDay, toExclusive, TOP_MISTAKES_LIMIT),
+        this.repository.countDistinctAttemptUsers(wauFrom, toExclusive),
+        this.repository.countTotalUsers(),
+        this.repository.countPendingUgc(),
+      ]);
 
     return {
       dau,
@@ -102,6 +113,8 @@ export class AdminDashboardService {
       aiCalls: aiUsage.calls,
       aiCostEstimate: aiUsage.costEstimate,
       topMistakes,
+      totalUsers,
+      pendingUgcCount,
     };
   }
 }

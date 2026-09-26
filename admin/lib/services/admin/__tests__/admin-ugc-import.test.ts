@@ -9,6 +9,8 @@ import type {
 } from "../admin-question-service";
 import type {
   AdminImportJobRecord,
+  AdminProgramRecord,
+  AdminSchoolRecord,
   AdminSchoolRepository,
   CommitImportJobParams,
 } from "../admin-school-service";
@@ -143,7 +145,30 @@ function schoolRow(): ParsedSchoolRow {
   };
 }
 
-function fakeSchoolRepo(jobs: AdminImportJobRecord[]): AdminSchoolRepository & { commits: CommitImportJobParams[] } {
+function programRow(overrides: Partial<AdminProgramRecord> = {}): AdminProgramRecord {
+  return {
+    id: "p-1",
+    schoolId: "s-1",
+    majorCode: "085400",
+    majorName: "电子信息",
+    year: 2025,
+    studyMode: "全日制",
+    planEnrollment: 120,
+    minScore: 355,
+    avgScore: 372.5,
+    isPublished: false,
+    version: 1,
+    createdAt: now,
+    updatedAt: now,
+    ...overrides,
+  };
+}
+
+function fakeSchoolRepo(
+  jobs: AdminImportJobRecord[],
+  programs: AdminProgramRecord[] = [],
+  school: AdminSchoolRecord | null = null,
+): AdminSchoolRepository & { commits: CommitImportJobParams[] } {
   const commits: CommitImportJobParams[] = [];
 
   return {
@@ -152,7 +177,12 @@ function fakeSchoolRepo(jobs: AdminImportJobRecord[]): AdminSchoolRepository & {
       return { rows: [], total: 0 };
     },
     async findSchoolById() {
-      return null;
+      return school;
+    },
+    async listPrograms(schoolId, year) {
+      return programs.filter(
+        (program) => program.schoolId === schoolId && (year === null || program.year === year),
+      );
     },
     async createSchool() {
       throw new Error("not used");
@@ -263,5 +293,79 @@ describe("导入确认状态机", () => {
     await expect(service.confirmImport(actor, "job-3", null)).rejects.toMatchObject({
       code: "IMPORT_JOB_EXPIRED",
     });
+  });
+});
+
+function schoolRecord(): AdminSchoolRecord {
+  return {
+    id: "s-1",
+    name: "深圳大学",
+    province: "广东",
+    region: "华南",
+    is985: false,
+    is211: false,
+    isDoubleFirstClass: false,
+    isSelfMarking: false,
+    isPublished: false,
+    version: 1,
+    createdAt: now,
+    updatedAt: now,
+  };
+}
+
+describe("管理端专业列表（ADMIN-SCH-08）", () => {
+  it("返回全部专业并映射 DTO（含未发布、Decimal 转数值）", async () => {
+    const programs = [
+      programRow({ id: "p-1", year: 2025, minScore: 355, avgScore: 372.5 }),
+      programRow({ id: "p-2", year: 2024, majorCode: "125100", majorName: "工商管理" }),
+    ];
+    const service = new AdminSchoolService(
+      fakeSchoolRepo([], programs, schoolRecord()),
+    );
+    const { rows } = await service.listPrograms(actor, "s-1", null);
+
+    expect(rows).toHaveLength(2);
+    expect(rows[0]).toMatchObject({
+      id: "p-1",
+      schoolId: "s-1",
+      minScore: 355,
+      avgScore: 372.5,
+      isPublished: false,
+    });
+  });
+
+  it("year 筛选透传仓储", async () => {
+    const programs = [
+      programRow({ id: "p-1", year: 2025 }),
+      programRow({ id: "p-2", year: 2024 }),
+    ];
+    const service = new AdminSchoolService(
+      fakeSchoolRepo([], programs, schoolRecord()),
+    );
+    const { rows } = await service.listPrograms(actor, "s-1", 2024);
+
+    expect(rows).toHaveLength(1);
+    expect(rows[0].id).toBe("p-2");
+  });
+
+  it("院校不存在返回 404", async () => {
+    const service = new AdminSchoolService(fakeSchoolRepo([], [], null));
+
+    await expect(service.listPrograms(actor, "s-404", null)).rejects.toMatchObject({
+      code: "NOT_FOUND",
+    });
+  });
+
+  it("非管理员触发 ADMIN_REQUIRED", async () => {
+    const service = new AdminSchoolService(
+      fakeSchoolRepo([], [], schoolRecord()),
+    );
+    const userActor = {
+      user: { id: "u-9", email: "u@t.dev", nickname: "考生", role: "user", isBanned: false },
+    };
+
+    await expect(
+      service.listPrograms(userActor, "s-1", null),
+    ).rejects.toMatchObject({ code: "ADMIN_REQUIRED" });
   });
 });

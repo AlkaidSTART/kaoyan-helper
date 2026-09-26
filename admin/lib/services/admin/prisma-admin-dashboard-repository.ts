@@ -60,6 +60,16 @@ export class PrismaAdminDashboardRepository implements AdminDashboardRepository 
     };
   }
 
+  async countTotalUsers(): Promise<number> {
+    return this.client.user.count();
+  }
+
+  async countPendingUgc(): Promise<number> {
+    return this.client.question.count({
+      where: { source: "ugc", reviewStatus: "pending", isDeleted: false },
+    });
+  }
+
   async listTopMistakes(
     from: Date,
     toExclusive: Date,

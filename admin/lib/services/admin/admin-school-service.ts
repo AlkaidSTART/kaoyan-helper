@@ -170,6 +170,9 @@ export interface AdminSchoolRepository {
 
   findSchoolById(schoolId: string): Promise<AdminSchoolRecord | null>;
 
+  /** 专业完整列表（ADMIN-SCH-08）：不分页，含未发布；year 为 null 时返回全部。 */
+  listPrograms(schoolId: string, year: number | null): Promise<AdminProgramRecord[]>;
+
   createSchool(
     input: CreateAdminSchoolInput,
     audit: ImportAuditContext,
@@ -238,6 +241,21 @@ export class AdminSchoolService {
     const { rows, total } = await this.repository.listSchools(filters, page, pageSize);
 
     return { rows: rows.map(toAdminSchoolDto), total };
+  }
+
+  /** 专业列表（ADMIN-SCH-08）：不分页，含未发布；year 为 null 时返回全部。 */
+  async listPrograms(
+    actor: AdminActor,
+    schoolId: string,
+    year: number | null,
+  ): Promise<{ rows: AdminProgramDto[] }> {
+    assertAdminActor(actor);
+
+    await this.requireSchool(schoolId);
+
+    const rows = await this.repository.listPrograms(schoolId, year);
+
+    return { rows: rows.map(toAdminProgramDto) };
   }
 
   async create(

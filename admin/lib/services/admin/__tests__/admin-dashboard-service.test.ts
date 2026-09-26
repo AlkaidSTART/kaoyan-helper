@@ -17,6 +17,12 @@ function fakeRepo(): AdminDashboardRepository {
     async listTopMistakes() {
       return [{ questionId: "q-1", stem: "题干", errorCount: 7 }];
     },
+    async countTotalUsers() {
+      return 1_284;
+    },
+    async countPendingUgc() {
+      return 8;
+    },
   };
 }
 
@@ -36,6 +42,8 @@ describe("AdminDashboardService 窗口校验", () => {
       questionAnswers: 1_234,
       aiCalls: 216,
       aiCostEstimate: 1.23,
+      totalUsers: 1_284,
+      pendingUgcCount: 8,
     });
     expect(result.topMistakes[0]).toMatchObject({ questionId: "q-1", errorCount: 7 });
   });

@@ -28,8 +28,8 @@
 | Schools | 5 | `/schools/*` |
 | Flashcards | 5 | `/flashcards/*`、`/check-ins` |
 | AI | 2 | `/ai/*` |
-| Admin | 20 | `/admin/*` |
-| **合计** | **55** | `/api/v1` |
+| Admin | 23 | `/admin/*` |
+| **合计** | **58** | `/api/v1` |
 
 ## 3. Auth
 
@@ -235,7 +235,7 @@ SSE 细节、事件格式和超时遵循总设计第 9 节。AI 接口必须先�
 
 | ID | Method / Path | Auth / Permission | Request | Response `data` | 审计与边界 |
 |---|---|---|---|---|---|
-| ADMIN-DASH-01 | `GET /admin/dashboard` | 管理员 / `admin:dashboard:read` | `from?, to?, timezone?` | `{dau, wau, questionAnswers, aiCalls, aiCostEstimate, topMistakes}` | 聚合数据；禁止返回用户隐私明文 |
+| ADMIN-DASH-01 | `GET /admin/dashboard` | 管理员 / `admin:dashboard:read` | `from?, to?, timezone?` | `{dau, wau, questionAnswers, aiCalls, aiCostEstimate, topMistakes, totalUsers, pendingUgcCount}` | 聚合数据；禁止返回用户隐私明文；`pendingUgcCount` 与 UGC 队列默认口径一致 |
 | ADMIN-USER-01 | `GET /admin/users` | 管理员 / `admin:users:read` | `keyword?, role?, isBanned?, page?, pageSize?` | 分页用户摘要 | 搜索邮箱/昵称；结果脱敏策略可配置 |
 | ADMIN-USER-02 | `GET /admin/users/:id` | 管理员 / `admin:users:read` | 路径 `id` | 用户详情 + 学习统计 | 不返回 Auth 内部 secret |
 | ADMIN-USER-03 | `POST /admin/users/:id/ban` | 管理员 / `admin:users:ban` | `{reason, expiresAt?}` | 更新后的用户状态 | 不可封禁自己；不可封禁最后一名有效管理员；必须审计 |
@@ -255,6 +255,9 @@ SSE 细节、事件格式和超时遵循总设计第 9 节。AI 接口必须先�
 | ADMIN-SCH-05 | `PATCH /admin/schools/:id/programs/:programId` | 管理员 / `admin:schools:write` | 可编辑字段 + `version` | 更新后的专业记录 | 乐观锁；审计 |
 | ADMIN-SCH-06 | `POST /admin/schools/import` | 管理员 / `admin:schools:write` | `multipart/form-data`：`file`, `format:"csv"\|"json"`, `mode:"validate"\|"commit"` | `{jobId, status, summary}` | 文件大小/行数限制；先校验后提交；审计 |
 | ADMIN-SCH-07 | `POST /admin/schools/import/:jobId/confirm` | 管理员 / `admin:schools:write` | `{jobId, version?}` | `{jobId, status:"completed", summary}` | 仅 validate 成功且未过期的任务可确认；审计 |
+| ADMIN-SCH-08 | `GET /admin/schools/:id/programs` | 管理员 / `admin:schools:read` | 路径 `id`；`year?` | 专业完整列表（不分页） | 含未发布与导入数据；院校不存在 404；供管理端编辑页读取 |
+| ADMIN-STAT-01 | `GET /admin/stats/users` | 管理员 / `admin:dashboard:read` | `from?, to?, timezone?` | `{totalUsers, newUsers, prevNewUsers}` | 注册统计；口径与看板同构（UTC 日界、默认近 7 天、≤90 天）；`prevNewUsers` 为紧邻等长前一窗口，供环比计算 |
+| ADMIN-AUDIT-01 | `GET /admin/audit-logs` | 管理员 / `admin:audit:read` | `action?, resourceType?, actorId?, page?, pageSize?` | 分页审计日志（含 actor 摘要） | 固定 `createdAt desc`；`metadata` 为写入侧脱敏摘要，原样透出 |
 
 ### 11.2 管理接口额外约束
 
