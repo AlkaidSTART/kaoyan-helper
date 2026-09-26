@@ -40,8 +40,6 @@ class _SchoolRowItemState extends ConsumerState<SchoolRowItem> {
   }
 
   void _toggleTarget() {
-    debugPrint('TOGGLE-TARGET-CALLED');
-    debugPrint('TOGGLE-TARGET-CALLED');
     widget.onTargetToggle?.call(!widget.isTarget);
   }
 

@@ -100,7 +100,13 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('错题重做'), findsOneWidget);
-      expect(find.textContaining('矛盾普遍性和特殊性'), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byType(AlertDialog),
+          matching: find.textContaining('矛盾普遍性和特殊性'),
+        ),
+        findsOneWidget,
+      );
 
       // 选择正确答案 A 并提交，服务端判题后提示连对进度
       await tester.tap(find.text('A. 矛盾普遍性寓于特殊性之中'));
@@ -110,7 +116,13 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('回答正确'), findsOneWidget);
-      expect(find.textContaining('共性寓于个性之中'), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byType(AlertDialog),
+          matching: find.textContaining('矛盾的普遍性即矛盾的共性'),
+        ),
+        findsOneWidget,
+      );
 
       // 关闭对话框
       await tester.tap(find.text('完成'));
@@ -153,10 +165,12 @@ void main() {
         expect(find.text('历年招生与复试线趋势：'), findsOneWidget);
         expect(find.text('382 分'), findsOneWidget);
 
-        // 点击目标收藏星标（浙江大学当前非目标）
+        // 点击目标收藏星标（浙江大学当前非目标；父级 InkWell 含 onDoubleTap，
+        // 单击需等待双击判定超时后生效）
         final starIcons = find.byIcon(Icons.star_outline_rounded);
         expect(starIcons, findsWidgets);
         await tester.tap(starIcons.first);
+        await tester.pump(const Duration(milliseconds: 350));
         await tester.pumpAndSettle();
 
         expect(find.text('已设为一志愿目标院校！'), findsOneWidget);

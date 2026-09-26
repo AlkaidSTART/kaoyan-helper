@@ -387,11 +387,21 @@ class FakeSchoolsRepository implements SchoolsRepository {
     int page = 1,
     int pageSize = 20,
   }) async {
-    return PagedResult(
-      items: schoolId == 'school-zju' ? _zjuPrograms : const [],
-      total: schoolId == 'school-zju' ? _zjuPrograms.length : 0,
-      totalPages: 1,
-    );
+    final programs = <SchoolProgram>[
+      ..._zjuPrograms,
+      const SchoolProgram(
+        id: 'p-3',
+        schoolId: 'school-ecnu',
+        majorCode: '085400',
+        majorName: '软件工程',
+        year: 2024,
+        planEnrollment: 60,
+        minScore: 355,
+        avgScore: 362,
+      ),
+    ].where((p) => p.schoolId == schoolId).toList();
+
+    return PagedResult(items: programs, total: programs.length, totalPages: 1);
   }
 
   @override
