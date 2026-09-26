@@ -319,6 +319,10 @@ export class AdminQuestionService {
       });
     }
 
+    if (question.reviewStatus !== "pending") {
+      throw new AppError(ERROR_CODES.UGC_ALREADY_REVIEWED);
+    }
+
     return toAdminQuestionDto(
       await this.repository.reviewQuestion({
         questionId,

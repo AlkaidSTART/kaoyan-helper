@@ -231,7 +231,11 @@ export class PrismaAdminQuestionRepository implements AdminQuestionRepository {
             resourceType: "question",
             resourceId: questionId,
             requestId: audit.requestId,
-            metadata: { reason: input.reason, version: input.version },
+            metadata: {
+              reason: input.reason,
+              version: input.version,
+              deletedAt: now.toISOString(),
+            },
           },
         });
       });

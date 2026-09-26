@@ -354,11 +354,6 @@ function parseJsonPrograms(
   return programs;
 }
 
-interface BooleanInput {
-  value: string | boolean | null;
-  provided: boolean;
-}
-
 function toSchoolRow(
   record: Record<string, string>,
   line: number,

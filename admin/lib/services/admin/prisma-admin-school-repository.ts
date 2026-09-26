@@ -123,7 +123,7 @@ export class PrismaAdminSchoolRepository implements AdminSchoolRepository {
             resourceType: "school",
             resourceId: created.id,
             requestId: audit.requestId,
-            metadata: { name: created.name },
+            metadata: { name: created.name, createdAt: now.toISOString() },
           },
         });
 
@@ -180,6 +180,7 @@ export class PrismaAdminSchoolRepository implements AdminSchoolRepository {
             requestId: audit.requestId,
             metadata: {
               changedFields: Object.keys(input).filter((field) => field !== "version"),
+              updatedAt: now.toISOString(),
             },
           },
         });
@@ -239,6 +240,7 @@ export class PrismaAdminSchoolRepository implements AdminSchoolRepository {
               schoolId,
               majorCode: input.majorCode,
               year: input.year,
+              upsertedAt: now.toISOString(),
             },
           },
         });
@@ -296,6 +298,7 @@ export class PrismaAdminSchoolRepository implements AdminSchoolRepository {
             metadata: {
               schoolId,
               changedFields: Object.keys(input).filter((field) => field !== "version"),
+              updatedAt: now.toISOString(),
             },
           },
         });

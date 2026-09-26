@@ -1,4 +1,4 @@
-import { Prisma, type PrismaClient } from "@/generated/prisma/client";
+import type { PrismaClient } from "@/generated/prisma/client";
 
 import { getPrismaClient } from "../../db/prisma";
 import type {
