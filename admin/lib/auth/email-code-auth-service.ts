@@ -8,6 +8,7 @@ import { isActivelyBanned } from "./user-session-service";
 import type { UserSessionRepository } from "./user-session-repository";
 import { UserSessionService, type UserTokenPair } from "./user-session-service";
 import { SESSION_TTL_SECONDS, generateSessionToken, hashSessionToken } from "./session-token";
+import type { ActivityRecorder } from "../services/activity/activity-recorder";
 
 export const FLUTTER_CLIENT_TYPE = "flutter";
 
@@ -51,6 +52,7 @@ export interface EmailCodeAuthServiceDependencies {
   now?: () => Date;
   generateSessionTokenFn?: () => string;
   sessionTtlSeconds?: number;
+  activityRecorder?: ActivityRecorder;
 }
 
 /**
@@ -70,6 +72,8 @@ export class EmailCodeAuthService {
 
   private readonly sessionTtlSeconds: number;
 
+  private readonly activityRecorder: ActivityRecorder | null;
+
   constructor(dependencies: EmailCodeAuthServiceDependencies) {
     this.otpClient = dependencies.otpClient;
     this.userRepository = dependencies.userRepository;
@@ -77,6 +81,7 @@ export class EmailCodeAuthService {
     this.now = dependencies.now ?? (() => new Date());
     this.generateSessionTokenFn = dependencies.generateSessionTokenFn ?? generateSessionToken;
     this.sessionTtlSeconds = dependencies.sessionTtlSeconds ?? SESSION_TTL_SECONDS;
+    this.activityRecorder = dependencies.activityRecorder ?? null;
   }
 
   async sendCode(email: string): Promise<SendCodeResult> {
@@ -110,6 +115,7 @@ export class EmailCodeAuthService {
       const sessionService = new UserSessionService({
         repository: this.userRepository,
         now: this.now,
+        activityRecorder: this.activityRecorder ?? undefined,
       });
       const tokens = await sessionService.createSessionPair(user, {
         clientType: input.clientType,
