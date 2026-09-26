@@ -4,7 +4,9 @@ import '../../../widgets/number_ticker.dart';
 class StatCard extends StatelessWidget {
   final IconData icon;
   final String label;
-  final int value;
+
+  /// 为 null 时展示 `--` 占位（数据未就绪或加载失败）。
+  final int? value;
   final String suffix;
   final String? subtitle;
   final Color? iconColor;
@@ -56,14 +58,23 @@ class StatCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.baseline,
                 textBaseline: TextBaseline.alphabetic,
                 children: [
-                  NumberTicker(
-                    value: value,
-                    suffix: suffix,
-                    style: theme.textTheme.headlineMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: valueColor ?? theme.colorScheme.onSurface,
+                  if (value == null)
+                    Text(
+                      '--$suffix',
+                      style: theme.textTheme.headlineMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: valueColor ?? theme.colorScheme.onSurface,
+                      ),
+                    )
+                  else
+                    NumberTicker(
+                      value: value!,
+                      suffix: suffix,
+                      style: theme.textTheme.headlineMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: valueColor ?? theme.colorScheme.onSurface,
+                      ),
                     ),
-                  ),
                   if (subtitle != null) ...[
                     const SizedBox(width: 6),
                     Text(

@@ -2,6 +2,7 @@ import { randomBytes } from "node:crypto";
 
 import { AppError, ERROR_CODES, type ErrorCode } from "../api/errors";
 import { formatUtcTimestamp } from "../api/response";
+import type { ActivityRecorder } from "../services/activity/activity-recorder";
 import type { AuthUserRecord } from "./auth-repository";
 import { getPermissionsForRole } from "./permissions";
 import { hashSessionToken } from "./session-token";
@@ -38,6 +39,7 @@ export interface UserSessionServiceDependencies {
   now?: () => Date;
   generateToken?: (kind: "access" | "refresh") => string;
   ttl?: { accessSeconds?: number; refreshSeconds?: number };
+  activityRecorder?: ActivityRecorder;
 }
 
 function generateUserToken(kind: "access" | "refresh"): string {
@@ -64,12 +66,15 @@ export class UserSessionService {
 
   private readonly refreshTtlSeconds: number;
 
+  private readonly activityRecorder: ActivityRecorder | null;
+
   constructor(dependencies: UserSessionServiceDependencies) {
     this.repository = dependencies.repository;
     this.now = dependencies.now ?? (() => new Date());
     this.generateTokenFn = dependencies.generateToken ?? generateUserToken;
     this.accessTtlSeconds = dependencies.ttl?.accessSeconds ?? ACCESS_TOKEN_TTL_SECONDS;
     this.refreshTtlSeconds = dependencies.ttl?.refreshSeconds ?? REFRESH_TOKEN_TTL_SECONDS;
+    this.activityRecorder = dependencies.activityRecorder ?? null;
   }
 
   async createSessionPair(
@@ -80,12 +85,13 @@ export class UserSessionService {
     const accessToken = this.generateTokenFn("access");
     const refreshToken = this.generateTokenFn("refresh");
     const clientType = options.clientType ?? "flutter";
+    const deviceName = options.deviceName ?? null;
 
     await this.repository.createSession({
       userId: user.id,
       tokenHash: hashSessionToken(accessToken),
       clientType,
-      deviceName: options.deviceName ?? null,
+      deviceName,
       expiresAt: new Date(now.getTime() + this.accessTtlSeconds * 1_000),
       now,
     });
@@ -93,9 +99,16 @@ export class UserSessionService {
       userId: user.id,
       tokenHash: hashSessionToken(refreshToken),
       clientType,
-      deviceName: options.deviceName ?? null,
+      deviceName,
       expiresAt: new Date(now.getTime() + this.refreshTtlSeconds * 1_000),
       now,
+    });
+
+    // 登录即会话建立（p1 admin-readonly-activity ADR-2）；recorder 自吞异常。
+    await this.activityRecorder?.record({
+      userId: user.id,
+      type: "login",
+      summary: { clientType, deviceName },
     });
 
     return {

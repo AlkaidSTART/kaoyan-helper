@@ -1,17 +1,28 @@
 import { describe, expect, it } from "vitest";
 
-import { AppError } from "../../../api/errors";
 import { AdminUserService } from "../admin-user-service";
 import type {
   AdminUserRecord,
   AdminUserRepository,
-  BanUserInput,
+  AdminUserStats,
 } from "../admin-user-service";
 
 const now = new Date("2026-09-26T00:00:00Z");
 
 const actor = {
   user: { id: "admin-1", email: "a@t.dev", nickname: "管理员", role: "admin", isBanned: false },
+};
+
+const nonAdminActor = {
+  user: { id: "u-9", email: "u@t.dev", nickname: "考生", role: "user", isBanned: false },
+};
+
+const STATS: AdminUserStats = {
+  questionAttempts: 1,
+  mistakeRecords: 2,
+  cardProgresses: 3,
+  checkIns: 4,
+  aiCalls: 5,
 };
 
 function userRow(overrides: Partial<AdminUserRecord> = {}): AdminUserRecord {
@@ -30,89 +41,56 @@ function userRow(overrides: Partial<AdminUserRecord> = {}): AdminUserRecord {
   };
 }
 
-function fakeRepo(rows: AdminUserRecord[]): AdminUserRepository & { bans: unknown[] } {
-  const bans: unknown[] = [];
+function fakeRepo(rows: AdminUserRecord[]): AdminUserRepository {
   const store = [...rows];
 
   return {
-    bans,
     async listUsers() {
       return { rows: store, total: store.length };
     },
     async findUserById(id) {
       return store.find((row) => row.id === id) ?? null;
     },
-    async countActiveAdmins() {
-      return store.filter((row) => row.role === "admin" && !row.isBanned).length;
-    },
-    async setUserBanned(params) {
-      bans.push(params);
-      const row = store.find((item) => item.id === params.userId);
-
-      if (!row) {
-        throw new AppError("NOT_FOUND");
-      }
-
-      return { ...row, isBanned: params.isBanned, bannedUntil: params.bannedUntil };
-    },
     async getUserStats() {
-      return {
-        questionAttempts: 1,
-        mistakeRecords: 2,
-        cardProgresses: 3,
-        checkIns: 4,
-        aiCalls: 5,
-      };
+      return STATS;
     },
   };
 }
 
-describe("AdminUserService 封禁边界", () => {
-  it("不能封禁自己（422）", async () => {
-    const repo = fakeRepo([userRow({ id: "admin-1", role: "admin" })]);
-    const service = new AdminUserService(repo);
+describe("AdminUserService 只读查询", () => {
+  it("列表透传仓储并映射 DTO（封禁状态与时间戳）", async () => {
+    const service = new AdminUserService(fakeRepo([userRow({ isBanned: true })]));
+    const { rows, total } = await service.list(actor, {
+      keyword: null,
+      role: null,
+      isBanned: null,
+    });
 
-    await expect(
-      service.ban(actor, "admin-1", { reason: "r", expiresAt: null, requestId: null }),
-    ).rejects.toMatchObject({ code: "VALIDATION_FAILED" });
+    expect(total).toBe(1);
+    expect(rows[0].isBanned).toBe(true);
+    expect(rows[0].createdAt).toBe("2026-09-26T00:00:00.000Z");
   });
 
-  it("最后一名有效管理员受保护（409）", async () => {
-    const repo = fakeRepo([userRow({ id: "admin-2", role: "admin" })]);
-    const service = new AdminUserService(repo);
+  it("详情附带学习统计", async () => {
+    const service = new AdminUserService(fakeRepo([userRow()]));
+    const detail = await service.getDetail(actor, "u-1");
 
-    await expect(
-      service.ban(actor, "admin-2", { reason: "r", expiresAt: null, requestId: null }),
-    ).rejects.toMatchObject({ code: "LAST_ADMIN_PROTECTED" });
-  });
-
-  it("封禁成功并写审计", async () => {
-    const repo = fakeRepo([userRow({ id: "u-1" }), userRow({ id: "admin-2", role: "admin" })]);
-    const service = new AdminUserService(repo);
-    const input: BanUserInput = { reason: "违规", expiresAt: null, requestId: "req-1" };
-    const detail = await service.ban(actor, "u-1", input);
-
-    expect(detail.isBanned).toBe(true);
-    expect(detail.stats.aiCalls).toBe(5);
-    expect(repo.bans[0]).toMatchObject({ userId: "u-1", isBanned: true, reason: "违规" });
+    expect(detail.stats).toEqual(STATS);
   });
 
   it("目标不存在返回 404", async () => {
     const service = new AdminUserService(fakeRepo([]));
 
-    await expect(
-      service.ban(actor, "u-x", { reason: "r", expiresAt: null, requestId: null }),
-    ).rejects.toMatchObject({ code: "NOT_FOUND" });
+    await expect(service.getDetail(actor, "u-x")).rejects.toMatchObject({
+      code: "NOT_FOUND",
+    });
   });
 
-  it("解封幂等", async () => {
-    const repo = fakeRepo([userRow({ id: "u-1", isBanned: true })]);
-    const service = new AdminUserService(repo);
-    const first = await service.unban(actor, "u-1", { reason: "复核", requestId: null });
-    const second = await service.unban(actor, "u-1", { reason: "复核", requestId: null });
+  it("非管理员触发 ADMIN_REQUIRED", async () => {
+    const service = new AdminUserService(fakeRepo([userRow()]));
 
-    expect(first.isBanned).toBe(false);
-    expect(second.isBanned).toBe(false);
-    expect(repo.bans).toHaveLength(2);
+    await expect(
+      service.list(nonAdminActor, { keyword: null, role: null, isBanned: null }),
+    ).rejects.toMatchObject({ code: "ADMIN_REQUIRED" });
   });
 });

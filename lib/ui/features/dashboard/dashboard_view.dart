@@ -1,14 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../../features/dashboard/presentation/dashboard_notifier.dart';
 import 'widgets/stat_card.dart';
 import 'widgets/task_center_card.dart';
 import 'widgets/target_school_card.dart';
 
-class DashboardView extends StatelessWidget {
+class DashboardView extends ConsumerWidget {
   const DashboardView({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    // 未登录或加载中为 null，统计卡显示 `--` 占位。
+    final summary = ref.watch(
+      dashboardSummaryProvider.select((state) => state.value),
+    );
+    final data = summary;
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -18,28 +26,28 @@ class DashboardView extends StatelessWidget {
           StatCard(
             icon: Icons.timer_outlined,
             label: '考研倒计时',
-            value: 98,
+            value: data?.daysUntilExam,
             suffix: ' 天',
             valueColor: theme.colorScheme.primary,
           ),
-          const StatCard(
+          StatCard(
             icon: Icons.assignment_outlined,
             label: '今日刷题',
-            value: 32,
-            subtitle: '/ 50 题',
+            value: data?.todayQuestionCount,
+            suffix: ' 题',
           ),
-          const StatCard(
+          StatCard(
             icon: Icons.track_changes_outlined,
-            label: '今日达成率',
-            value: 64,
-            suffix: '%',
+            label: '待复习卡片',
+            value: data?.dueCardCount,
+            suffix: ' 张',
           ),
-          const StatCard(
+          StatCard(
             icon: Icons.local_fire_department_outlined,
             label: '连续打卡',
-            value: 12,
+            value: data?.streakDays,
             suffix: ' 天',
-            iconColor: Color(0xFFE07B39),
+            iconColor: const Color(0xFFE07B39),
           ),
         ];
 

@@ -7,6 +7,8 @@ import 'package:kaoyan_helper/features/auth/presentation/auth_notifier.dart';
 import 'package:kaoyan_helper/main.dart';
 import 'package:kaoyan_helper/ui/features/rest/rest_view.dart';
 
+import 'helpers/test_overrides.dart';
+
 class AuthenticatedAuthNotifier extends AuthNotifier {
   @override
   AuthState build() => const AuthState(isAuthenticated: true);
@@ -92,6 +94,7 @@ void main() {
         final container = ProviderContainer(
           overrides: [
             authNotifierProvider.overrideWith(AuthenticatedAuthNotifier.new),
+            ...buildTestOverrides(),
           ],
         );
         addTearDown(container.dispose);

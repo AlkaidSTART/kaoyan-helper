@@ -33,6 +33,7 @@ model User {
   reviewedQuestions Question[]     @relation("QuestionReviewer")
   adminAuditLogs  AdminAuditLog[]
   schoolImportJobs SchoolImportJob[]
+  activities      UserActivity[]
 
   @@index([role])
   @@index([isBanned])
@@ -331,4 +332,23 @@ model SchoolImportJob {
   actor     User     @relation(fields: [actorId], references: [id], onDelete: Cascade)
 
   @@map("school_import_jobs")
+}
+
+// ---------------------------------------------------------------------------
+// 观测域：用户活动事件（p1 admin-readonly-activity ADR-2）
+// 服务端在既有写路径成功后旁路落一条事件；summary 只存最少必要字段。
+// ---------------------------------------------------------------------------
+
+model UserActivity {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  type      String
+  summary   Json     @default("{}")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([createdAt(sort: Desc)])
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([type, createdAt(sort: Desc)])
+  @@map("user_activities")
 }

@@ -10,6 +10,8 @@ import 'package:kaoyan_helper/ui/features/dashboard/dashboard_view.dart';
 import 'package:kaoyan_helper/ui/features/rest/rest_view.dart';
 import 'package:kaoyan_helper/ui/features/schools/schools_view.dart';
 
+import 'helpers/test_overrides.dart';
+
 class AuthenticatedAuthNotifier extends AuthNotifier {
   @override
   AuthState build() => const AuthState(isAuthenticated: true);
@@ -25,7 +27,7 @@ void main() {
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
 
-      final container = ProviderContainer();
+      final container = ProviderContainer(overrides: buildTestOverrides());
       addTearDown(container.dispose);
 
       await tester.pumpWidget(
@@ -53,6 +55,7 @@ void main() {
       final container = ProviderContainer(
         overrides: [
           authNotifierProvider.overrideWith(AuthenticatedAuthNotifier.new),
+          ...buildTestOverrides(),
         ],
       );
       addTearDown(container.dispose);
@@ -96,6 +99,7 @@ void main() {
       final container = ProviderContainer(
         overrides: [
           authNotifierProvider.overrideWith(AuthenticatedAuthNotifier.new),
+          ...buildTestOverrides(),
         ],
       );
       addTearDown(container.dispose);
@@ -130,6 +134,7 @@ void main() {
       final container = ProviderContainer(
         overrides: [
           authNotifierProvider.overrideWith(AuthenticatedAuthNotifier.new),
+          ...buildTestOverrides(),
         ],
       );
       addTearDown(container.dispose);

@@ -1,6 +1,7 @@
 import { AppError, ERROR_CODES } from "../../api/errors";
 import { formatUtcTimestamp } from "../../api/response";
 import { judgeAnswer, type JudgeQuestion, type QuestionOption } from "../../domain/judging";
+import type { ActivityRecorder } from "../activity/activity-recorder";
 
 export type QuizScope = "public" | "mine";
 
@@ -152,8 +153,11 @@ export interface QuizRepository {
 export class QuizService {
   private readonly repository: QuizRepository;
 
-  constructor(repository: QuizRepository) {
+  private readonly activityRecorder: ActivityRecorder | null;
+
+  constructor(repository: QuizRepository, activityRecorder?: ActivityRecorder) {
     this.repository = repository;
+    this.activityRecorder = activityRecorder ?? null;
   }
 
   async list(
@@ -188,6 +192,13 @@ export class QuizService {
       isCorrect: outcome.isCorrect,
       attemptId: input.attemptId,
       answeredAt: now,
+    });
+
+    // 观测旁路（p1 admin-readonly-activity ADR-3）：recorder 自吞异常，不影响判题结果。
+    await this.activityRecorder?.record({
+      userId,
+      type: "question_attempt",
+      summary: { questionId, isCorrect: outcome.isCorrect },
     });
 
     return {

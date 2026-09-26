@@ -5,6 +5,8 @@ import 'package:kaoyan_helper/features/auth/presentation/auth_notifier.dart';
 import 'package:kaoyan_helper/features/auth/presentation/login_page.dart';
 import 'package:kaoyan_helper/main.dart';
 
+import 'helpers/test_overrides.dart';
+
 void main() {
   group('Auth Login & Interceptor Tests', () {
     testWidgets(
@@ -15,13 +17,15 @@ void main() {
         addTearDown(tester.view.resetPhysicalSize);
         addTearDown(tester.view.resetDevicePixelRatio);
 
-        await tester.pumpWidget(const ProviderScope(child: MyApp()));
+        await tester.pumpWidget(
+          ProviderScope(overrides: buildTestOverrides(), child: const MyApp()),
+        );
         await tester.pumpAndSettle();
 
         // 默认拦截在 LoginPage
         expect(find.byType(LoginPage), findsOneWidget);
         expect(find.text('开启今日研途'), findsOneWidget);
-        expect(find.text('填入测试账号'), findsOneWidget);
+        expect(find.text('填入示例邮箱'), findsOneWidget);
       },
     );
 
@@ -33,15 +37,17 @@ void main() {
         addTearDown(tester.view.resetPhysicalSize);
         addTearDown(tester.view.resetDevicePixelRatio);
 
-        await tester.pumpWidget(const ProviderScope(child: MyApp()));
+        await tester.pumpWidget(
+          ProviderScope(overrides: buildTestOverrides(), child: const MyApp()),
+        );
         await tester.pumpAndSettle();
 
-        // 点击填入测试账号
-        await tester.tap(find.text('填入测试账号'));
+        // 点击填入示例邮箱
+        await tester.tap(find.text('填入示例邮箱'));
         await tester.pumpAndSettle();
 
-        // 验证输入框已预置
-        expect(find.text('13800000000'), findsOneWidget);
+        // 验证输入框已预置（示例邮箱 + 演示验证码）
+        expect(find.text('user@example.com'), findsOneWidget);
         expect(find.text('123456'), findsOneWidget);
 
         // 验证协议复选框已被勾选
@@ -58,7 +64,7 @@ void main() {
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
 
-      final container = ProviderContainer();
+      final container = ProviderContainer(overrides: buildTestOverrides());
       addTearDown(container.dispose);
 
       await tester.pumpWidget(
@@ -69,8 +75,8 @@ void main() {
       // 1. 拦截在登录页
       expect(find.byType(LoginPage), findsOneWidget);
 
-      // 2. 点击填入测试账号
-      await tester.tap(find.text('填入测试账号'));
+      // 2. 点击填入示例邮箱
+      await tester.tap(find.text('填入示例邮箱'));
       await tester.pumpAndSettle();
 
       // 3. 点击登录提交

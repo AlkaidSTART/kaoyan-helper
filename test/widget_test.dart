@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kaoyan_helper/core/providers/layout_providers.dart';
 import 'package:kaoyan_helper/features/auth/presentation/auth_notifier.dart';
 import 'package:kaoyan_helper/main.dart';
+import 'helpers/test_overrides.dart';
 
 class AuthenticatedAuthNotifier extends AuthNotifier {
   @override
@@ -25,6 +26,7 @@ void main() {
         ProviderScope(
           overrides: [
             authNotifierProvider.overrideWith(AuthenticatedAuthNotifier.new),
+            ...buildTestOverrides(),
           ],
           child: const MyApp(),
         ),
@@ -47,7 +49,7 @@ void main() {
       // 验证学习看板核心统计与卡片
       expect(find.text('考研倒计时'), findsOneWidget);
       expect(find.text('今日刷题'), findsOneWidget);
-      expect(find.text('今日达成率'), findsOneWidget);
+      expect(find.text('待复习卡片'), findsOneWidget);
       expect(find.text('连续打卡'), findsOneWidget);
       expect(find.text('任务中心'), findsOneWidget);
       expect(find.text('目标看板'), findsOneWidget);
@@ -66,6 +68,7 @@ void main() {
       final container = ProviderContainer(
         overrides: [
           authNotifierProvider.overrideWith(AuthenticatedAuthNotifier.new),
+          ...buildTestOverrides(),
         ],
       );
       addTearDown(container.dispose);
@@ -111,6 +114,7 @@ void main() {
         ProviderScope(
           overrides: [
             authNotifierProvider.overrideWith(AuthenticatedAuthNotifier.new),
+            ...buildTestOverrides(),
           ],
           child: const MyApp(),
         ),

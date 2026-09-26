@@ -15,12 +15,19 @@ class ShellTopAppBar extends ConsumerWidget implements PreferredSizeWidget {
     final isAiExpanded = ref.watch(aiPanelExpandedProvider);
     final currentUser = ref.watch(authNotifierProvider).currentUser;
 
-    final schoolText = currentUser != null
-        ? '${currentUser.targetSchool} · ${currentUser.targetMajor}'
-        : '浙江大学 · 计算机 (085404)';
-    final daysText = currentUser != null
-        ? '距考研 ${currentUser.daysUntilExam} 天'
-        : '距考研 98 天';
+    // 目标院校/倒计时来自后端聚合数据；未登录或尚未完善时展示引导文案。
+    final school = currentUser == null
+        ? null
+        : (currentUser.targetSchool == null
+              ? '完善目标院校'
+              : [
+                  currentUser.targetSchool,
+                  currentUser.targetMajor,
+                ].nonNulls.join(' · '));
+    final schoolText = school ?? '浙江大学 · 计算机 (085404)';
+    final daysText = currentUser?.daysUntilExam == null
+        ? '距考研 98 天'
+        : '距考研 ${currentUser!.daysUntilExam} 天';
     final nickname = currentUser?.nickname ?? '研友';
 
     return AppBar(

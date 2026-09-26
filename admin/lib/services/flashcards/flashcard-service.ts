@@ -2,6 +2,7 @@ import { AppError, ERROR_CODES } from "../../api/errors";
 import { formatUtcTimestamp } from "../../api/response";
 import { calendarDayInTimeZone, formatCalendarDay } from "../../domain/time";
 import { computeSm2, type CardRating } from "../../domain/sm2";
+import type { ActivityRecorder } from "../activity/activity-recorder";
 
 export interface FlashcardFilters {
   category: string | null;
@@ -155,9 +156,12 @@ export class FlashcardService {
 
   private readonly timeZone: string;
 
-  constructor(repository: FlashcardRepository, timeZone: string) {
+  private readonly activityRecorder: ActivityRecorder | null;
+
+  constructor(repository: FlashcardRepository, timeZone: string, activityRecorder?: ActivityRecorder) {
     this.repository = repository;
     this.timeZone = timeZone;
+    this.activityRecorder = activityRecorder ?? null;
   }
 
   async listDue(userId: string, limit: number): Promise<DueListDto> {
@@ -215,6 +219,13 @@ export class FlashcardService {
       idempotencyKey: input.idempotencyKey,
       now,
       timeZone: this.timeZone,
+    });
+
+    // 观测旁路（p1 admin-readonly-activity ADR-3）：recorder 自吞异常，不影响复习结果。
+    await this.activityRecorder?.record({
+      userId,
+      type: "card_review",
+      summary: { cardId, rating: input.rating },
     });
 
     return {

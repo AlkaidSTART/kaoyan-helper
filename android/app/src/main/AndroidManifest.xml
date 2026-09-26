@@ -1,4 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- 连接用户后端 API 需要网络权限 -->
+    <uses-permission android:name="android.permission.INTERNET"/>
     <application
         android:label="kaoyan_helper"
         android:name="${applicationName}"

@@ -8,12 +8,10 @@ import type {
   AdminUserRecord,
   AdminUserRepository,
   AdminUserStats,
-  SetUserBannedParams,
 } from "./admin-user-service";
 
 /**
- * Prisma 实现的管理端用户仓储。
- * 封禁/解封在事务内同步写入 `admin_audit_logs`（契约 §11.2 高风险写同事务审计）。
+ * Prisma 实现的管理端用户仓储（只读）。
  */
 export class PrismaAdminUserRepository implements AdminUserRepository {
   private readonly injectedClient?: PrismaClient;
@@ -70,45 +68,6 @@ export class PrismaAdminUserRepository implements AdminUserRepository {
       const row = await this.client.user.findUnique({ where: { id: userId } });
 
       return row ? (row as AdminUserRecord) : null;
-    });
-  }
-
-  async countActiveAdmins(): Promise<number> {
-    return this.run(() =>
-      this.client.user.count({ where: { role: "admin", isBanned: false } }),
-    );
-  }
-
-  async setUserBanned(params: SetUserBannedParams): Promise<AdminUserRecord> {
-    return this.run(async () => {
-      const row = await this.client.$transaction(async (tx) => {
-        const updated = await tx.user.update({
-          where: { id: params.userId },
-          data: {
-            isBanned: params.isBanned,
-            bannedUntil: params.bannedUntil,
-          },
-        });
-
-        await tx.adminAuditLog.create({
-          data: {
-            actorId: params.actorId,
-            action: params.isBanned ? "user.ban" : "user.unban",
-            resourceType: "user",
-            resourceId: params.userId,
-            requestId: params.requestId,
-            metadata: {
-              reason: params.reason,
-              bannedUntil:
-                params.bannedUntil === null ? null : params.bannedUntil.toISOString(),
-            },
-          },
-        });
-
-        return updated;
-      });
-
-      return row as AdminUserRecord;
     });
   }
 

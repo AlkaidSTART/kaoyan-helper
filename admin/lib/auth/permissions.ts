@@ -18,17 +18,17 @@ export const USER_PERMISSIONS = [
   "ai:chat",
 ] as const;
 
+/**
+ * 管理端定位为只读观察台（p0 admin-readonly-activity）：不保留任何写权限点。
+ */
 export const ADMIN_PERMISSIONS = [
   "admin:dashboard:read",
   "admin:users:read",
-  "admin:users:ban",
   "admin:questions:read",
-  "admin:questions:write",
   "admin:ugc:read",
-  "admin:ugc:review",
   "admin:schools:read",
-  "admin:schools:write",
   "admin:audit:read",
+  "admin:activity:read",
 ] as const;
 
 export type UserPermission = (typeof USER_PERMISSIONS)[number];

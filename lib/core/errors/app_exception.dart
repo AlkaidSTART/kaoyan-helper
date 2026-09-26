@@ -18,3 +18,10 @@ class AuthException extends AppException {
 class NetworkException extends AppException {
   const NetworkException(super.message, {super.code});
 }
+
+/// 后端业务错误领域异常（envelope error.code 原样透传）
+class ApiException extends AppException {
+  final int? statusCode;
+
+  const ApiException(super.message, {super.code, this.statusCode});
+}

@@ -1,16 +1,18 @@
 class UserModel {
   final String id;
   final String nickname;
-  final String targetSchool;
-  final String targetMajor;
-  final int daysUntilExam;
+
+  /// 目标院校信息由后端 `GET /me` / `GET /dashboard/summary` 下发，登录响应不含。
+  final String? targetSchool;
+  final String? targetMajor;
+  final int? daysUntilExam;
 
   const UserModel({
     required this.id,
     required this.nickname,
-    required this.targetSchool,
-    required this.targetMajor,
-    required this.daysUntilExam,
+    this.targetSchool,
+    this.targetMajor,
+    this.daysUntilExam,
   });
 
   static const mock = UserModel(

@@ -30,15 +30,22 @@ class RouterNotifier extends ChangeNotifier {
 
   RouterNotifier(this._ref) {
     _ref.listen(authNotifierProvider, (previous, next) {
-      if (previous?.isAuthenticated != next.isAuthenticated) {
+      if (previous?.isAuthenticated != next.isAuthenticated ||
+          previous?.isRestoring != next.isRestoring) {
         notifyListeners();
       }
     });
   }
 
   String? redirect(BuildContext context, GoRouterState state) {
-    final isAuthenticated = _ref.read(authNotifierProvider).isAuthenticated;
+    final authState = _ref.read(authNotifierProvider);
+    final isAuthenticated = authState.isAuthenticated;
     final isLoggingIn = state.matchedLocation == AppRoutes.login;
+
+    // 启动会话恢复期间不强制跳转，待恢复结果收敛后再定向。
+    if (authState.isRestoring) {
+      return null;
+    }
 
     if (!isAuthenticated) {
       return isLoggingIn ? null : AppRoutes.login;
