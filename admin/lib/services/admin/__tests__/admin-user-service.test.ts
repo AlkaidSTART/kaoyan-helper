@@ -68,7 +68,7 @@ describe("AdminUserService 只读查询", () => {
 
     expect(total).toBe(1);
     expect(rows[0].isBanned).toBe(true);
-    expect(rows[0].createdAt).toBe("2026-09-26T00:00:00.000Z");
+    expect(rows[0].createdAt).toBe("2026-09-26T00:00:00Z");
   });
 
   it("详情附带学习统计", async () => {

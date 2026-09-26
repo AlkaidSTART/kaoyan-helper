@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -21,12 +22,12 @@ Map<String, dynamic> _successEnvelope(dynamic data, {Map<String, dynamic>? pagin
     'meta': {
       'requestId': 'req_test',
       'timestamp': '2026-09-26T10:00:00Z',
-      if (pagination != null) 'pagination': pagination,
+      'pagination': ?pagination,
     },
   };
 }
 
-Map<String, dynamic> _errorEnvelope(String code, String message, {int status = 400}) {
+Map<String, dynamic> _errorEnvelope(String code, String message, ) {
   return {
     'success': false,
     'error': {'code': code, 'message': message, 'details': null},
@@ -163,13 +164,13 @@ void main() {
 
     test('loginWithCode posts flutter clientType and persists tokens', () async {
       client.responder = (_) => ApiClientResponse(
-            data: _successEnvelope({
+            data: {
               'accessToken': 'access-1',
               'refreshToken': 'refresh-1',
               'expiresIn': 3600,
               'tokenType': 'Bearer',
               'user': {'id': 'u-1', 'email': 'user@example.com', 'nickname': '登科同学'},
-            }).data,
+            },
           );
 
       final user = await repository.loginWithCode('User@Example.com ', '123456');
@@ -480,7 +481,7 @@ void main() {
         });
 
         if (options.uri.path.endsWith('/auth/refresh')) {
-          return ResponseBody(
+          return ResponseBody.fromString(
             jsonEncode(_successEnvelope({
               'accessToken': 'access-new',
               'refreshToken': 'refresh-new',
@@ -493,22 +494,24 @@ void main() {
         }
 
         if (options.headers['Authorization'] == 'Bearer access-new') {
-          return ResponseBody(
+          return ResponseBody.fromString(
             jsonEncode(_successEnvelope({'daysUntilExam': 98})),
             200,
             headers: _jsonHeaders,
           );
         }
 
-        return ResponseBody(
+        return ResponseBody.fromString(
           jsonEncode(_errorEnvelope('TOKEN_EXPIRED', '访问令牌已过期')),
           401,
           headers: _jsonHeaders,
         );
       });
 
-      final client = DioClient(tokenStore: tokenStore, dio: Dio())
-        .._testInjectAdapter(adapter);
+      final client = DioClient(
+        tokenStore: tokenStore,
+        dio: Dio()..httpClientAdapter = adapter,
+      );
 
       final summary = await DashboardRepository(client: client).getSummary();
 
@@ -527,22 +530,24 @@ void main() {
 
       final adapter = _ScriptedAdapter((options) {
         if (options.uri.path.endsWith('/auth/refresh')) {
-          return ResponseBody(
+          return ResponseBody.fromString(
             jsonEncode(_errorEnvelope('REFRESH_INVALID', '刷新凭证无效')),
             401,
             headers: _jsonHeaders,
           );
         }
 
-        return ResponseBody(
+        return ResponseBody.fromString(
           jsonEncode(_errorEnvelope('TOKEN_EXPIRED', '访问令牌已过期')),
           401,
           headers: _jsonHeaders,
         );
       });
 
-      final client = DioClient(tokenStore: tokenStore, dio: Dio())
-        .._testInjectAdapter(adapter);
+      final client = DioClient(
+        tokenStore: tokenStore,
+        dio: Dio()..httpClientAdapter = adapter,
+      );
 
       await expectLater(
         DashboardRepository(client: client).getSummary(),
@@ -565,12 +570,12 @@ class _ScriptedAdapter implements HttpClientAdapter {
   _ScriptedAdapter(this.handler);
 
   @override
-  Future<ResponseBody> fetch(RequestOptions options) async => handler(options);
+  Future<ResponseBody> fetch(
+    RequestOptions options,
+    Stream<Uint8List>? requestStream,
+    Future<void>? cancelFuture,
+  ) async => handler(options);
 
   @override
   void close({bool force = false}) {}
-}
-
-extension _TestAdapter on DioClient {
-  void _testInjectAdapter(HttpClientAdapter adapter) {}
 }

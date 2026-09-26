@@ -5,6 +5,7 @@ import { readUuidParam } from "@/lib/api/params";
 import { createSuccessResponse } from "@/lib/api/response";
 import { readAndValidateJson } from "@/lib/api/validation";
 import { getActor, requirePermission } from "@/lib/auth/actor";
+import { PrismaActivityRecorder } from "@/lib/services/activity/prisma-activity-recorder";
 import { QuizService } from "@/lib/services/quiz/quiz-service";
 import { PrismaQuizRepository } from "@/lib/services/quiz/prisma-quiz-repository";
 
@@ -25,7 +26,7 @@ export async function POST(
 
     const { id } = await params;
     const input = await readAndValidateJson(request, submitAnswerSchema);
-    const service = new QuizService(new PrismaQuizRepository());
+    const service = new QuizService(new PrismaQuizRepository(), new PrismaActivityRecorder());
     const result = await service.submitAnswer(actor.user.id, readUuidParam(id), {
       answer: input.answer,
       attemptId: input.attemptId,

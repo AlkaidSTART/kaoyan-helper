@@ -28,8 +28,8 @@ class FlashcardsRepository {
     final result = await _client.get(
       '/flashcards',
       queryParameters: {
-        if (category != null) 'category': category,
-        if (source != null) 'source': source,
+        'category': ?category,
+        'source': ?source,
         if (search != null && search.isNotEmpty) 'search': search,
         'page': page,
         'pageSize': pageSize,

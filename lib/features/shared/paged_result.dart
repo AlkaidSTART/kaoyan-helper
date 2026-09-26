@@ -24,11 +24,8 @@ class PagedResult<T> {
   }) {
     final list = data is Map<String, dynamic> ? data[itemsKey] : null;
     final items = list is List
-        ? list
-              .whereType<Map<String, dynamic>>()
-              .map(map)
-              .toList(growable: false)
-        : const <T>[];
+        ? list.whereType<Map<String, dynamic>>().map(map).toList()
+        : <T>[];
 
     return PagedResult<T>(
       items: items,

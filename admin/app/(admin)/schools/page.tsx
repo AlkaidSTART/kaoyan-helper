@@ -1,10 +1,8 @@
 import type { Metadata } from "next";
-import { Upload } from "lucide-react";
 
 import { PageHeader } from "@/components/admin/page-header";
 import { StatusBadge } from "@/components/admin/status-badge";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -20,12 +18,8 @@ export const metadata: Metadata = { title: "院校数据" };
 export default function SchoolsPage() {
   return (
     <>
-      <PageHeader title="院校数据" description="招生院校与发布状态">
+      <PageHeader title="院校数据" description="招生院校与发布状态（只读观测）">
         <StatusBadge tone="warning" label="示例数据" />
-        <Button size="sm" variant="outline" disabled>
-          <Upload aria-hidden />
-          批量导入
-        </Button>
       </PageHeader>
 
       <div className="overflow-hidden rounded-lg border">
@@ -70,7 +64,7 @@ export default function SchoolsPage() {
         </Table>
       </div>
       <p className="text-xs text-muted-foreground">
-        院校维护与 CSV / JSON 导入将在管理接口（P2-10）接入后开放。
+        管理端定位为只读观察台：院校数据维护与批量导入由数据侧流程承担。
       </p>
     </>
   );

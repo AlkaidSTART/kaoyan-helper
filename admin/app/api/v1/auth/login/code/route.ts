@@ -15,6 +15,7 @@ import { SupabaseEmailOtpClient } from "@/lib/auth/otp-client";
 import { PrismaAuthRepository } from "@/lib/auth/prisma-auth-repository";
 import { PrismaUserSessionRepository } from "@/lib/auth/prisma-user-session-repository";
 import { SESSION_TTL_SECONDS } from "@/lib/auth/session-token";
+import { PrismaActivityRecorder } from "@/lib/services/activity/prisma-activity-recorder";
 
 const loginCodeSchema = z.strictObject({
   email: z.email().max(320),
@@ -48,6 +49,7 @@ export async function POST(request: Request): Promise<Response> {
       otpClient: new SupabaseEmailOtpClient(),
       userRepository: new PrismaUserSessionRepository(),
       adminSessionRepository: new PrismaAuthRepository(),
+      activityRecorder: new PrismaActivityRecorder(),
     });
     const result = await service.loginWithCode({
       email: input.email,

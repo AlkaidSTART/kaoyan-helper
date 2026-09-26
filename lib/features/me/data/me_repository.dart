@@ -22,9 +22,9 @@ class MeRepository {
     final result = await _client.patch(
       '/me',
       body: {
-        if (nickname != null) 'nickname': nickname,
-        if (avatarUrl != null) 'avatarUrl': avatarUrl,
-        if (examYear != null) 'examYear': examYear,
+        'nickname': ?nickname,
+        'avatarUrl': ?avatarUrl,
+        'examYear': ?examYear,
       },
     );
     return MeProfile.fromJson(result.data as Map<String, dynamic>);

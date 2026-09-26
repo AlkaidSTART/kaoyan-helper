@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
+  Activity,
   BookOpen,
   GraduationCap,
   LayoutDashboard,
@@ -26,10 +27,11 @@ import {
 
 const NAV_ITEMS = [
   { title: "概览", href: "/dashboard", icon: LayoutDashboard },
-  { title: "用户管理", href: "/users", icon: Users },
-  { title: "题库管理", href: "/questions", icon: BookOpen },
-  { title: "UGC 审核", href: "/ugc", icon: ShieldCheck },
+  { title: "用户", href: "/users", icon: Users },
+  { title: "题库", href: "/questions", icon: BookOpen },
+  { title: "UGC 内容", href: "/ugc", icon: ShieldCheck },
   { title: "院校数据", href: "/schools", icon: School },
+  { title: "用户活动", href: "/activities", icon: Activity },
 ] as const;
 
 interface AppSidebarProps {

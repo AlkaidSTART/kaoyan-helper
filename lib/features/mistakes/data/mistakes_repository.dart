@@ -18,8 +18,8 @@ class MistakesRepository {
     final result = await _client.get(
       '/mistakes',
       queryParameters: {
-        if (status != null) 'status': status,
-        if (subject != null) 'subject': subject,
+        'status': ?status,
+        'subject': ?subject,
         'page': page,
         'pageSize': pageSize,
       },

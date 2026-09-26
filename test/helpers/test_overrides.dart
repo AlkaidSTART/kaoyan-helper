@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kaoyan_helper/core/network/auth_token_store.dart';
 import 'package:kaoyan_helper/features/auth/data/auth_repository.dart';
+import 'package:kaoyan_helper/features/dashboard/data/dashboard_repository.dart';
 import 'package:kaoyan_helper/features/dashboard/domain/dashboard_summary.dart';
 import 'package:kaoyan_helper/features/dashboard/presentation/dashboard_notifier.dart';
 

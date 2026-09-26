@@ -24,11 +24,11 @@ class QuizRepository {
       '/questions',
       queryParameters: {
         'scope': scope,
-        if (subject != null) 'subject': subject,
-        if (chapter != null) 'chapter': chapter,
-        if (year != null) 'year': year,
-        if (type != null) 'type': type,
-        if (difficulty != null) 'difficulty': difficulty,
+        'subject': ?subject,
+        'chapter': ?chapter,
+        'year': ?year,
+        'type': ?type,
+        'difficulty': ?difficulty,
         if (search != null && search.isNotEmpty) 'search': search,
         'page': page,
         'pageSize': pageSize,
@@ -87,10 +87,10 @@ class QuizRepository {
         ],
         'answer': answer,
         'visibility': visibility,
-        if (chapter != null) 'chapter': chapter,
-        if (year != null) 'year': year,
-        if (explanation != null) 'explanation': explanation,
-        if (difficulty != null) 'difficulty': difficulty,
+        'chapter': ?chapter,
+        'year': ?year,
+        'explanation': ?explanation,
+        'difficulty': ?difficulty,
       },
     );
     return QuestionDetail.fromJson(result.data as Map<String, dynamic>);
@@ -109,13 +109,13 @@ class QuizRepository {
       '/questions/$id',
       body: {
         'version': version,
-        if (stem != null) 'stem': stem,
-        if (explanation != null) 'explanation': explanation,
+        'stem': ?stem,
+        'explanation': ?explanation,
         if (options != null)
           'options': [
             for (final option in options) {'key': option.key, 'content': option.content},
           ],
-        if (difficulty != null) 'difficulty': difficulty,
+        'difficulty': ?difficulty,
       },
     );
     return QuestionDetail.fromJson(result.data as Map<String, dynamic>);

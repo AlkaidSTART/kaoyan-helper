@@ -185,6 +185,8 @@ class DioClient {
     }
 
     switch (e.type) {
+      case DioExceptionType.badResponse:
+        return ApiEnvelopeParser.parseError(response?.data, response?.statusCode);
       case DioExceptionType.connectionTimeout:
       case DioExceptionType.sendTimeout:
       case DioExceptionType.receiveTimeout:

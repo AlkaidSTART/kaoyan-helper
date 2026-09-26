@@ -94,7 +94,7 @@ abstract final class ApiEnvelopeParser {
         return '请求的资源不存在';
       case 429:
         return '操作过于频繁，请稍后重试';
-      case >= 500:
+      case final code when code >= 500:
         return '服务暂时不可用，请稍后重试';
       default:
         return '请求失败，请稍后重试';

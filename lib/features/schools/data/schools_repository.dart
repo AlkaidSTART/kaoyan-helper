@@ -25,13 +25,13 @@ class SchoolsRepository {
       '/schools',
       queryParameters: {
         if (keyword != null && keyword.isNotEmpty) 'keyword': keyword,
-        if (province != null) 'province': province,
-        if (region != null) 'region': region,
-        if (is985 != null) 'is985': is985,
-        if (is211 != null) 'is211': is211,
-        if (isDoubleFirstClass != null) 'isDoubleFirstClass': isDoubleFirstClass,
-        if (isSelfMarking != null) 'isSelfMarking': isSelfMarking,
-        if (majorCode != null) 'majorCode': majorCode,
+        'province': ?province,
+        'region': ?region,
+        'is985': ?is985,
+        'is211': ?is211,
+        'isDoubleFirstClass': ?isDoubleFirstClass,
+        'isSelfMarking': ?isSelfMarking,
+        'majorCode': ?majorCode,
         'page': page,
         'pageSize': pageSize,
       },
@@ -63,9 +63,9 @@ class SchoolsRepository {
     final result = await _client.get(
       '/schools/$schoolId/programs',
       queryParameters: {
-        if (majorCode != null) 'majorCode': majorCode,
-        if (yearFrom != null) 'yearFrom': yearFrom,
-        if (yearTo != null) 'yearTo': yearTo,
+        'majorCode': ?majorCode,
+        'yearFrom': ?yearFrom,
+        'yearTo': ?yearTo,
         'page': page,
         'pageSize': pageSize,
       },
@@ -90,8 +90,8 @@ class SchoolsRepository {
       '/schools/$schoolId/target',
       body: {
         'type': type,
-        if (majorCode != null) 'majorCode': majorCode,
-        if (majorName != null) 'majorName': majorName,
+        'majorCode': ?majorCode,
+        'majorName': ?majorName,
       },
     );
     return _targetsFrom(result.data);
