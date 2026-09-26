@@ -2,7 +2,7 @@
 
 > 版本：v1.0  
 > 日期：2026-09-26  
-> 状态：设计基线，待实现验证  
+> 状态：设计基线，已按本设计实现并通过单元测试与构建验证  
 > 上游需求：`docs/p0-definition/next-backend-api-foundation/definition.md`  
 > 总设计：`docs/p1-design/next-backend-api-rbac/design.md`
 

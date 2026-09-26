@@ -2,7 +2,7 @@
 
 > 版本：v1.0  
 > 日期：2026-09-26  
-> 状态：待实现  
+> 状态：P2-0 实施准备与 P2-1 API 基础层已完成；P2-2 及后续待实现  
 > 上游需求：`docs/p0-definition/next-backend-api-rbac/definition.md`  
 > 上游设计：`docs/p1-design/next-backend-api-rbac/design.md`  
 > 接口契约：`docs/p1-design/next-backend-api-rbac/api-contract.md`
@@ -74,15 +74,15 @@ P2-12 旧 Supabase 直连迁移与全局文档更新
 
 ### P2-1 API 基础层
 
-- [ ] P2-101 建立统一 `AppError` 领域错误类型与稳定业务码常量，禁止 Route Handler 直接泄露 Supabase/Postgres 原始错误。
-- [ ] P2-102 实现成功、错误、分页响应 envelope，统一 `success`、`data`、`error`、`meta` 字段。
-- [ ] P2-103 实现 `requestId` 生成、外部 `X-Request-Id` 校验、日志上下文和响应回传。
-- [ ] P2-104 实现 UTC RFC3339 时间戳格式与统一序列化规则。
-- [ ] P2-105 实现分页参数解析：默认 `page=1`、`pageSize=20`，最大值 100，非法值返回 422 `PAGINATION_INVALID`。
-- [ ] P2-106 实现 Zod 或项目等价 Schema 校验，拒绝未知敏感字段、拒绝客户端提交 `role`、`userId`、`creatorId`、`isCorrect` 等受保护字段。
-- [ ] P2-107 实现结构化日志与脱敏：记录 `requestId`、route、method、status、durationMs、userId、errorCode，不记录 token、Cookie、完整 prompt、密钥和隐私明文。
-- [ ] P2-108 为成功、错误、分页、请求 ID、未知字段和错误脱敏编写单元测试。
-- [ ] P2-109 为登录、验证码、AI、导入、管理写入和搜索接口定义限流策略；限流失败统一返回 429。
+- [x] P2-101 建立统一 `AppError` 领域错误类型与稳定业务码常量，禁止 Route Handler 直接泄露 Supabase/Postgres 原始错误。
+- [x] P2-102 实现成功、错误、分页响应 envelope，统一 `success`、`data`、`error`、`meta` 字段。
+- [x] P2-103 实现 `requestId` 生成、外部 `X-Request-Id` 校验、日志上下文和响应回传。
+- [x] P2-104 实现 UTC RFC3339 时间戳格式与统一序列化规则。
+- [x] P2-105 实现分页参数解析：默认 `page=1`、`pageSize=20`，最大值 100，非法值返回 422 `PAGINATION_INVALID`。
+- [x] P2-106 实现 Zod 或项目等价 Schema 校验，拒绝未知敏感字段、拒绝客户端提交 `role`、`userId`、`creatorId`、`isCorrect` 等受保护字段。
+- [x] P2-107 实现结构化日志与脱敏：记录 `requestId`、route、method、status、durationMs、userId、errorCode，不记录 token、Cookie、完整 prompt、密钥和隐私明文。
+- [x] P2-108 为成功、错误、分页、请求 ID、未知字段和错误脱敏编写单元测试。
+- [ ] P2-109 为登录、验证码、AI、导入、管理写入和搜索接口定义限流策略；限流失败统一返回 429。基础 `RateLimiter`、进程内固定窗口实现、测试注入 `now` 与统一 429 已完成；各业务额度和多实例分布式存储待对应接口阶段确定。
 
 ### P2-2 Supabase 客户端与会话适配
 
@@ -313,7 +313,7 @@ P2-12 旧 Supabase 直连迁移与全局文档更新
 | 日期 | 任务 ID | 实际问题 | 排查/决策 | 影响文件 | 状态 |
 |---|---|---|---|---|---|
 | 2026-09-26 | P2-002 | 本地 `admin/` 为 Next.js 16.3.5，`middleware.ts` 已弃用，`cookies()` 与动态路由 `params` 均为异步 | 以 `admin/node_modules/next/dist/docs/` 实际版本文档为准：改用根 `proxy.ts`（仅做导航守卫，不做唯一鉴权）；`cookies()` 使用 `await`；Route Handler 的 `context.params` 为 `Promise`；不设置已弃用的 `runtime = 'edge'`；每个请求新建 Supabase 客户端 | `admin/proxy.ts`、全部 `app/api/**/route.ts` | 已解决 |
-| 2026-09-26 | P2-001 | `admin/` 仅含脚手架，无 `lib/`、无 API 路由、无测试脚本 | 保留既有 `dev/build/start/lint` 脚本；新增 `@supabase/ssr`、`@supabase/supabase-js`、`zod`、`server-only` 依赖；不为本阶段引入测试框架，P2-108/P2-111 的自动化测试仍待补 | `admin/package.json`、`admin/pnpm-lock.yaml` | 已解决 |
+| 2026-09-26 | P2-001、P2-108 | `admin/` 初始仅有脚手架，无 `lib/`、无 API 路由、无测试脚本 | 保留既有 `dev/build/start/lint` 脚本；新增 `@supabase/ssr`、`@supabase/supabase-js`、`zod`、`server-only` 依赖；P2-1 阶段补入 Vitest 与 `pnpm test`，基础层 60 个测试通过，P2-11 业务契约测试仍待后续实现 | `admin/package.json`、`admin/pnpm-lock.yaml`、`admin/lib/api/__tests__/*.test.ts` | 已解决（基础层） |
 | 2026-09-26 | P2-004 | `.mcp.json` 固定项目 `roiqsirzrykaebsqpxex`，MCP 工具返回 `INVALID_ARGUMENT`，`_list_projects` 只见两个未激活项目 | 改用只读方式审计：以 `.env.local` 中的键发起 `GET /rest/v1/` OpenAPI 请求（不打印密钥）。结果是 `components.schemas` 为空，仅暴露 `/rpc/rls_auto_enable`；探测业务表全部返回 `PGRST205`。**结论：远端 `public` schema 为空，不存在既有表、RLS 或迁移** | `docs/p1-design/next-backend-api-rbac/data-model.md` | 已解决（结论：从零建基线） |
 | 2026-09-26 | P2-005 | 文档旧稿使用 `SUPABASE_ANON_KEY` / `SUPABASE_SERVICE_ROLE_KEY`，与 `.env.local` 实际命名不一致 | 以实际存在的 `SUPABASE_URL` / `SUPABASE_PUBLISHABLE_KEY` / `SUPABASE_SECRET_KEY` 为准，不新增旧名别名；服务端统一经 `lib/env.ts` 读取 | `docs/p1-design/next-backend-api-rbac/environment.md`、`admin/lib/env.ts` | 已解决 |
 | 2026-09-26 | P2-004 | 远端库为空与既有 Flutter 直连 Supabase 的关系 | 空库意味着旧客户端当前也无业务表可用，因此基线迁移不引入额外回退风险；迁移文件只提交，不自动应用到远端，需人工确认后执行 | `supabase/migrations/*.sql` | 已记录 |

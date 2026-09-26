@@ -2,7 +2,7 @@
 
 > 版本：v1.0  
 > 日期：2026-09-26  
-> 状态：实施计划已落盘，编码待执行  
+> 状态：P2-101 至 P2-109 已实现，自动化验证通过  
 > 上游需求：`docs/p0-definition/next-backend-api-foundation/definition.md`  
 > 上游设计：`docs/p1-design/next-backend-api-foundation/design.md`  
 > 总开发清单：`docs/p2-development/next-backend-api-rbac/development.md` 的 P2-1
@@ -135,12 +135,16 @@
 
 | 日期 | 任务 ID | 实际问题 | 排查/决策 | 影响文件 | 状态 |
 |---|---|---|---|---|---|
-| 2026-09-26 | P2-101 至 P2-109 | 待编码 | 待记录 | 待记录 | 待执行 |
+| 2026-09-26 | P2-101 至 P2-109 | 工程没有测试脚本，基础协议层无法独立回归 | 引入 Vitest 并新增 `pnpm test`；测试只使用 Node 的 Web `Request`/`Response`，不启动 Next.js 或 Supabase | `admin/package.json`、`admin/pnpm-lock.yaml`、`admin/lib/api/__tests__/*.test.ts` | 已解决 |
+| 2026-09-26 | P2-101 至 P2-107 | 普通 JSON 需要统一 envelope，但 AI SSE、Cookie 等响应不能被强制二次包装 | 普通数据自动包装；handler 返回自定义 `Response` 时保留原状态、正文和 `Content-Type`，仅补齐缺失的 `X-Request-Id` | `admin/lib/api/handler.ts`、`admin/lib/api/response.ts` | 已解决 |
+| 2026-09-26 | P2-108 | handler 测试使用可注入时钟序列，成功 envelope 与完成日志分别消耗不同时间点，首版预计 `durationMs` 与真实序列不一致 | 按请求开始、响应完成、日志完成的实际时间点修正断言，覆盖耗时计算而不使用真实等待 | `admin/lib/api/__tests__/handler.test.ts` | 已解决 |
+| 2026-09-26 | P2-105、P2-108 | 分页参数的联合键在 `URLSearchParams.getAll` 索引处触发 Next.js 构建类型错误 | 将非法分页字段参数收窄为 `"page" | "pageSize"`，保持运行时校验与 422 错误契约不变 | `admin/lib/api/pagination.ts` | 已解决 |
+| 2026-09-26 | P2-101 至 P2-109 | 需要确认基础层可被后续 Route Handler 使用且不影响现有 Next.js 构建 | 8 个测试文件、60 个测试通过；ESLint 和 Next.js 生产构建通过；构建仅有仓库外 `pnpm-workspace.yaml` 发现的非阻塞 Turbopack root 警告 | `admin/lib/api/**`、`admin/package.json`、`admin/pnpm-lock.yaml` | 已验证 |
 
 ## 6. 完成定义
 
-- [ ] `admin/lib/api/` 八个基础模块可被后续 Route Handler 直接复用。
-- [ ] 单元测试覆盖成功、错误、分页、请求 ID、校验、日志、限流和自定义 Response。
-- [ ] `pnpm test`、`pnpm lint`、`pnpm build` 在 `admin/` 真实通过。
-- [ ] P3 验证文档回填真实命令、退出码、测试数量和限制。
-- [ ] 任务 `changed-files.md` 与实际改动一致。
+- [x] `admin/lib/api/` 八个基础模块可被后续 Route Handler 直接复用。
+- [x] 单元测试覆盖成功、错误、分页、请求 ID、校验、日志、限流和自定义 Response。
+- [x] `pnpm test`、`pnpm lint`、`pnpm build` 在 `admin/` 真实通过。
+- [x] P3 验证文档回填真实命令、退出码、测试数量和限制。
+- [x] 任务 `changed-files.md` 与实际改动一致。

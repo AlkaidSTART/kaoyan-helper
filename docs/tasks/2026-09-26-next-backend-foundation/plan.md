@@ -35,6 +35,11 @@
 - 不执行远端 Supabase 迁移。
 - 完成后真实执行 `cd admin && pnpm test && pnpm lint && pnpm build`。
 
-## 6. 当前状态
+## 6. 实际结果
 
-计划已落盘，开始实现。
+- 已实现 `admin/lib/api/` 的错误、响应、请求上下文、时间、分页、校验、日志、限流和 handler 基础模块。
+- 已引入 Vitest 与 `pnpm test`，8 个测试文件、60 个测试全部通过。
+- `pnpm lint` 退出码 0；无 ESLint warning。
+- `pnpm build` 退出码 0；仅有仓库外 `pnpm-workspace.yaml` 导致的非阻塞 Turbopack root 警告。
+- 仓库根目录 `git diff --check` 退出码 0。
+- 未执行 Flutter、Supabase、远端迁移、Auth/RBAC 和业务 Route Handler 验证，继续由后续阶段负责。
