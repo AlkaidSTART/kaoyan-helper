@@ -26,10 +26,15 @@
 ## 落地计划
 
 1. `admin/package.json`：build 脚本改为 `prisma generate && next build`。
-2. 验证：在 `admin/` 下执行 `pnpm build`，确认 `prisma generate` 先行执行且 `next build` 全量通过。
+2. `admin/prisma.config.ts`：顶部 `import "dotenv/config"` 显式加载 `.env`（Prisma 7 CLI 不再自动加载 .env，官方文档要求在 config 中自行加载；CI 无 .env 时从平台环境变量取 `DATABASE_URL`）。
+3. `admin/package.json`：新增 devDependency `dotenv`。
+4. 验证：`pnpm build`、模拟 CI（移除 .env 仅靠环境变量）执行 `prisma generate`、`pnpm lint`、`pnpm test`。
 
 （说明：`admin/.gitignore` 此前已包含 `/generated/prisma`，无需改动。）
 
 ## 验证结果
 
-- `pnpm build`（新脚本）：`prisma generate` 成功生成客户端，`next build` 全部 36 个路由编译通过，无报错。
+1. `pnpm build`（新脚本）：`✔ Generated Prisma Client (7.10.0) to ./generated/prisma`，`✓ Compiled successfully`，36/36 路由编译通过。
+2. CI 场景模拟：临时移除 `.env`，仅以 shell 环境变量提供 `DATABASE_URL`，`prisma generate` 正常成功（.env 已恢复原位）。
+3. `pnpm lint`：0 errors（另有 2 条既有 `_page`/`_pageSize` unused-vars warning，属历史遗留代码，与本次改动无关，未处理）。
+4. `pnpm test`：28 个测试文件、195 个用例全部通过。

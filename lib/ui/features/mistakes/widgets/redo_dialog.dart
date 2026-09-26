@@ -103,9 +103,11 @@ class _RedoDialogState extends ConsumerState<RedoDialog> {
                 ] else
                   RadioGroup<String>(
                     groupValue: _selectedKey,
-                    onChanged: _submitting
-                        ? null
-                        : (value) => setState(() => _selectedKey = value),
+                    onChanged: (value) {
+                      if (!_submitting) {
+                        setState(() => _selectedKey = value);
+                      }
+                    },
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
