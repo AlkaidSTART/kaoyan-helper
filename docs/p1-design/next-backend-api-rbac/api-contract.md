@@ -39,11 +39,11 @@
 |---|---|---|---|---|---|
 | AUTH-01 | `POST /auth/send-code` | 公开 | `{email, purpose:"login"}` | `{expiresInSeconds, retryAfterSeconds}` | `RATE_LIMITED`、`VALIDATION_FAILED`；邮箱做规范化与小写化 |
 | AUTH-02 | `POST /auth/login/code` | 公开 | `{email, code, clientType:"flutter"\|"admin-web", deviceName?}` | Flutter：`{accessToken, refreshToken, expiresIn, tokenType, user, permissions}`；Admin：`{user}` + Set-Cookie | `EMAIL_CODE_INVALID`、`EMAIL_CODE_EXPIRED`、`ADMIN_REQUIRED`、`USER_BANNED` |
-| AUTH-03 | `POST /auth/login/password` | 公开 | `{email, password, clientType, deviceName?}` | 同 AUTH-02 | `AUTH_INVALID_CREDENTIALS`、`ADMIN_REQUIRED`、`USER_BANNED`；仅在启用 Supabase Password Provider 后开放 |
+| AUTH-03 | `POST /auth/login/password` | 公开 | `{email, password, clientType, deviceName?}` | Admin：`{user}` + Set-Cookie；Flutter 密码登录未开放 | `AUTH_INVALID_CREDENTIALS`、`ADMIN_REQUIRED`、`USER_BANNED`；Admin 凭据来自 Prisma `admin_credentials`（bcrypt），不启用 Supabase Password Provider；非 `admin-web` 客户端返回 422 `PROVIDER_UNSUPPORTED` |
 | AUTH-04 | `POST /auth/oauth/:provider` | 公开 | `{redirectUri, clientType}` | `{authorizationUrl, state, expiresAt}` | `PROVIDER_UNSUPPORTED`、`OAUTH_STATE_INVALID`；MVP 为扩展项，不阻塞邮箱验证码 |
-| AUTH-05 | `POST /auth/refresh` | 公开/凭证 | Flutter：`{refreshToken}`；Admin：HttpOnly Cookie | Flutter：新 token 对；Admin：`{expiresIn}` + 轮换 Cookie | `REFRESH_INVALID`、`TOKEN_EXPIRED`、`USER_BANNED` |
-| AUTH-06 | `POST /auth/logout` | 登录 | Flutter 可选 `{refreshToken}`；Admin 无 body | `null` | 始终清理服务端会话；重复退出保持幂等 |
-| AUTH-07 | `GET /auth/session` | 登录 | 无 | `{user, permissions, expiresAt}` | `TOKEN_EXPIRED`、`AUTH_REQUIRED`、`USER_BANNED` |
+| AUTH-05 | `POST /auth/refresh` | 公开/凭证 | Flutter：`{refreshToken}`；Admin：HttpOnly `admin_session` Cookie | Flutter：新 token 对；Admin：`{expiresIn}` + 轮换 Cookie | `REFRESH_INVALID`、`TOKEN_EXPIRED`、`USER_BANNED`；Admin 在 Prisma 事务内撤销旧 `admin_sessions` 行并写入新行 |
+| AUTH-06 | `POST /auth/logout` | 登录 | Flutter 可选 `{refreshToken}`；Admin 无 body | `null` | 始终清理服务端会话；Admin 撤销 Prisma `admin_sessions` 行并清 `admin_session` Cookie；重复退出保持幂等 |
+| AUTH-07 | `GET /auth/session` | 登录 | 无 | `{user, permissions, expiresAt}` | `TOKEN_EXPIRED`、`AUTH_REQUIRED`、`USER_BANNED`；Admin 从 Prisma `admin_sessions` 读取并刷新 `last_seen_at` |
 
 ### 3.2 认证响应用户对象
 
@@ -65,11 +65,11 @@
 
 ### 3.3 Cookie 约定
 
-- 名称：`sb_access`、`sb_refresh`。
-- 属性：`HttpOnly; Secure; SameSite=Lax; Path=/`。
-- access cookie 短时有效；refresh cookie 按 Supabase 会话策略设置。
-- 浏览器端不提供读取 token 的接口。
-- refresh 成功必须轮换 Cookie；退出清除两个 Cookie。
+- Admin Web：单一 `admin_session` Cookie（HttpOnly，服务端 Prisma 会话）。
+- Flutter：不使用 Cookie，改由 `Authorization: Bearer <token>` 携带 access token。
+- 属性：`HttpOnly; SameSite=Lax; Path=/; Max-Age=43200`；生产环境追加 `Secure`，开发环境不强制。
+- Cookie 只保存随机 token 本身，数据库仅存其 SHA-256 摘要，浏览器端不提供读取接口。
+- refresh 成功必须轮换并写回 `admin_session`；退出使用 `Max-Age=0` 清除该 Cookie。
 
 ### 3.4 OAuth 扩展流程
 

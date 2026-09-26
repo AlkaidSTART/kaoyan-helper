@@ -110,7 +110,7 @@
 
 ### 3.3 管理后台会话流程
 
-1. 管理后台通过 `POST /api/v1/auth/login/code`，`clientType=admin-web` 登录。
+1. 管理后台通过 `POST /api/v1/auth/login/password`（或后续的 `POST /api/v1/auth/login/code`），`clientType=admin-web` 登录；密码登录时服务端用 Prisma 读取 `admin_credentials` 并以 bcrypt 校验，不启用 Supabase Password Provider。
 2. Next.js 校验 `users.role === 'admin'`，否则返回 403 `ADMIN_REQUIRED`。
 3. 登录成功后设置 HttpOnly、Secure、SameSite=Lax 的会话 Cookie。
 4. 管理后台页面导航由根 `proxy.ts` 做第一层守卫，`/api/v1/admin/*` Route Handler 再做权限检查。
@@ -224,7 +224,7 @@
 | Header | 使用方 | 说明 |
 |---|---|---|
 | `Authorization: Bearer <token>` | Flutter | 受保护接口必填 |
-| `Cookie: sb_access=...; sb_refresh=...` | Admin Web | HttpOnly 服务端会话 |
+| `Cookie: admin_session=...` | Admin Web | HttpOnly Prisma 服务端会话（刷新/退出即轮换/撤销该 Cookie） |
 | `Content-Type: application/json` | 所有 JSON 请求 | 文件导入除外 |
 | `X-Request-Id` | 可选 | 调用方链路 ID，服务端校验格式；缺失时生成 |
 | `Idempotency-Key` | 可选/写操作 | 判分、审核、封禁等防止重复提交 |

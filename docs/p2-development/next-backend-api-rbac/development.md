@@ -88,7 +88,7 @@ P2-12 旧 Supabase 直连迁移与全局文档更新
 
 - [ ] P2-201 实现服务端 Supabase 用户客户端：从当前请求的 Bearer Token 或 Cookie 会话绑定用户身份，查询时保留 RLS。
 - [ ] P2-202 实现 server-only 高权限 Supabase 客户端，并确保任何客户端 bundle、日志和错误响应都无法导入或泄露 service role。
-- [ ] P2-203 实现 Cookie 会话适配：读取、校验、轮换和清除 `sb_access`、`sb_refresh`，属性固定为 `HttpOnly; Secure; SameSite=Lax; Path=/`。
+- [ ] P2-203 实现 Cookie 会话适配：读取、校验、轮换和清除 `sb_access`、`sb_refresh`，属性固定为 `HttpOnly; Secure; SameSite=Lax; Path=/`。Admin 侧已用 Prisma 服务端 Session + `admin_session` Cookie 完成等价适配（属性 `HttpOnly; SameSite=Lax; Path=/; Max-Age=43200`，生产追加 `Secure`）；Supabase `sb_*` Cookie 适配未实现。
 - [ ] P2-204 明确 Cookie 中只保存最小必要会话数据，不保存角色作为授权事实源；角色每次从 `public.users` 读取。
 - [ ] P2-205 实现用户存在性、`is_banned`、`role` 和权限集合的读取函数，禁止信任 JWT 自定义 claim 中的角色。
 - [ ] P2-206 验证普通用户客户端无法跨用户读取或修改私有资源，RLS 失败必须映射为安全的 AppError。
@@ -101,11 +101,11 @@ P2-12 旧 Supabase 直连迁移与全局文档更新
 - [ ] P2-302 实现 `POST /api/v1/auth/login/code`：支持 `clientType=flutter` 与 `clientType=admin-web`，校验验证码和用户封禁状态。
 - [ ] P2-303 Flutter 登录成功返回 access token、refresh token、过期时间、用户对象和权限列表。
 - [ ] P2-304 管理后台登录成功只返回用户对象并设置 HttpOnly Cookie；非 `admin` 返回 403 `ADMIN_REQUIRED`。
-- [ ] P2-305 实现 `POST /api/v1/auth/login/password` 的条件分支；仅当确认启用 Supabase Password Provider 后开放。
-- [ ] P2-306 实现 `POST /api/v1/auth/refresh`：Flutter 使用 refresh token，管理后台使用 Cookie，成功必须轮换令牌/Cookie。
-- [ ] P2-307 实现 `POST /api/v1/auth/logout`：撤销服务端会话、清除 Cookie，重复退出保持幂等。
-- [ ] P2-308 实现 `GET /api/v1/auth/session`：返回当前用户、权限和会话过期时间，不返回内部 Auth secret。
-- [ ] P2-309 统一 401/403 语义：缺少身份为 401 `AUTH_REQUIRED`，过期/无效刷新为 401，身份有效但权限不足为 403，封禁为 403 `USER_BANNED`。
+- [x] P2-305 实现 `POST /api/v1/auth/login/password`：Admin 使用 Prisma `admin_credentials` + bcrypt 校验并签发 `admin_session`，不依赖 Supabase Password Provider；非 `admin-web` 客户端返回 422 `PROVIDER_UNSUPPORTED`；Flutter 密码登录未开放。
+- [x] P2-306 实现 `POST /api/v1/auth/refresh`：管理后台从 `admin_session` Cookie 读取会话，在 Prisma 事务内条件撤销旧行并写入新行，成功轮换 Cookie；Flutter refresh token 分支未实现。
+- [x] P2-307 实现 `POST /api/v1/auth/logout`：Admin 撤销 Prisma `admin_sessions` 行并清除 `admin_session` Cookie，缺失/无效/已撤销 Cookie 仍返回成功，重复退出保持幂等；Flutter 分支未实现。
+- [x] P2-308 实现 `GET /api/v1/auth/session`：Admin 从 Prisma `admin_sessions` 读取会话，返回 `{user, permissions, expiresAt}` 并刷新 `last_seen_at`，不返回 token 或哈希。
+- [ ] P2-309 统一 401/403 语义：缺少身份为 401 `AUTH_REQUIRED`，过期/无效刷新为 401，身份有效但权限不足为 403，封禁为 403 `USER_BANNED`。Admin 四个 auth 接口已按此语义实现（含 `TOKEN_EXPIRED`、`REFRESH_INVALID`）；Flutter 与其他受保护接口待实现。
 - [ ] P2-310 实现验证码与密码错误的安全响应，禁止区分邮箱是否存在而泄露账号枚举信息。
 - [ ] P2-311 设计 OAuth 一次性 handoff code，但标记为扩展项；MVP 邮箱验证码通过后不得被 OAuth 阻塞。
 - [ ] P2-312 编写登录、刷新、退出、会话恢复、封禁、降权和管理员 Cookie 测试。

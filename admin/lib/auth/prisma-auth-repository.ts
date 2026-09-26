@@ -1,7 +1,7 @@
 import { Prisma, PrismaClient } from "@/generated/prisma/client";
 
 import { AppError, ERROR_CODES } from "../api/errors";
-import { getPrismaClient } from "../db/prisma";
+import { PrismaClientConfigurationError, getPrismaClient } from "../db/prisma";
 import type {
   AdminCredentialRecord,
   AdminSessionRecord,
@@ -44,12 +44,25 @@ interface PrismaAdminSessionRow {
  *
  * - 只负责查询、事务和 Prisma 异常映射，绝不把原始 Prisma 错误抛给上层。
  * - 未命中查询返回 `null`，让 `AuthService` 决定业务错误码。
+ * - 惰性解析 Prisma Client：构造仓储不建立连接，未配置 `DATABASE_URL` 时也不会
+ *   因为“无 Cookie / 非法 token”这类早退路径而被误判为依赖不可用。
  */
 export class PrismaAuthRepository implements AuthRepository {
-  private readonly client: PrismaClient;
+  private readonly injectedClient?: PrismaClient;
 
-  constructor(client: PrismaClient = getPrismaClient()) {
-    this.client = client;
+  private resolvedClient?: PrismaClient;
+
+  constructor(client?: PrismaClient) {
+    this.injectedClient = client;
+  }
+
+  /** 首次真正执行数据库操作时才创建（或复用注入的）Prisma Client。 */
+  private get client(): PrismaClient {
+    if (!this.resolvedClient) {
+      this.resolvedClient = this.injectedClient ?? getPrismaClient();
+    }
+
+    return this.resolvedClient;
   }
 
   async findCredentialByEmail(email: string): Promise<AdminCredentialRecord | null> {
@@ -207,7 +220,12 @@ function toSessionRecord(session: PrismaAdminSessionRow): AdminSessionRecord {
  * 连接、查询与初始化失败统一视为依赖不可用；其余视为内部错误。
  */
 function mapPrismaError(error: unknown): AppError {
+  if (error instanceof AppError) {
+    return error;
+  }
+
   if (
+    error instanceof PrismaClientConfigurationError ||
     error instanceof Prisma.PrismaClientKnownRequestError ||
     error instanceof Prisma.PrismaClientUnknownRequestError ||
     error instanceof Prisma.PrismaClientInitializationError ||

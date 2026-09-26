@@ -20,6 +20,8 @@ Route Handler (Zod 校验 / HTTP Cookie)
 - `AuthService` 不依赖 Prisma、Next.js 或具体数据库，便于使用 fake repository 做单元测试。
 - `PrismaAuthRepository` 只负责查询、事务和 Prisma 异常映射，不向 Route Handler 泄漏 Prisma 原始错误。
 - `lib/db/prisma.ts` 只提供惰性单例，模块导入时不得建立数据库连接。
+- `PrismaAuthRepository` 同样惰性解析 Prisma Client：构造函数不触发 `getPrismaClient()`，只有真正执行数据库操作时才解析。这样在缺少 `DATABASE_URL` 的环境下，无 Cookie 或 token 格式非法的早退路径（401 `AUTH_REQUIRED` / `REFRESH_INVALID`）不会因客户端初始化失败而被误判为 503 `DEPENDENCY_UNAVAILABLE`；只有确实需要访问数据库的路径才会暴露依赖不可用。
+- 测试可通过构造函数注入 fake Prisma Client，避免单元测试依赖真实数据库。
 
 ## 2. 数据模型
 
