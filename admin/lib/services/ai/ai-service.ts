@@ -1,5 +1,4 @@
 import { AppError, ERROR_CODES } from "../../api/errors";
-import type { QuestionRow } from "../quiz/quiz-service";
 import {
   DeepSeekClient,
   buildChatMessages,

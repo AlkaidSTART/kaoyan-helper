@@ -140,7 +140,6 @@ export class PrismaSchoolRepository implements SchoolRepository {
     userId: string,
     schoolId: string,
     input: TargetInput,
-    _now: Date,
   ): Promise<TargetRow[]> {
     return this.run(() =>
       this.client.$transaction(async (tx) => {

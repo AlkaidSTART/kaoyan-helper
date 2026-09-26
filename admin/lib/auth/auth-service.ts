@@ -2,7 +2,7 @@ import { AppError, ERROR_CODES, type ErrorCode } from "../api/errors";
 import { formatUtcTimestamp } from "../api/response";
 import type { AdminSessionRecord, AuthRepository, AuthUserRecord } from "./auth-repository";
 import { performDummyPasswordCheck, verifyPassword } from "./password";
-import { getPermissionsForRole, type AdminPermission } from "./permissions";
+import { getPermissionsForRole } from "./permissions";
 import {
   SESSION_TTL_SECONDS,
   generateSessionToken,

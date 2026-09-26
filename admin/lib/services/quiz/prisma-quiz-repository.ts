@@ -139,6 +139,7 @@ export class PrismaQuizRepository implements QuizRepository {
                   status: mistakeBefore.status,
                   errorCount: mistakeBefore.errorCount,
                   consecutiveCorrect: mistakeBefore.consecutiveCorrect,
+                  masteredAt: mistakeBefore.masteredAt,
                 }
               : null,
             false,
@@ -178,6 +179,7 @@ export class PrismaQuizRepository implements QuizRepository {
               status: mistakeBefore.status,
               errorCount: mistakeBefore.errorCount,
               consecutiveCorrect: mistakeBefore.consecutiveCorrect,
+              masteredAt: mistakeBefore.masteredAt,
             },
             true,
             answeredAt,

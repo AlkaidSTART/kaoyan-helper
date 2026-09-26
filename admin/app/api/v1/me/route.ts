@@ -13,7 +13,7 @@ const updateProfileSchema = z.strictObject({
 });
 
 export async function GET(request: Request): Promise<Response> {
-  return handleApiRequest(request, async (context) => {
+  return handleApiRequest(request, async () => {
     const actor = await getActor(request);
 
     requirePermission(actor, "user:self:read");
@@ -25,7 +25,7 @@ export async function GET(request: Request): Promise<Response> {
 }
 
 export async function PATCH(request: Request): Promise<Response> {
-  return handleApiRequest(request, async (context) => {
+  return handleApiRequest(request, async () => {
     const actor = await getActor(request);
 
     requirePermission(actor, "user:self:update");

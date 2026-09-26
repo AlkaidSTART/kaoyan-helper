@@ -2,7 +2,7 @@
 
 > 版本：v1.0  
 > 日期：2026-09-26  
-> 状态：待执行，不代表任何接口、迁移或测试已经完成  
+> 状态：业务组件接口（Auth Flutter 分支、Me、Dashboard、Quiz、Mistakes、Schools、Flashcards、AI 共 35 个）已实现并通过自动化测试；管理接口、隔离数据库验收与多端验收待执行  
 > 上游需求：`docs/p0-definition/next-backend-api-rbac/definition.md`  
 > 上游设计：`docs/p1-design/next-backend-api-rbac/design.md`  
 > 接口契约：`docs/p1-design/next-backend-api-rbac/api-contract.md`  
@@ -84,16 +84,16 @@
 
 | 模块 | 契约数量 | 已实现 | 契约测试通过 | 权限测试通过 | 证据路径 | 状态 |
 |---|---:|---:|---:|---:|---|---|
-| Auth | 7 | 待统计 | 待执行 | 待执行 | 待填写 | 待执行 |
-| Me | 4 | 待统计 | 待执行 | 待执行 | 待填写 | 待执行 |
-| Dashboard | 1 | 待统计 | 待执行 | 待执行 | 待填写 | 待执行 |
-| Quiz | 6 | 待统计 | 待执行 | 待执行 | 待填写 | 待执行 |
-| Mistakes | 5 | 待统计 | 待执行 | 待执行 | 待填写 | 待执行 |
-| Schools | 5 | 待统计 | 待执行 | 待执行 | 待填写 | 待执行 |
-| Flashcards | 5 | 待统计 | 待执行 | 待执行 | 待填写 | 待执行 |
-| AI | 2 | 待统计 | 待执行 | 待执行 | 待填写 | 待执行 |
-| Admin | 20 | 待统计 | 待执行 | 待执行 | 待填写 | 待执行 |
-| **合计** | **55** | **待统计** | **待执行** | **待执行** | **待填写** | **待执行** |
+| Auth | 7 | 7（password/refresh/logout/session 为双凭证分支；send-code、login/code、oauth 已实现） | 服务层 50 项 + 路由 8 项通过 | 部分（服务层语义已测；跨用户集成待隔离库） | `admin/lib/auth/__tests__/`、`admin/app/api/v1/auth/__tests__/routes.test.ts` | 代码完成，集成验收待执行 |
+| Me | 4 | 4 | 服务层 6 项通过 | 服务层所有权已测 | `admin/lib/services/me/__tests__/` | 代码完成，集成验收待执行 |
+| Dashboard | 1 | 1 | 服务层 4 项通过 | 服务层已测 | `admin/lib/services/dashboard/__tests__/` | 代码完成，集成验收待执行 |
+| Quiz | 6 | 6 | 服务层 9 项 + 判题 8 项通过 | 所有权/404 防枚举已测 | `admin/lib/services/quiz/__tests__/`、`admin/lib/domain/__tests__/judging.test.ts` | 代码完成，集成验收待执行 |
+| Mistakes | 5 | 5 | 服务层 6 项 + 状态机 5 项通过 | 跨用户 404 已测 | `admin/lib/services/mistakes/__tests__/` | 代码完成，集成验收待执行 |
+| Schools | 5 | 5 | 服务层 5 项通过 | 目标上限/主目标唯一已测 | `admin/lib/services/me/__tests__/`、`admin/lib/services/schools/` | 代码完成，集成验收待执行 |
+| Flashcards | 5 | 5 | 服务层 7 项 + SM-2 4 项通过 | 未到期 409、跨用户 404 已测 | `admin/lib/services/flashcards/__tests__/`、`admin/lib/domain/__tests__/sm2.test.ts` | 代码完成，集成验收待执行 |
+| AI | 2 | 2（未配置 `DEEPSEEK_API_KEY` 时建流前返回 503 `DEPENDENCY_UNAVAILABLE`） | 配额 4 项通过 | 配额语义已测 | `admin/lib/services/ai/__tests__/` | 代码完成，上游联调待执行 |
+| Admin | 20 | 0 | 不适用 | 不适用 | — | 待实现 |
+| **合计** | **55** | **35** | **167 项自动化测试通过（22 个文件）** | 服务层覆盖 | 见各模块 `__tests__` | 业务侧代码完成 |
 
 ## 6. 通用响应与错误契约
 
@@ -401,3 +401,34 @@
 - [ ] P3-SIGNOFF-010 验收人、日期、commit SHA、环境版本和遗留风险已填写。
 
 当前结论：**待执行。P2 实现完成前不得发布或宣称该接口体系已经验证通过。**
+
+## 14. 业务组件接口实现轮次证据（2026-09-26 回填）
+
+本轮（任务 `docs/tasks/2026-09-26-backend-business-api/plan.md`）完成 P2-3 Flutter 分支与 P2-7/P2-8/P2-9 共 35 个业务接口。以下结果均来自真实执行，未执行项明确标注。
+
+### 14.1 真实执行结果
+
+| 命令（在 `admin/` 执行） | 结果 | 结论 |
+|---|---|---|
+| `pnpm exec tsc --noEmit` | 退出码 0 | 类型检查通过 |
+| `pnpm test`（Vitest） | **22 个测试文件、167 个测试全部通过** | 基础层 + 认证 + 领域服务测试通过 |
+| `pnpm lint`（eslint） | 0 error / 0 warning | 静态检查通过 |
+| `pnpm build`（next build） | 构建成功；27 个 `route.ts` 全部注册为动态服务端路由 | 业务路由全部挂载 |
+| `flutter analyze`（仓库根目录） | No issues found | Flutter 侧无新问题 |
+| `flutter test`（仓库根目录） | 17 通过 / 4 失败（router_test、schools_mobile_test、auth_login_test、widget_test） | 失败为既有问题：`git diff -- lib test` 为空，本任务未改动任何 Flutter 文件 |
+
+### 14.2 测试覆盖说明
+
+- 判题规则（单选/多选/填空、ANSWER_INVALID）、错题状态机（首错、再错、连对、连对 2 掌握、重新激活清零、mastered 保持）：`lib/domain/__tests__/judging.test.ts`（13 项）。
+- SM-2 三类评级与间隔推进：`lib/domain/__tests__/sm2.test.ts`（4 项）。
+- 时区/日界线/倒计时：`lib/domain/__tests__/time.test.ts`（4 项）。
+- Quiz 服务（可访问性 404、判题委托、UGC pending、乐观锁传递）：9 项；Mistakes 服务（跨用户 404、重做、仅 mastered 可激活）：6 项；Me 服务（目标上限/主目标唯一/重复拒绝）：5 项；Flashcards（CARD_NOT_DUE、打卡、连击）：7 项；Dashboard（聚合、非法时区 422、倒计时口径）：4 项；AI 配额（429、日界线）：4 项；用户会话（令牌对、原子轮换、重放 401、封禁 403、幂等登出）：8 项。
+- 认证路由（Cookie/Bearer 双入口、envelope、requestId）：`app/api/v1/auth/__tests__/routes.test.ts` 8 项。
+
+### 14.3 未执行项（阻断完整验收，非本轮范围）
+
+- [ ] 真实数据库集成验收：基线迁移与 `20260926140000_user_sessions.sql` 尚未应用到远端（`data-model.md` §7 要求人工确认后执行），跨用户隔离、封禁即时生效、迁移演练需在隔离数据库执行。
+- [ ] Supabase Auth 邮箱 OTP 真实发送链路（依赖项目 SMTP/模板配置）。
+- [ ] DeepSeek 上游联调（`DEEPSEEK_API_KEY` 未配置时接口按契约返回 503，不伪造成功）。
+- [ ] `/api/v1/admin/*` 20 个管理接口（P2-10 待实现）。
+- [ ] 多端（Flutter Web/移动端）真实登录验收。

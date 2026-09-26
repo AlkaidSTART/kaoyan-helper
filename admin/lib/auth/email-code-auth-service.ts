@@ -6,11 +6,7 @@ import { getPermissionsForRole } from "./permissions";
 import type { EmailOtpClient } from "./otp-client";
 import { isActivelyBanned } from "./user-session-service";
 import type { UserSessionRepository } from "./user-session-repository";
-import {
-  REFRESH_TOKEN_TTL_SECONDS,
-  UserSessionService,
-  type UserTokenPair,
-} from "./user-session-service";
+import { UserSessionService, type UserTokenPair } from "./user-session-service";
 import { SESSION_TTL_SECONDS, generateSessionToken, hashSessionToken } from "./session-token";
 
 export const FLUTTER_CLIENT_TYPE = "flutter";

@@ -58,7 +58,7 @@ export class PrismaDashboardRepository implements DashboardRepository {
     );
   }
 
-  async listRecentCheckInDates(userId: string, now: Date, _timeZone: string): Promise<Date[]> {
+  async listRecentCheckInDates(userId: string, now: Date): Promise<Date[]> {
     const rows = await this.run(() =>
       this.client.checkInRecord.findMany({
         where: {

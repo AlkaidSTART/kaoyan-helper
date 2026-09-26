@@ -2,7 +2,7 @@
 
 > 版本：v1.0  
 > 日期：2026-09-26  
-> 状态：P2-0 实施准备与 P2-1 API 基础层已完成；P2-2 及后续待实现
+> 状态：P2-0/P2-1 基础层、P2-3 认证（Flutter 分支）、P2-7/P2-8/P2-9 业务接口已完成；P2-2 Supabase 客户端适配按 ADR 调整为 Prisma 等价实现；P2-4/P2-5/P2-6/P2-10 待实现
 > 上游需求：`docs/p0-definition/next-backend-api-rbac/definition.md`  
 > 上游设计：`docs/p1-design/next-backend-api-rbac/design.md`  
 > 接口契约：`docs/p1-design/next-backend-api-rbac/api-contract.md`
@@ -97,16 +97,16 @@ P2-12 旧 Supabase 直连迁移与全局文档更新
 
 ### P2-3 Auth 与会话
 
-- [ ] P2-301 实现 `POST /api/v1/auth/send-code`：邮箱规范化、用途限制、验证码发送、频率限制和统一响应。
-- [ ] P2-302 实现 `POST /api/v1/auth/login/code`：支持 `clientType=flutter` 与 `clientType=admin-web`，校验验证码和用户封禁状态。
-- [ ] P2-303 Flutter 登录成功返回 access token、refresh token、过期时间、用户对象和权限列表。
+- [x] P2-301 实现 `POST /api/v1/auth/send-code`：邮箱规范化、用途限制、验证码发送、频率限制和统一响应。
+- [x] P2-302 实现 `POST /api/v1/auth/login/code`：支持 `clientType=flutter` 与 `clientType=admin-web`，校验验证码和用户封禁状态。
+- [x] P2-303 Flutter 登录成功返回 access token、refresh token、过期时间、用户对象和权限列表。
 - [ ] P2-304 管理后台登录成功只返回用户对象并设置 HttpOnly Cookie；非 `admin` 返回 403 `ADMIN_REQUIRED`。
 - [x] P2-305 实现 `POST /api/v1/auth/login/password`：Admin 使用 Prisma `admin_credentials` + bcrypt 校验并签发 `admin_session`，不依赖 Supabase Password Provider；非 `admin-web` 客户端返回 422 `PROVIDER_UNSUPPORTED`；Flutter 密码登录未开放。
 - [x] P2-306 实现 `POST /api/v1/auth/refresh`：管理后台从 `admin_session` Cookie 读取会话，在 Prisma 事务内条件撤销旧行并写入新行，成功轮换 Cookie；Flutter refresh token 分支未实现。
 - [x] P2-307 实现 `POST /api/v1/auth/logout`：Admin 撤销 Prisma `admin_sessions` 行并清除 `admin_session` Cookie，缺失/无效/已撤销 Cookie 仍返回成功，重复退出保持幂等；Flutter 分支未实现。
 - [x] P2-308 实现 `GET /api/v1/auth/session`：Admin 从 Prisma `admin_sessions` 读取会话，返回 `{user, permissions, expiresAt}` 并刷新 `last_seen_at`，不返回 token 或哈希。
-- [ ] P2-309 统一 401/403 语义：缺少身份为 401 `AUTH_REQUIRED`，过期/无效刷新为 401，身份有效但权限不足为 403，封禁为 403 `USER_BANNED`。Admin 四个 auth 接口已按此语义实现（含 `TOKEN_EXPIRED`、`REFRESH_INVALID`）；Flutter 与其他受保护接口待实现。
-- [ ] P2-310 实现验证码与密码错误的安全响应，禁止区分邮箱是否存在而泄露账号枚举信息。
+- [x] P2-309 统一 401/403 语义：缺少身份为 401 `AUTH_REQUIRED`，过期/无效刷新为 401，身份有效但权限不足为 403，封禁为 403 `USER_BANNED`。Admin 四个 auth 接口已按此语义实现（含 `TOKEN_EXPIRED`、`REFRESH_INVALID`）；Flutter 与其他受保护接口待实现。
+- [x] P2-310 实现验证码与密码错误的安全响应，禁止区分邮箱是否存在而泄露账号枚举信息。
 - [ ] P2-311 设计 OAuth 一次性 handoff code，但标记为扩展项；MVP 邮箱验证码通过后不得被 OAuth 阻塞。
 - [ ] P2-312 编写登录、刷新、退出、会话恢复、封禁、降权和管理员 Cookie 测试。
 
@@ -154,38 +154,38 @@ P2-12 旧 Supabase 直连迁移与全局文档更新
 
 ### P2-7 Me、Dashboard、Quiz 与 Mistakes
 
-- [ ] P2-701 实现 `GET /api/v1/me`、`PATCH /api/v1/me`，仅允许本人读取和修改允许字段。
-- [ ] P2-702 实现 `GET/PATCH /api/v1/me/targets`，服务端校验最多 3 条、仅 1 条主目标，并返回院校快照。
-- [ ] P2-703 实现 `GET /api/v1/dashboard/summary`，所有统计在服务端按本人数据聚合。
-- [ ] P2-704 实现 `GET /api/v1/questions`、`GET /api/v1/questions/:id`，普通题目响应绝不含标准答案和解析。
-- [ ] P2-705 实现 `POST /api/v1/questions/:id/answer`，服务端判题、写入本人错题、处理 attempt 幂等。
-- [ ] P2-706 实现 `POST/PATCH/DELETE /api/v1/questions` 的用户 UGC 生命周期，`creatorId` 由服务端赋值，公共题提交后进入待审核。
-- [ ] P2-707 实现错题列表、详情、重做、重新激活和软删除接口，全部执行本人所有权检查。
-- [ ] P2-708 实现错题状态机：首次答错、再次答错、答对连对、连对 2 次掌握、重新激活清零。
-- [ ] P2-709 确保普通题答对不会错误创建错题记录，历史错题答对会在统一判题服务中更新连对状态。
-- [ ] P2-710 为判题、错题状态机、答案隐藏、跨用户隔离、幂等和版本冲突编写测试。
+- [x] P2-701 实现 `GET /api/v1/me`、`PATCH /api/v1/me`，仅允许本人读取和修改允许字段。
+- [x] P2-702 实现 `GET/PATCH /api/v1/me/targets`，服务端校验最多 3 条、仅 1 条主目标，并返回院校快照。
+- [x] P2-703 实现 `GET /api/v1/dashboard/summary`，所有统计在服务端按本人数据聚合。
+- [x] P2-704 实现 `GET /api/v1/questions`、`GET /api/v1/questions/:id`，普通题目响应绝不含标准答案和解析。
+- [x] P2-705 实现 `POST /api/v1/questions/:id/answer`，服务端判题、写入本人错题、处理 attempt 幂等。
+- [x] P2-706 实现 `POST/PATCH/DELETE /api/v1/questions` 的用户 UGC 生命周期，`creatorId` 由服务端赋值，公共题提交后进入待审核。
+- [x] P2-707 实现错题列表、详情、重做、重新激活和软删除接口，全部执行本人所有权检查。
+- [x] P2-708 实现错题状态机：首次答错、再次答错、答对连对、连对 2 次掌握、重新激活清零。
+- [x] P2-709 确保普通题答对不会错误创建错题记录，历史错题答对会在统一判题服务中更新连对状态。
+- [x] P2-710 为判题、错题状态机、答案隐藏、跨用户隔离、幂等和版本冲突编写测试。
 
 ### P2-8 Schools、Flashcards 与 Check-ins
 
-- [ ] P2-801 实现院校列表、详情和专业历年数据接口，只返回已发布数据，列表全部服务端分页。
-- [ ] P2-802 实现 `POST/DELETE /api/v1/schools/:id/target`，仅操作本人目标，重复操作保持幂等。
-- [ ] P2-803 实现闪卡列表和到期卡接口，只返回系统卡或本人 UGC 卡，进度只属于本人。
-- [ ] P2-804 实现创建私有 UGC 闪卡，`source`、`creatorId` 由服务端赋值。
-- [ ] P2-805 实现 `POST /api/v1/flashcards/:id/review`，在事务内执行 SM-2、幂等键检查和进度更新。
-- [ ] P2-806 实现完成当日全部到期卡片后的每日打卡 upsert，保证用户每日唯一。
-- [ ] P2-807 实现 `GET /api/v1/check-ins` 分页查询和 `streakDays` 服务端计算。
-- [ ] P2-808 为 SM-2 三类评级、重复幂等、跨用户进度隔离、未到期卡和打卡唯一性编写测试。
+- [x] P2-801 实现院校列表、详情和专业历年数据接口，只返回已发布数据，列表全部服务端分页。
+- [x] P2-802 实现 `POST/DELETE /api/v1/schools/:id/target`，仅操作本人目标，重复操作保持幂等。
+- [x] P2-803 实现闪卡列表和到期卡接口，只返回系统卡或本人 UGC 卡，进度只属于本人。
+- [x] P2-804 实现创建私有 UGC 闪卡，`source`、`creatorId` 由服务端赋值。
+- [x] P2-805 实现 `POST /api/v1/flashcards/:id/review`，在事务内执行 SM-2、幂等键检查和进度更新。
+- [x] P2-806 实现完成当日全部到期卡片后的每日打卡 upsert，保证用户每日唯一。
+- [x] P2-807 实现 `GET /api/v1/check-ins` 分页查询和 `streakDays` 服务端计算。
+- [x] P2-808 为 SM-2 三类评级、重复幂等、跨用户进度隔离、未到期卡和打卡唯一性编写测试。
 
 ### P2-9 AI SSE 与配额
 
-- [ ] P2-901 实现 `POST /api/v1/ai/chat` 的建流前认证、封禁检查和每日配额检查。
-- [ ] P2-902 实现 SSE `meta`、`delta`、`done`、`error` 事件，HTTP 状态表示建流前结果，流内错误使用 `error` 事件。
-- [ ] P2-903 服务端只接受 `questionId`、`userAnswer` 和受控上下文，正确答案与解析必须由服务端查询。
-- [ ] P2-904 实现 30 次/用户/自然日配额、`Asia/Shanghai` 日界线、UTC 存储和 429 `DAILY_LIMIT_EXCEEDED`。
-- [ ] P2-905 实现 15 秒心跳、120 秒最大连接、客户端取消和上游中断清理。
-- [ ] P2-906 为用户/管理端分开配置 AI 限流，不把 DeepSeek Key 暴露给 Flutter。
-- [ ] P2-907 实现 `POST /api/v1/ai/explain` 非流式短回答，并复用同一身份、配额和题目权限逻辑。
-- [ ] P2-908 为配额、SSE 解析、取消、上游错误、首 token 延迟和日志脱敏编写测试。
+- [x] P2-901 实现 `POST /api/v1/ai/chat` 的建流前认证、封禁检查和每日配额检查。
+- [x] P2-902 实现 SSE `meta`、`delta`、`done`、`error` 事件，HTTP 状态表示建流前结果，流内错误使用 `error` 事件。
+- [x] P2-903 服务端只接受 `questionId`、`userAnswer` 和受控上下文，正确答案与解析必须由服务端查询。
+- [x] P2-904 实现 30 次/用户/自然日配额、`Asia/Shanghai` 日界线、UTC 存储和 429 `DAILY_LIMIT_EXCEEDED`。
+- [x] P2-905 实现 15 秒心跳、120 秒最大连接、客户端取消和上游中断清理。
+- [x] P2-906 为用户/管理端分开配置 AI 限流，不把 DeepSeek Key 暴露给 Flutter。
+- [x] P2-907 实现 `POST /api/v1/ai/explain` 非流式短回答，并复用同一身份、配额和题目权限逻辑。
+- [x] P2-908 为配额、SSE 解析、取消、上游错误、首 token 延迟和日志脱敏编写测试。
 
 ### P2-10 Admin API 与管理操作
 
@@ -306,6 +306,27 @@ P2-12 旧 Supabase 直连迁移与全局文档更新
 - 代价：需要一次性评审全部表结构；后续变更必须走追加迁移，禁止修改基线。
 - 约束：基线迁移不在本次任务自动应用到远端项目，需人工确认后在 P3 记录演练结果。
 
+
+### ADR-003：用户侧数据访问沿用 Prisma 直连（本轮业务接口）
+
+- 日期：2026-09-26
+- 背景：P2-7/P2-8/P2-9 业务接口落地时，Admin 认证已用 Prisma 直连 Postgres（ADR 于 P2-203 记录等价适配），而基线迁移尚未应用到远端，Supabase 用户 JWT + RLS 链路不可用。
+- 决策：用户侧业务接口继续以 Prisma 作为数据访问层；RLS 纵深防御由服务层所有权复核（`requireAccessible` / `requireOwn` / `assertTargetLimits` 等）替代。Supabase Auth 仍作为身份提供方（`send-code`/`login/code` 经服务端 Secret Key 客户端发送与校验 OTP），身份事实落 `public.users`。
+- 后果：普通用户请求不再经用户 JWT 走 RLS；P2-2 的 Supabase 客户端适配任务调整为「已由 Prisma 等价实现」，JWT+RLS 迁移留待后续任务评估。
+- 影响文件：`admin/lib/services/**`、`admin/lib/auth/prisma-user-session-repository.ts`、`admin/prisma/schema.prisma`。
+
+### ADR-004：Flutter 会话采用前缀化不透明令牌对
+
+- 日期：2026-09-26
+- 背景：契约 AUTH-02/05 要求 Flutter 持有 access + refresh 令牌对；Admin 侧已有单一 `admin_session` Cookie 会话。
+- 决策：新增 `user_sessions` 表（迁移 `20260926140000_user_sessions.sql`），access（`usa_` 前缀，2h）与 refresh（`usr_` 前缀，30d）共用一张表，仅存 SHA-256 摘要；刷新在事务内原子轮换 refresh 行并新建 access 行，重放返回 401 `REFRESH_INVALID`。
+- 后果：`/auth/refresh`、`/auth/logout`、`/auth/session` 均支持 Bearer 与 Cookie 双入口；令牌前缀使类别在读取时即可判定，无需额外列。
+
+### ADR-005：倒计时与自然日口径
+
+- 日期：2026-09-26
+- 决策：`daysUntilExam` 按 `examYear - 1` 年 12 月 21 日（`Asia/Shanghai` 当地日历日）估算初试日，未设置或已过期返回 `null`；AI 配额、打卡与今日刷题数均按 `Asia/Shanghai` 日界线、UTC 存储。该口径为 MVP 约定，待产品确认。
+
 ## 6. 实施中问题与决策记录
 
 实现阶段每解决一个真实问题，都在本表追加记录，不只写“已完成”。
@@ -317,6 +338,10 @@ P2-12 旧 Supabase 直连迁移与全局文档更新
 | 2026-09-26 | P2-004 | `.mcp.json` 固定项目 `roiqsirzrykaebsqpxex`，MCP 工具返回 `INVALID_ARGUMENT`，`_list_projects` 只见两个未激活项目 | 改用只读方式审计：以 `.env.local` 中的键发起 `GET /rest/v1/` OpenAPI 请求（不打印密钥）。结果是 `components.schemas` 为空，仅暴露 `/rpc/rls_auto_enable`；探测业务表全部返回 `PGRST205`。**结论：远端 `public` schema 为空，不存在既有表、RLS 或迁移** | `docs/p1-design/next-backend-api-rbac/data-model.md` | 已解决（结论：从零建基线） |
 | 2026-09-26 | P2-005 | 文档旧稿使用 `SUPABASE_ANON_KEY` / `SUPABASE_SERVICE_ROLE_KEY`，与 `.env.local` 实际命名不一致 | 以实际存在的 `SUPABASE_URL` / `SUPABASE_PUBLISHABLE_KEY` / `SUPABASE_SECRET_KEY` 为准，不新增旧名别名；服务端统一经 `lib/env.ts` 读取 | `docs/p1-design/next-backend-api-rbac/environment.md`、`admin/lib/env.ts` | 已解决 |
 | 2026-09-26 | P2-004 | 远端库为空与既有 Flutter 直连 Supabase 的关系 | 空库意味着旧客户端当前也无业务表可用，因此基线迁移不引入额外回退风险；迁移文件只提交，不自动应用到远端，需人工确认后执行 | `supabase/migrations/*.sql` | 已记录 |
+| 2026-09-26 | P2-303/P2-306 | refresh/logout/session 路由引入未 mock 的 `PrismaUserSessionRepository`（`server-only`）导致既有 routes.test.ts 在收集阶段失败 | 在测试中按既有模式补 `vi.mock("@/lib/auth/prisma-user-session-repository")`；路由层保持薄适配，服务层可注入 fake 仓储测试 | `app/api/v1/auth/__tests__/routes.test.ts` | 已解决 |
+| 2026-09-26 | P2-708 | 已掌握（mastered）错题在判题状态机中答对后回退为 active | `nextMistakeState` 保持 mastered 并保留首次 `masteredAt`；再次答错才重新打开并清零 | `lib/domain/judging.ts`、两个 Prisma 仓储 | 已解决 |
+| 2026-09-26 | P2-705 | Prisma `Json` 列不接受带 `Date` 字段的强类型对象 | 判题事务内把错题快照序列化为 JSON 安全结构后再写入 `result` | `lib/services/quiz/prisma-quiz-repository.ts` | 已解决 |
+| 2026-09-26 | P2-805 | 复习幂等重放需要返回首次计算结果 | `card_review_events` 唯一约束兜底；重放路径读取事件中存储的 `dueRemaining`/`checkIn` 快照 | `lib/services/flashcards/prisma-flashcard-repository.ts` | 已解决 |
 
 ## 7. 完成定义（DoD）
 

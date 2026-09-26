@@ -89,7 +89,12 @@ export interface MistakeStateUpdate {
 }
 
 export function nextMistakeState(
-  current: { status: string; errorCount: number; consecutiveCorrect: number } | null,
+  current: {
+    status: string;
+    errorCount: number;
+    consecutiveCorrect: number;
+    masteredAt: Date | null;
+  } | null,
   isCorrect: boolean,
   now: Date,
 ): MistakeStateUpdate {
@@ -103,6 +108,7 @@ export function nextMistakeState(
   }
 
   if (!isCorrect) {
+    // 已掌握的题再次答错视为重新打开：回到 active 并清空掌握时间。
     return {
       status: "active",
       errorCount: current.errorCount + 1,
@@ -112,12 +118,23 @@ export function nextMistakeState(
   }
 
   const consecutiveCorrect = current.consecutiveCorrect + 1;
-  const mastered = current.status !== "mastered" && consecutiveCorrect >= 2;
+
+  if (current.status === "mastered") {
+    // 已掌握后答对保持 mastered，保留首次掌握时间。
+    return {
+      status: "mastered",
+      errorCount: current.errorCount,
+      consecutiveCorrect,
+      masteredAt: current.masteredAt,
+    };
+  }
+
+  const mastered = consecutiveCorrect >= 2;
 
   return {
     status: mastered ? "mastered" : "active",
     errorCount: current.errorCount,
     consecutiveCorrect,
-    masteredAt: mastered ? now : null,
+    masteredAt: mastered ? now : current.masteredAt,
   };
 }

@@ -1,6 +1,5 @@
 import { AppError, ERROR_CODES } from "../../api/errors";
 import type { QuestionRow } from "../quiz/quiz-service";
-import { usageDateFor } from "./quota";
 import type { AiRepository } from "./quota";
 
 const DEEPSEEK_BASE_URL = "https://api.deepseek.com";

@@ -32,6 +32,10 @@ function resetRepositoryState(): void {
   repositoryState.calls.touchSession = 0;
 }
 
+vi.mock("@/lib/auth/prisma-user-session-repository", () => ({
+  PrismaUserSessionRepository: class {},
+}));
+
 vi.mock("@/lib/auth/prisma-auth-repository", () => ({
   PrismaAuthRepository: class implements AuthRepository {
     async findCredentialByEmail(): Promise<AdminCredentialRecord | null> {

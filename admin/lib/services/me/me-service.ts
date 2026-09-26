@@ -1,6 +1,5 @@
 import { AppError, ERROR_CODES } from "../../api/errors";
 import type { PaginationParams } from "../../api/pagination";
-import type { AuthUserRecord } from "../../auth/auth-repository";
 import { formatUtcTimestamp } from "../../api/response";
 
 export interface TargetDto {

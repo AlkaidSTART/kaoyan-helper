@@ -5,7 +5,7 @@ import { createSseResponse, encodeSseEvent, streamSseEvents } from "@/lib/api/ss
 import { readAndValidateJson } from "@/lib/api/validation";
 import { getActor, requirePermission } from "@/lib/auth/actor";
 import { AiService } from "@/lib/services/ai/ai-service";
-import { DeepSeekClient, buildChatMessages, type ChatRequest } from "@/lib/services/ai/deepseek-client";
+import { DeepSeekClient, type ChatRequest } from "@/lib/services/ai/deepseek-client";
 import { PrismaAiRepository } from "@/lib/services/ai/prisma-ai-repository";
 
 const chatMessageSchema = z.strictObject({

@@ -138,6 +138,7 @@ export class PrismaMistakeRepository implements MistakeRepository {
             status: mistakeBefore.status,
             errorCount: mistakeBefore.errorCount,
             consecutiveCorrect: mistakeBefore.consecutiveCorrect,
+            masteredAt: mistakeBefore.masteredAt,
           },
           isCorrect,
           answeredAt,

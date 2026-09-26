@@ -1,7 +1,7 @@
 import { AppError, ERROR_CODES } from "../../api/errors";
 import { formatUtcTimestamp } from "../../api/response";
 import { judgeAnswer, nextMistakeState } from "../../domain/judging";
-import { toJudgeQuestion, toOptions, type QuestionRow, type QuestionSummaryDto } from "../quiz/quiz-service";
+import { toJudgeQuestion, toOptions, type QuestionRow } from "../quiz/quiz-service";
 
 export interface MistakeFilters {
   status: string | null;

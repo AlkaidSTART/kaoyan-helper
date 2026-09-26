@@ -70,7 +70,7 @@ describe("nextMistakeState", () => {
 
   it("increments error count and resets streak on repeated mistakes", () => {
     expect(
-      nextMistakeState({ status: "active", errorCount: 2, consecutiveCorrect: 1 }, false, now),
+      nextMistakeState({ status: "active", errorCount: 2, consecutiveCorrect: 1, masteredAt: null }, false, now),
     ).toEqual({
       status: "active",
       errorCount: 3,
@@ -80,12 +80,12 @@ describe("nextMistakeState", () => {
   });
 
   it("advances the streak on redo success and masters at two", () => {
-    const first = nextMistakeState({ status: "active", errorCount: 1, consecutiveCorrect: 0 }, true, now);
+    const first = nextMistakeState({ status: "active", errorCount: 1, consecutiveCorrect: 0, masteredAt: null }, true, now);
 
     expect(first).toMatchObject({ status: "active", consecutiveCorrect: 1, masteredAt: null });
 
     const second = nextMistakeState(
-      { status: "active", errorCount: 1, consecutiveCorrect: first.consecutiveCorrect },
+      { status: "active", errorCount: 1, consecutiveCorrect: first.consecutiveCorrect, masteredAt: null },
       true,
       now,
     );
@@ -94,10 +94,29 @@ describe("nextMistakeState", () => {
     expect(second.masteredAt).toEqual(now);
   });
 
-  it("keeps mastered state once reached", () => {
-    const next = nextMistakeState({ status: "mastered", errorCount: 3, consecutiveCorrect: 2 }, true, now);
+  it("keeps mastered state and the original mastered time once reached", () => {
+    const masteredAt = new Date("2026-09-20T08:00:00Z");
+    const next = nextMistakeState(
+      { status: "mastered", errorCount: 3, consecutiveCorrect: 2, masteredAt },
+      true,
+      now,
+    );
 
     expect(next.status).toBe("mastered");
     expect(next.consecutiveCorrect).toBe(3);
+    expect(next.masteredAt).toEqual(masteredAt);
+  });
+
+  it("reopens a mastered mistake after a wrong redo", () => {
+    const next = nextMistakeState(
+      { status: "mastered", errorCount: 3, consecutiveCorrect: 2, masteredAt: now },
+      false,
+      now,
+    );
+
+    expect(next.status).toBe("active");
+    expect(next.errorCount).toBe(4);
+    expect(next.consecutiveCorrect).toBe(0);
+    expect(next.masteredAt).toBeNull();
   });
 });

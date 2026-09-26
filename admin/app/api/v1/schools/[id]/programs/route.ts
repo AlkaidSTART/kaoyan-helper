@@ -6,7 +6,6 @@ import { createPaginationMeta, parsePagination } from "@/lib/api/pagination";
 import { handleApiRequest } from "@/lib/api/handler";
 import { readUuidParam, searchParamsToObject } from "@/lib/api/params";
 import { createSuccessResponse } from "@/lib/api/response";
-import { readAndValidateJson } from "@/lib/api/validation";
 import { getActor, requirePermission } from "@/lib/auth/actor";
 import { SchoolService, toProgramDto } from "@/lib/services/schools/school-service";
 import { PrismaSchoolRepository } from "@/lib/services/schools/prisma-school-repository";
