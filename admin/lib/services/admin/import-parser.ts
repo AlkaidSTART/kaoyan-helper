@@ -395,7 +395,8 @@ function toSchoolRow(
   };
 
   for (const [field, raw] of flags) {
-    const parsed = parseBooleanInput(raw);
+    // 未提供的布尔字段默认 false（契约 ADMIN-SCH-06）。
+    const parsed = raw === "" ? false : parseBooleanInput(raw);
 
     if (parsed === null) {
       errors.push({ line, field, message: `${field} 须为 true/false/1/0` });

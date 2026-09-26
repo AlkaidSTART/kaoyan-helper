@@ -3,6 +3,8 @@ import { formatUtcTimestamp } from "../../api/response";
 import type { QuestionOption } from "../../domain/judging";
 import { toOptions } from "../quiz/quiz-service";
 
+export type { QuestionOption } from "../../domain/judging";
+
 import { assertAdminActor, type AdminActor } from "./admin-actor";
 
 export interface AdminAuditContext {
