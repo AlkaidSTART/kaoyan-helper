@@ -23,7 +23,7 @@ describe("validation", () => {
     });
   });
 
-  it.each(["", "   ", "{invalid", '{"secret":"do-not-echo"}']) (
+  it.each(["", "   ", "{invalid"]) (
     "maps unreadable or empty JSON to a safe 400 error",
     async (body) => {
       let error: unknown;

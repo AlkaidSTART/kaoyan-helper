@@ -69,7 +69,10 @@ export function createPaginationMeta(
   };
 }
 
-function readPositiveInteger(searchParams: URLSearchParams, key: string): number | null {
+function readPositiveInteger(
+  searchParams: URLSearchParams,
+  key: "page" | "pageSize",
+): number | null {
   const values = searchParams.getAll(key);
 
   if (values.length === 0) {

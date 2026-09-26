@@ -44,7 +44,7 @@ describe("handleApiRequest", () => {
       route: "/api/items",
       method: "GET",
       status: 200,
-      durationMs: 1_000,
+      durationMs: 2_000,
       userId: null,
       errorCode: null,
       timestamp: "2026-09-26T10:00:02Z",
