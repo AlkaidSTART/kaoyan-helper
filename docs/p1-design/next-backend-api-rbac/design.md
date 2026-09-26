@@ -305,7 +305,7 @@
 | 404 | `NOT_FOUND` | 资源不存在或私有资源不可见 |
 | 409 | `CONFLICT` | 唯一约束、重复提交、并发版本冲突 |
 | 409 | `ATTEMPT_CONFLICT` | 同一 attempt 重复提交且内容不一致 |
-| 409 | `ALREADY_REVIEWED` | UGC 已被其他管理员审核 |
+| 409 | `UGC_ALREADY_REVIEWED` | UGC 已被其他管理员审核 |
 | 422 | `VALIDATION_FAILED` | JSON 合法但字段语义不满足 |
 | 422 | `PAGINATION_INVALID` | 分页参数越界或非法 |
 | 429 | `RATE_LIMITED` | 通用限流 |

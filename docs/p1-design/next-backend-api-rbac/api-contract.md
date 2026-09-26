@@ -38,7 +38,7 @@
 | ID | Method / Path | Auth / Permission | Request | Response `data` | 错误与边界 |
 |---|---|---|---|---|---|
 | AUTH-01 | `POST /auth/send-code` | 公开 | `{email, purpose:"login"}` | `{expiresInSeconds, retryAfterSeconds}` | `RATE_LIMITED`、`VALIDATION_FAILED`；邮箱做规范化与小写化 |
-| AUTH-02 | `POST /auth/login/code` | 公开 | `{email, code, clientType:"flutter"|"admin-web", deviceName?}` | Flutter：`{accessToken, refreshToken, expiresIn, tokenType, user, permissions}`；Admin：`{user}` + Set-Cookie | `EMAIL_CODE_INVALID`、`EMAIL_CODE_EXPIRED`、`ADMIN_REQUIRED`、`USER_BANNED` |
+| AUTH-02 | `POST /auth/login/code` | 公开 | `{email, code, clientType:"flutter"\|"admin-web", deviceName?}` | Flutter：`{accessToken, refreshToken, expiresIn, tokenType, user, permissions}`；Admin：`{user}` + Set-Cookie | `EMAIL_CODE_INVALID`、`EMAIL_CODE_EXPIRED`、`ADMIN_REQUIRED`、`USER_BANNED` |
 | AUTH-03 | `POST /auth/login/password` | 公开 | `{email, password, clientType, deviceName?}` | 同 AUTH-02 | `AUTH_INVALID_CREDENTIALS`、`ADMIN_REQUIRED`、`USER_BANNED`；仅在启用 Supabase Password Provider 后开放 |
 | AUTH-04 | `POST /auth/oauth/:provider` | 公开 | `{redirectUri, clientType}` | `{authorizationUrl, state, expiresAt}` | `PROVIDER_UNSUPPORTED`、`OAUTH_STATE_INVALID`；MVP 为扩展项，不阻塞邮箱验证码 |
 | AUTH-05 | `POST /auth/refresh` | 公开/凭证 | Flutter：`{refreshToken}`；Admin：HttpOnly Cookie | Flutter：新 token 对；Admin：`{expiresIn}` + 轮换 Cookie | `REFRESH_INVALID`、`TOKEN_EXPIRED`、`USER_BANNED` |
@@ -89,7 +89,7 @@ MVP 先保证邮箱验证码登录。OAuth 若在本期后续启用，采用一�
 | ME-01 | `GET /me` | 登录 / `user:self:read` | 无 | 用户对象 + `targets` 摘要 | 仅 `auth.uid()`；不返回内部审计字段 |
 | ME-02 | `PATCH /me` | 登录 / `user:self:update` | `{nickname?, avatarUrl?, examYear?}` | 更新后的用户对象 | `role`、`isBanned`、`email` 不可改；`IMMUTABLE_FIELD`、`VALIDATION_FAILED` |
 | ME-03 | `GET /me/targets` | 登录 / `user:target:read` | 无 | `{targets:[target]}` | 仅本人；返回院校快照，不信任客户端缓存的校名 |
-| ME-04 | `PATCH /me/targets` | 登录 / `user:target:write` | `{targets:[{schoolId, type:"primary"|"backup", majorCode?, majorName?}]}` | 更新后目标列表 | 最多 3 条且仅 1 条 primary；`TARGET_LIMIT_EXCEEDED`、`TARGET_PRIMARY_CONFLICT`、`NOT_FOUND` |
+| ME-04 | `PATCH /me/targets` | 登录 / `user:target:write` | `{targets:[{schoolId, type:"primary"\|"backup", majorCode?, majorName?}]}` | 更新后目标列表 | 最多 3 条且仅 1 条 primary；`TARGET_LIMIT_EXCEEDED`、`TARGET_PRIMARY_CONFLICT`、`NOT_FOUND` |
 
 目标对象示例：
 
@@ -120,10 +120,10 @@ MVP 先保证邮箱验证码登录。OAuth 若在本期后续启用，采用一�
 
 | ID | Method / Path | Auth / Permission | Request | Response `data` | 所有权/错误 |
 |---|---|---|---|---|---|
-| QUIZ-01 | `GET /questions` | 登录 / `quiz:read` | `subject?, chapter?, year?, type?, difficulty?, scope:"public"|"mine", search?, page?, pageSize?` | 分页题目摘要，不含 `answer`/`explanation` | `public` 仅官方已批准题；`mine` 仅 `creator_id=auth.uid()` |
+| QUIZ-01 | `GET /questions` | 登录 / `quiz:read` | `subject?, chapter?, year?, type?, difficulty?, scope:"public"\|"mine", search?, page?, pageSize?` | 分页题目摘要，不含 `answer`/`explanation` | `public` 仅官方已批准题；`mine` 仅 `creator_id=auth.uid()` |
 | QUIZ-02 | `GET /questions/:id` | 登录 / `quiz:read` | 路径 `id` | 题目详情，不含答案与解析 | 官方已批准题或本人题；不可见返回 404 |
 | QUIZ-03 | `POST /questions/:id/answer` | 登录 / `quiz:submit` | `{answer:"B", attemptId}` | `{isCorrect, correctAnswer, explanation, mistake, answeredAt}` | 服务端判题；错题记录仅本人；幂等键防重复副作用 |
-| QUIZ-04 | `POST /questions` | 登录 / `quiz:create` | `{subject, chapter?, year?, type, stem, options, answer, explanation?, difficulty?, visibility:"private"|"public"}` | 创建的题目（创建者可看答案与审核状态） | `creatorId` 服务端赋值；public 进入 pending |
+| QUIZ-04 | `POST /questions` | 登录 / `quiz:create` | `{subject, chapter?, year?, type, stem, options, answer, explanation?, difficulty?, visibility:"private"\|"public"}` | 创建的题目（创建者可看答案与审核状态） | `creatorId` 服务端赋值；public 进入 pending |
 | QUIZ-05 | `PATCH /questions/:id` | 登录 / `quiz:update:own` | 允许编辑的题目字段 + `version` | 更新后题目 | 仅本人；发布中的公共题编辑后回到 pending；并发冲突 409 |
 | QUIZ-06 | `DELETE /questions/:id` | 登录 / `quiz:delete:own` | `{version}` | `null` | 仅本人；软删除；已用于他人错题时仍保留历史引用 |
 
@@ -197,7 +197,7 @@ MVP 先保证邮箱验证码登录。OAuth 若在本期后续启用，采用一�
 | SCH-01 | `GET /schools` | 登录 / `school:read` | `keyword?, province?, region?, is985?, is211?, isDoubleFirstClass?, isSelfMarking?, majorCode?, page?, pageSize?` | 分页院校摘要 | 仅已发布数据；组合条件 AND |
 | SCH-02 | `GET /schools/:id` | 登录 / `school:read` | 路径 `id` | 院校详情 + 可用专业摘要 | 不存在或下架返回 404 |
 | SCH-03 | `GET /schools/:id/programs` | 登录 / `school:read` | `majorCode?, yearFrom?, yearTo?, page?, pageSize?` | 分页专业历年数据 | 只读；按 `year DESC` 稳定排序 |
-| SCH-04 | `POST /schools/:id/target` | 登录 / `user:target:write` | `{type:"primary"|"backup", majorCode?, majorName?}` | 更新后的目标列表 | 仅本人；最多 3 条且主目标唯一；重复加目标幂等返回现有条目 |
+| SCH-04 | `POST /schools/:id/target` | 登录 / `user:target:write` | `{type:"primary"\|"backup", majorCode?, majorName?}` | 更新后的目标列表 | 仅本人；最多 3 条且主目标唯一；重复加目标幂等返回现有条目 |
 | SCH-05 | `DELETE /schools/:id/target` | 登录 / `user:target:write` | `type`, `majorCode?` | 更新后的目标列表 | 仅本人；不存在目标时保持幂等 |
 
 说明：原草案中的 `POST /school-data/upload` 与确认接口属于管理端导入能力，统一收敛到 `ADMIN-SCH-06/07`，避免无 `/admin` 前缀的高权限写接口被误开放。
@@ -209,7 +209,7 @@ MVP 先保证邮箱验证码登录。OAuth 若在本期后续启用，采用一�
 | FC-01 | `GET /flashcards/due` | 登录 / `flashcard:read` | `limit?`（1~50，默认 20） | `{items, dueRemaining, serverTime}` | 仅系统卡和本人 UGC 卡；进度仅本人 |
 | FC-02 | `GET /flashcards` | 登录 / `flashcard:read` | `category?, source?, search?, page?, pageSize?` | 分页卡片 | 系统卡或本人 UGC 卡 |
 | FC-03 | `POST /flashcards` | 登录 / `flashcard:write:own` | `{category, front, back, tags?}` | 创建的卡片 | `source`、`creatorId` 服务端赋值；仅本人可见 |
-| FC-04 | `POST /flashcards/:id/review` | 登录 / `flashcard:review:own` | `{rating:"forgot"|"fuzzy"|"remembered", idempotencyKey}` | `{progress, dueRemaining, checkIn?}` | 卡片可访问、进度仅本人；事务内计算 SM-2 |
+| FC-04 | `POST /flashcards/:id/review` | 登录 / `flashcard:review:own` | `{rating:"forgot"\|"fuzzy"\|"remembered", idempotencyKey}` | `{progress, dueRemaining, checkIn?}` | 卡片可访问、进度仅本人；事务内计算 SM-2 |
 | FC-05 | `GET /check-ins` | 登录 / `flashcard:read` | `from?, to?, page?, pageSize?` | 分页打卡记录 + `streakDays` | 仅 `user_id=auth.uid()` |
 
 SM-2 计算完全由服务端执行：
@@ -253,7 +253,7 @@ SSE 细节、事件格式和超时遵循总设计第 9 节。AI 接口必须先�
 | ADMIN-SCH-03 | `PATCH /admin/schools/:id` | 管理员 / `admin:schools:write` | 可编辑字段 + `version` | 更新后的院校 | 乐观锁；审计 |
 | ADMIN-SCH-04 | `POST /admin/schools/:id/programs` | 管理员 / `admin:schools:write` | 专业年度数据 | 创建/更新后的专业记录 | 以 `schoolId+majorCode+year` 唯一；审计 |
 | ADMIN-SCH-05 | `PATCH /admin/schools/:id/programs/:programId` | 管理员 / `admin:schools:write` | 可编辑字段 + `version` | 更新后的专业记录 | 乐观锁；审计 |
-| ADMIN-SCH-06 | `POST /admin/schools/import` | 管理员 / `admin:schools:write` | `multipart/form-data`：`file`, `format:"csv"|"json"`, `mode:"validate"|"commit"` | `{jobId, status, summary}` | 文件大小/行数限制；先校验后提交；审计 |
+| ADMIN-SCH-06 | `POST /admin/schools/import` | 管理员 / `admin:schools:write` | `multipart/form-data`：`file`, `format:"csv"\|"json"`, `mode:"validate"\|"commit"` | `{jobId, status, summary}` | 文件大小/行数限制；先校验后提交；审计 |
 | ADMIN-SCH-07 | `POST /admin/schools/import/:jobId/confirm` | 管理员 / `admin:schools:write` | `{jobId, version?}` | `{jobId, status:"completed", summary}` | 仅 validate 成功且未过期的任务可确认；审计 |
 
 ### 11.2 管理接口额外约束
