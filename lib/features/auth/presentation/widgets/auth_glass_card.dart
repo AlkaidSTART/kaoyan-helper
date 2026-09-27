@@ -141,17 +141,7 @@ class _AuthGlassCardState extends ConsumerState<AuthGlassCard>
       child: ClipRRect(
         borderRadius: BorderRadius.circular(24),
         child: BackdropFilter(
-          filter: ImageFilter.compose(
-            outer: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-            inner: ImageFilter.colorFilter(
-              ColorFilter.matrix(<double>[
-                1.157, -0.143, -0.014, 0, 0, //
-                -0.043, 1.057, -0.014, 0, 0,
-                -0.043, -0.143, 1.157, 0, 0,
-                0, 0, 0, 1, 0,
-              ]),
-            ),
-          ),
+          filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
           child: Container(
             width: 400,
             padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 28),
@@ -253,7 +243,7 @@ class _AuthGlassCardState extends ConsumerState<AuthGlassCard>
                 ),
                 const SizedBox(height: 16),
 
-                // Tab 切换：验证码登录 / 密码登录
+                // Tab 切换：验证码登录 / 密码登录（滑动胶囊指示器）
                 Container(
                   height: 38,
                   padding: const EdgeInsets.all(3),
@@ -261,51 +251,95 @@ class _AuthGlassCardState extends ConsumerState<AuthGlassCard>
                     color: Colors.white.withAlpha(90),
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: Row(
+                  child: Stack(
                     children: [
-                      _buildTabItem(title: '验证码登录', index: 0),
-                      _buildTabItem(title: '密码登录', index: 1),
+                      AnimatedAlign(
+                        duration: const Duration(milliseconds: 250),
+                        curve: Curves.easeOutCubic,
+                        alignment: _activeTab == 0
+                            ? Alignment.centerLeft
+                            : Alignment.centerRight,
+                        child: FractionallySizedBox(
+                          widthFactor: 0.5,
+                          child: Container(
+                            height: 32,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(8),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withAlpha(12),
+                                  blurRadius: 4,
+                                  offset: const Offset(0, 1),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                      Row(
+                        children: [
+                          _buildTabItem(title: '验证码登录', index: 0),
+                          _buildTabItem(title: '密码登录', index: 1),
+                        ],
+                      ),
                     ],
                   ),
                 ),
                 const SizedBox(height: 18),
 
-                // 错误提示条
-                if (authState.errorMessage != null) ...[
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 8,
-                    ),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFFBECEB),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                        color: const Color(0xFFD4453A).withAlpha(60),
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(
-                          Icons.error_outline_rounded,
-                          size: 16,
-                          color: Color(0xFFD4453A),
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            authState.errorMessage!,
-                            style: const TextStyle(
-                              fontSize: 12,
-                              color: Color(0xFFD4453A),
+                // 错误提示条（高度展开收起 + 淡入淡出）
+                AnimatedSize(
+                  duration: const Duration(milliseconds: 220),
+                  curve: Curves.easeOutCubic,
+                  alignment: Alignment.topCenter,
+                  child: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 180),
+                    switchInCurve: Curves.easeOutCubic,
+                    switchOutCurve: Curves.easeInCubic,
+                    child: authState.errorMessage != null
+                        ? Padding(
+                            key: const ValueKey('auth-error'),
+                            padding: const EdgeInsets.only(bottom: 14),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 8,
+                              ),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFFBECEB),
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(
+                                  color: const Color(0xFFD4453A).withAlpha(60),
+                                ),
+                              ),
+                              child: Row(
+                                children: [
+                                  const Icon(
+                                    Icons.error_outline_rounded,
+                                    size: 16,
+                                    color: Color(0xFFD4453A),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      authState.errorMessage!,
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                        color: Color(0xFFD4453A),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
+                          )
+                        : const SizedBox(
+                            width: double.infinity,
+                            key: ValueKey('auth-no-error'),
                           ),
-                        ),
-                      ],
-                    ),
                   ),
-                  const SizedBox(height: 14),
-                ],
+                ),
 
                 // 邮箱输入框（后端仅支持邮箱验证码登录）
                 _buildInputField(
@@ -316,11 +350,30 @@ class _AuthGlassCardState extends ConsumerState<AuthGlassCard>
                 ),
                 const SizedBox(height: 12),
 
-                // 密码或验证码输入框
-                if (_activeTab == 0)
-                  _buildCodeInputField()
-                else
-                  _buildPasswordInputField(),
+                // 密码或验证码输入框（淡入 + 轻微滑动过渡）
+                AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 220),
+                  switchInCurve: Curves.easeOutCubic,
+                  switchOutCurve: Curves.easeInCubic,
+                  transitionBuilder: (child, animation) {
+                    return FadeTransition(
+                      opacity: animation,
+                      child: SlideTransition(
+                        position: Tween<Offset>(
+                          begin: const Offset(0.05, 0),
+                          end: Offset.zero,
+                        ).animate(animation),
+                        child: child,
+                      ),
+                    );
+                  },
+                  child: KeyedSubtree(
+                    key: ValueKey<int>(_activeTab),
+                    child: _activeTab == 0
+                        ? _buildCodeInputField()
+                        : _buildPasswordInputField(),
+                  ),
+                ),
 
                 const SizedBox(height: 20),
 
@@ -394,6 +447,7 @@ class _AuthGlassCardState extends ConsumerState<AuthGlassCard>
     final isSelected = _activeTab == index;
     return Expanded(
       child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
         onTap: () {
           if (_activeTab != index) {
             setState(() {
@@ -403,23 +457,10 @@ class _AuthGlassCardState extends ConsumerState<AuthGlassCard>
             });
           }
         },
-        child: Container(
-          decoration: BoxDecoration(
-            color: isSelected ? Colors.white : Colors.transparent,
-            borderRadius: BorderRadius.circular(8),
-            boxShadow: isSelected
-                ? [
-                    BoxShadow(
-                      color: Colors.black.withAlpha(12),
-                      blurRadius: 4,
-                      offset: const Offset(0, 1),
-                    ),
-                  ]
-                : null,
-          ),
-          alignment: Alignment.center,
-          child: Text(
-            title,
+        child: Center(
+          child: AnimatedDefaultTextStyle(
+            duration: const Duration(milliseconds: 250),
+            curve: Curves.easeOutCubic,
             style: TextStyle(
               fontSize: 13,
               fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
@@ -427,6 +468,7 @@ class _AuthGlassCardState extends ConsumerState<AuthGlassCard>
                   ? const Color(0xFF204374)
                   : const Color(0xFF7C6B5D),
             ),
+            child: Text(title),
           ),
         ),
       ),

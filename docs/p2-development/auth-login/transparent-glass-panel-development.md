@@ -8,8 +8,9 @@
 - [x] 落盘 P3 验证文档，执行 `flutter analyze` 与 `flutter test`。
 
 ## 技术决策 (ADR)
-- **ADR-006**: 采用 `ImageFilter.compose(outer: ImageFilter.blur(20), inner: ImageFilter.colorFilter(饱和矩阵 ×1.2))` 替代单层模糊——透光率提高后仅靠模糊会显得灰蒙，饱和补偿恢复玻璃"折色"质感；该 API 为 Flutter 官方 compose 能力，无自定义着色器，三端兼容。
+- **ADR-006**: 背景模糊采用单层 `ImageFilter.blur(sigma: 20)`；玻璃暖色调由暖白半透明渐变填充承担，不叠加色彩滤镜——`dart:ui` 的 `ImageFilter` 无 `colorFilter` 工厂（已核对 Flutter 3.41.2 与 master 源码，仅 blur/dilate/erode/matrix/compose/shader），任何 SDK 版本均不可用。
 - **ADR-007**: 错误提示条保留实色：红色警示在半透明底上对比度会显著衰减，可读性优先于风格统一。
 
 ## 实际问题记录
+- 初版尝试 `ImageFilter.compose(outer: blur, inner: ImageFilter.colorFilter(...))` 做背景饱和补偿，编译报 `undefined_method`：该 API 在 Flutter 中不存在，属方案设计失误；已回退为单层模糊并重跑验证通过。
 - 输入框装饰在三个 builder 中重复出现，本次按最小改动原则就地修改数值，不抽取公共样式（避免无关重构）。

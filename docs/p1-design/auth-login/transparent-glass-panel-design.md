@@ -5,10 +5,11 @@
 | 层 | 参数 | 设计理由 |
 | --- | --- | --- |
 | 背景模糊 | `BackdropFilter` blur sigma 16 → **20** | 填充变透后需更强模糊保证文字可读性 |
-| 背景饱和 | 叠加 `ColorFilter.matrix` 饱和度 ×1.2 | 玻璃折色感的关键，避免灰蒙蒙 |
-| 面板填充 | `0xCCFFFDF9` (80%) → 暖白对角渐变 **44% → 22%** | 左上高、右下低形成光感，露出背景 |
+| 面板填充 | `0xCCFFFDF9` (80%) → 暖白对角渐变 **44% → 22%** | 左上高、右下低形成光感，露出背景；暖白底色同时承担色调补偿 |
 | 边框 | `#FFFFFF` 65% 白，宽 1.5 → **1.2** | 玻璃边缘高光 |
 | 投影 | 保持 `#1F2C2623` / blur 24 / (0,12) 不变 | 悬浮层级不变 |
+
+> 设计修正：原方案计划叠加饱和度 ×1.2 色彩滤镜，但 Flutter（含 master 分支）的 `dart:ui` `ImageFilter` 不提供 `colorFilter` 工厂（仅 blur/dilate/erode/matrix/compose/shader），该层无法落地；玻璃暖色调由暖白半透明渐变承担。
 
 ## 面板内部二级容器
 
@@ -22,4 +23,4 @@
 
 ## 不变性
 - 文字色板（深墨蓝标题、暖灰褐辅助字）、布局尺寸、间距、动效全部不动。
-- `ImageFilter.compose(outer: blur, inner: colorFilter)` 为 Flutter 3.7+ 官方 API，三端均可渲染。
+- 仅用 `ImageFilter.blur` 单层背景模糊（Flutter 3.7+ 官方 API），三端均可渲染。
