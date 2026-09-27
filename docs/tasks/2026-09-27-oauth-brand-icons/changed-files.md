@@ -4,7 +4,7 @@
 | 文件 | 说明 |
 | --- | --- |
 | `pubspec.yaml` | dependencies 新增 `font_awesome_flutter: ^11.0.0` |
-| `lib/features/auth/presentation/widgets/oauth_button_row.dart` | 三处占位图标替换为 `FaIcon(FontAwesomeIcons.google/github/weixin)`，品牌色保持不变，尺寸上调至 22/24/24 |
+| `lib/features/auth/presentation/widgets/oauth_button_row.dart` | 三处占位图标替换为 `FaIcon(FontAwesomeIcons.google/github/weixin)`，品牌色保持不变，尺寸上调至 22/24/24；后续按用户需求移除微信按钮，仅保留 Google / GitHub |
 
 ## 新建
 | 文件 | 说明 |
