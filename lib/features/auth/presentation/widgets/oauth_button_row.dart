@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class OAuthButtonRow extends StatelessWidget {
   const OAuthButtonRow({super.key});
@@ -10,33 +11,20 @@ class OAuthButtonRow extends StatelessWidget {
       children: [
         _buildOAuthButton(
           tooltip: 'Google 账号登录',
-          icon: const Text(
-            'G',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF4285F4),
-            ),
+          icon: const FaIcon(
+            FontAwesomeIcons.google,
+            size: 22,
+            color: Color(0xFF4285F4),
           ),
           onTap: () {},
         ),
         const SizedBox(width: 20),
         _buildOAuthButton(
           tooltip: 'GitHub 账号登录',
-          icon: const Icon(
-            Icons.terminal_rounded,
-            size: 22,
+          icon: const FaIcon(
+            FontAwesomeIcons.github,
+            size: 24,
             color: Color(0xFF24292E),
-          ),
-          onTap: () {},
-        ),
-        const SizedBox(width: 20),
-        _buildOAuthButton(
-          tooltip: '微信快捷登录',
-          icon: const Icon(
-            Icons.chat_bubble_outline_rounded,
-            size: 20,
-            color: Color(0xFF07C160),
           ),
           onTap: () {},
         ),
@@ -58,9 +46,9 @@ class OAuthButtonRow extends StatelessWidget {
           width: 44,
           height: 44,
           decoration: BoxDecoration(
-            color: Colors.white.withAlpha(200),
+            color: Colors.white.withAlpha(115),
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: const Color(0xFFDFD5CA), width: 1.0),
+            border: Border.all(color: Colors.white.withAlpha(150), width: 1.0),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withAlpha(10),
