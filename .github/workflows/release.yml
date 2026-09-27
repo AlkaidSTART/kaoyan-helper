@@ -187,7 +187,12 @@ jobs:
 
       - name: Package Unsigned IPA
         run: |
-          APP_PATH="$(find build/ios/archive/Products/Applications -maxdepth 1 -name '*.app' | head -n 1)"
+          APP_PATH="$(find build/ios/archive -type d -name '*.app' | head -n 1)"
+          if [ -z "$APP_PATH" ]; then
+            echo "No .app found under build/ios/archive:"
+            find build/ios -maxdepth 4 -type d | head -50
+            exit 1
+          fi
           echo "App bundle: $APP_PATH"
           mkdir Payload
           cp -R "$APP_PATH" Payload/
