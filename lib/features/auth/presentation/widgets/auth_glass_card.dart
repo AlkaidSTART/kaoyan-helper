@@ -141,16 +141,33 @@ class _AuthGlassCardState extends ConsumerState<AuthGlassCard>
       child: ClipRRect(
         borderRadius: BorderRadius.circular(24),
         child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+          filter: ImageFilter.compose(
+            outer: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+            inner: ImageFilter.colorFilter(
+              ColorFilter.matrix(<double>[
+                1.157, -0.143, -0.014, 0, 0, //
+                -0.043, 1.057, -0.014, 0, 0,
+                -0.043, -0.143, 1.157, 0, 0,
+                0, 0, 0, 1, 0,
+              ]),
+            ),
+          ),
           child: Container(
             width: 400,
             padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 28),
             decoration: BoxDecoration(
-              color: const Color(0xCCFFFDF9), // 80% 暖白毛玻璃
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  const Color(0xFFFFFDF9).withAlpha(112), // 44% 暖白
+                  const Color(0xFFFFFDF9).withAlpha(56), // 22% 暖白
+                ],
+              ),
               borderRadius: BorderRadius.circular(24),
               border: Border.all(
                 color: Colors.white.withAlpha(165),
-                width: 1.5,
+                width: 1.2,
               ),
               boxShadow: const [
                 BoxShadow(
@@ -241,7 +258,7 @@ class _AuthGlassCardState extends ConsumerState<AuthGlassCard>
                   height: 38,
                   padding: const EdgeInsets.all(3),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFF3ECE4),
+                    color: Colors.white.withAlpha(90),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Row(
@@ -318,7 +335,7 @@ class _AuthGlassCardState extends ConsumerState<AuthGlassCard>
                 // 第三方快速登录分隔
                 Row(
                   children: [
-                    const Expanded(child: Divider(color: Color(0xFFDFD5CA))),
+                    const Expanded(child: Divider(color: Color(0x96FFFFFF))),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 12.0),
                       child: Text(
@@ -329,7 +346,7 @@ class _AuthGlassCardState extends ConsumerState<AuthGlassCard>
                         ),
                       ),
                     ),
-                    const Expanded(child: Divider(color: Color(0xFFDFD5CA))),
+                    const Expanded(child: Divider(color: Color(0x96FFFFFF))),
                   ],
                 ),
                 const SizedBox(height: 14),
@@ -425,9 +442,9 @@ class _AuthGlassCardState extends ConsumerState<AuthGlassCard>
     return Container(
       height: 46,
       decoration: BoxDecoration(
-        color: Colors.white.withAlpha(180),
+        color: Colors.white.withAlpha(115),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFDFD5CA), width: 1.5),
+        border: Border.all(color: Colors.white.withAlpha(150), width: 1.2),
       ),
       child: TextField(
         controller: controller,
@@ -451,9 +468,9 @@ class _AuthGlassCardState extends ConsumerState<AuthGlassCard>
     return Container(
       height: 46,
       decoration: BoxDecoration(
-        color: Colors.white.withAlpha(180),
+        color: Colors.white.withAlpha(115),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFDFD5CA), width: 1.5),
+        border: Border.all(color: Colors.white.withAlpha(150), width: 1.2),
       ),
       child: Row(
         children: [
@@ -509,9 +526,9 @@ class _AuthGlassCardState extends ConsumerState<AuthGlassCard>
     return Container(
       height: 46,
       decoration: BoxDecoration(
-        color: Colors.white.withAlpha(180),
+        color: Colors.white.withAlpha(115),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFDFD5CA), width: 1.5),
+        border: Border.all(color: Colors.white.withAlpha(150), width: 1.2),
       ),
       child: TextField(
         controller: _secretController,

@@ -46,9 +46,9 @@ class OAuthButtonRow extends StatelessWidget {
           width: 44,
           height: 44,
           decoration: BoxDecoration(
-            color: Colors.white.withAlpha(200),
+            color: Colors.white.withAlpha(115),
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: const Color(0xFFDFD5CA), width: 1.0),
+            border: Border.all(color: Colors.white.withAlpha(150), width: 1.0),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withAlpha(10),
