@@ -20,7 +20,7 @@ class LoginPage extends StatelessWidget {
               children: [
                 // 背景图层 (左偏居中，完整露出左侧题干书堆与右侧晨曦)
                 Image.asset(
-                  'assets/logo.png',
+                  'assets/backend_logo.png',
                   fit: BoxFit.cover,
                   alignment: Alignment.centerLeft,
                 ),
@@ -45,7 +45,7 @@ class LoginPage extends StatelessWidget {
             fit: StackFit.expand,
             children: [
               Image.asset(
-                'assets/logo.png',
+                'assets/backend_logo.png',
                 fit: BoxFit.cover,
                 alignment: Alignment.topCenter,
               ),

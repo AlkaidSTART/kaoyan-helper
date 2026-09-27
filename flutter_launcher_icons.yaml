@@ -1,0 +1,20 @@
+# 全平台应用图标生成配置（运行: dart run flutter_launcher_icons）
+# 产品 logo：登科·考研助手，底色取自原图 #FDFDFC，品牌红 #F7342F
+flutter_launcher_icons:
+  image_path: "assets/icon/app_icon.png"
+  adaptive_icon_background: "#FDFDFC"
+  adaptive_icon_foreground: "assets/icon/adaptive_foreground.png"
+  android: true
+  ios: true
+  remove_alpha_ios: true
+  web:
+    generate: true
+    image_path: "assets/icon/app_icon.png"
+    background_color: "#FDFDFC"
+    theme_color: "#F7342F"
+  windows:
+    generate: true
+    image_path: "assets/icon/app_icon.png"
+  macos:
+    generate: true
+    image_path: "assets/icon/app_icon.png"
