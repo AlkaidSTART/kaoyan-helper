@@ -3,8 +3,16 @@ name: CI Pipeline
 on:
   push:
     branches: [ main, dev ]
+    paths-ignore:
+      - 'admin/**'
+      - 'docs/**'
+      - '**.md'
   pull_request:
     branches: [ main, dev ]
+    paths-ignore:
+      - 'admin/**'
+      - 'docs/**'
+      - '**.md'
 
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}

@@ -1,34 +1,24 @@
 name: CD Pipeline
 
+# Web 端构建与 GitHub Pages 部署。
+# 安装包发版（APK / Windows / macOS / iOS）由 release.yml 在 pubspec.yaml 版本变更时自动处理。
+
 on:
   push:
     branches: [ main ]
-    tags: [ 'v*' ]
   workflow_dispatch:
-    inputs:
-      target:
-        description: 'Build target'
-        required: true
-        default: 'all'
-        type: choice
-        options:
-          - all
-          - web
-          - android
 
 concurrency:
   group: cd-${{ github.ref }}
   cancel-in-progress: false
 
 permissions:
-  contents: write
   pages: write
   id-token: write
 
 jobs:
   deploy-web:
     name: Build & Deploy Web
-    if: github.event_name == 'push' || github.event.inputs.target == 'all' || github.event.inputs.target == 'web'
     runs-on: ubuntu-latest
     environment:
       name: github-pages
@@ -59,88 +49,3 @@ jobs:
         id: deployment
         if: github.ref == 'refs/heads/main'
         uses: actions/deploy-pages@v4
-
-      - name: Package Web Release Zip
-        if: startsWith(github.ref, 'refs/tags/v') || github.event.inputs.target == 'all' || github.event.inputs.target == 'web'
-        run: |
-          cd build/web && zip -r ../../kaoyan-helper-web.zip . && cd ../..
-
-      - name: Upload Web Build Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: web-release-bundle
-          path: kaoyan-helper-web.zip
-          if-no-files-found: ignore
-
-  build-android:
-    name: Build Android APK
-    if: startsWith(github.ref, 'refs/tags/v') || github.event.inputs.target == 'all' || github.event.inputs.target == 'android'
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
-      - name: Setup Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'zulu'
-          java-version: '17'
-
-      - name: Setup Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          channel: 'stable'
-          cache: true
-
-      - name: Install Dependencies
-        run: flutter pub get
-
-      - name: Build Android Release APK
-        run: flutter build apk --release
-
-      - name: Upload Android APK Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: android-release-apk
-          path: build/app/outputs/flutter-apk/app-release.apk
-
-  create-release:
-    name: Publish GitHub Release
-    needs: [ deploy-web, build-android ]
-    if: startsWith(github.ref, 'refs/tags/v')
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
-      - name: Download Web Release Artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: web-release-bundle
-          path: release-assets
-
-      - name: Download Android APK Artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: android-release-apk
-          path: release-assets
-
-      - name: Prepare Release Assets
-        run: |
-          mv release-assets/app-release.apk release-assets/kaoyan-helper-${{ github.ref_name }}-android.apk 2>/dev/null || true
-          mv release-assets/kaoyan-helper-web.zip release-assets/kaoyan-helper-${{ github.ref_name }}-web.zip 2>/dev/null || true
-          ls -la release-assets
-
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
-        with:
-          files: |
-            release-assets/kaoyan-helper-${{ github.ref_name }}-android.apk
-            release-assets/kaoyan-helper-${{ github.ref_name }}-web.zip
-          generate_release_notes: true
-          draft: false
-          prerelease: false
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
