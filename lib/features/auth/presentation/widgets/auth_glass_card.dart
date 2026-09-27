@@ -211,32 +211,6 @@ class _AuthGlassCardState extends ConsumerState<AuthGlassCard>
                           horizontal: 6,
                           vertical: 2,
                         ),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFE67E22).withAlpha(25),
-                          borderRadius: BorderRadius.circular(6),
-                          border: Border.all(
-                            color: const Color(0xFFE67E22).withAlpha(60),
-                          ),
-                        ),
-                        child: const Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.bolt_outlined,
-                              size: 13,
-                              color: Color(0xFFE67E22),
-                            ),
-                            SizedBox(width: 2),
-                            Text(
-                              '填入示例邮箱',
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.bold,
-                                color: Color(0xFFE67E22),
-                              ),
-                            ),
-                          ],
-                        ),
                       ),
                     ),
                   ],
